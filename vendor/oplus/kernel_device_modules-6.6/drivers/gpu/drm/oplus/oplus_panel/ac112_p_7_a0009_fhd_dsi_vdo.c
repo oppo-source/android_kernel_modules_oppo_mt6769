@@ -1,0 +1,1079 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (c) 2022 MediaTek Inc.
+ */
+
+#include <linux/backlight.h>
+#include <drm/drm_mipi_dsi.h>
+#include <drm/drm_panel.h>
+#include <drm/drm_modes.h>
+#include <linux/delay.h>
+#include <drm/drm_connector.h>
+#include <drm/drm_device.h>
+
+#include <linux/gpio/consumer.h>
+#include <linux/regulator/consumer.h>
+
+#include <video/mipi_display.h>
+#include <video/of_videomode.h>
+#include <video/videomode.h>
+
+#include <linux/module.h>
+#include <linux/of_platform.h>
+#include <linux/of_graph.h>
+#include <linux/of_address.h>
+#include <linux/platform_device.h>
+#include <soc/oplus/device_info.h>
+
+#define CONFIG_MTK_PANEL_EXT
+#include "mtk_panel_ext.h"
+#include "mtk_drm_graphics_base.h"
+#include "mtk_boot_common.h"
+#include "mtk_dsi.h"
+#ifdef CONFIG_MTK_ROUND_CORNER_SUPPORT
+#include "../mediatek/mediatek_v2/mtk_corner_pattern/mtk_data_hw_roundedpattern.h"
+#endif
+
+#define REGFLAG_CMD				0xFFFA
+#define REGFLAG_DELAY			0xFFFC
+#define REGFLAG_UDELAY			0xFFFB
+#define REGFLAG_END_OF_TABLE	0xFFFD
+
+extern unsigned int oplus_display_brightness;
+extern unsigned int oplus_max_normal_brightness;
+extern unsigned int cabc_mode;
+static unsigned char g_GammaFlag = 1;
+
+#if IS_ENABLED(CONFIG_OPLUS_MTK_DRM_GKI_NOTIFY)
+#include "../mediatek/mediatek_v2/mtk_panel_ext.h"
+#include "../mediatek/mediatek_v2/mtk_drm_graphics_base.h"
+#include "../mediatek/mediatek_v2/mtk_disp_notify.h"
+#endif
+
+#define LCD_CTL_RST_OFF 0x12
+#define LCD_CTL_CS_OFF  0x1A
+#define LCD_CTL_TP_LOAD_FW 0x10
+#define LCD_CTL_CS_ON  0x19
+
+#if IS_ENABLED(CONFIG_TOUCHPANEL_NOTIFY)
+extern int (*tp_gesture_enable_notifier)(unsigned int tp_index);
+#endif
+static bool is_pd_with_guesture = false;
+
+struct lcm {
+	struct device *dev;
+	struct drm_panel panel;
+	struct backlight_device *backlight;
+	struct gpio_desc *reset_gpio;
+	struct gpio_desc *vdd18_gpio;
+	struct gpio_desc *bias_pos, *bias_neg;
+
+	bool prepared;
+	bool enabled;
+
+	unsigned int gate_ic;
+
+	int error;
+};
+
+struct LCM_setting_table {
+  	unsigned int cmd;
+ 	unsigned char count;
+ 	unsigned char para_list[128];
+};
+
+#if 0
+static int blmap_table[] = {
+                36, 8,
+                16, 11,
+                17, 12,
+                19, 13,
+                19, 15,
+                20, 14,
+                22, 14,
+                22, 14,
+                24, 10,
+                24, 8 ,
+                26, 4 ,
+                27, 0 ,
+                29, 9 ,
+                29, 9 ,
+                30, 14,
+                33, 25,
+                34, 30,
+                36, 44,
+                37, 49,
+                40, 65,
+                40, 69,
+                43, 88,
+                46, 109,
+                47, 112,
+                50, 135,
+                53, 161,
+                53, 163,
+                60, 220,
+                60, 223,
+                64, 257,
+                63, 255,
+                71, 334,
+                71, 331,
+                75, 375,
+                80, 422,
+                84, 473,
+                89, 529,
+                88, 518,
+                99, 653,
+                98, 640,
+                103, 707,
+                117, 878,
+                115, 862,
+                122, 947,
+                128, 1039,
+                135, 1138,
+                132, 1102,
+                149, 1355,
+                157, 1478,
+                166, 1611,
+                163, 1563,
+                183, 1900,
+                180, 1844,
+                203, 2232,
+                199, 2169,
+                209, 2344,
+                236, 2821,
+                232, 2742,
+                243, 2958,
+                255, 3188,
+                268, 3433,
+                282, 3705,
+                317, 4400,
+                176, 1555};
+#endif
+
+/*
+static struct LCM_setting_table set_dimming_off[] = {
+	{0xFF, 0x01, {0x10}},
+	{0xFB, 0x01, {0x01}},
+	{0x53, 0x01, {0x24}}
+};
+
+static struct LCM_setting_table init_setting_cmd[] = {
+	{ 0xFF, 0x03, {0x98, 0x07, 0x00} },
+};
+*/
+/*
+static struct LCM_setting_table bl_level[] = {
+	 { 0xFF, 0x03, {0x98, 0x81, 0x00} },
+	{0x51, 2, {0x00, 0xFF} },
+	{REGFLAG_END_OF_TABLE, 0x00, {} }
+};
+*/
+#define lcm_dcs_write_seq(ctx, seq...) \
+({\
+	const u8 d[] = { seq };\
+	BUILD_BUG_ON_MSG(ARRAY_SIZE(d) > 64, "DCS sequence too big for stack");\
+	lcm_dcs_write(ctx, d, ARRAY_SIZE(d));\
+})
+
+#define lcm_dcs_write_seq_static(ctx, seq...) \
+({\
+	static const u8 d[] = { seq };\
+	lcm_dcs_write(ctx, d, ARRAY_SIZE(d));\
+})
+
+static inline struct lcm *panel_to_lcm(struct drm_panel *panel)
+{
+	return container_of(panel, struct lcm, panel);
+}
+
+static void lcm_dcs_write(struct lcm *ctx, const void *data, size_t len)
+{
+	struct mipi_dsi_device *dsi = to_mipi_dsi_device(ctx->dev);
+	ssize_t ret;
+	char *addr;
+
+	if (ctx->error < 0)
+		return;
+
+	addr = (char *)data;
+	if ((int)*addr < 0xB0)
+		ret = mipi_dsi_dcs_write_buffer(dsi, data, len);
+	else
+		ret = mipi_dsi_generic_write(dsi, data, len);
+	if (ret < 0) {
+		dev_err(ctx->dev, "error %zd writing seq: %ph\n", ret, data);
+		ctx->error = ret;
+	}
+}
+
+static void lcm_mdelay(unsigned int ms)
+{
+	if (ms < 10)
+		udelay(ms * 1000);
+	else if (ms <= 20)
+		usleep_range(ms*1000, (ms+1)*1000);
+	else
+		usleep_range(ms * 1000 - 100, ms * 1000);
+}
+
+
+/*static void push_table(struct lcm *ctx, struct LCM_setting_table *table, unsigned int count)
+{
+	unsigned int i;
+	unsigned int cmd;
+
+	for (i = 0; i < count; i++) {
+		cmd = table[i].cmd;
+		switch (cmd) {
+		case REGFLAG_DELAY:
+			usleep_range(table[i].count*1000, table[i].count*1000 + 100);
+			break;
+		case REGFLAG_UDELAY:
+			usleep_range(table[i].count, table[i].count + 100);
+			break;
+		case REGFLAG_END_OF_TABLE:
+			break;
+		default:
+			lcm_dcs_write(ctx, table[i].para_list, table[i].count);
+			break;
+		}
+	}
+}*/
+
+static void lcm_panel_init(struct lcm *ctx)
+{
+
+	gpiod_set_value(ctx->reset_gpio, 1);
+	lcm_mdelay(3);
+	gpiod_set_value(ctx->reset_gpio, 0);
+	lcm_mdelay(3);
+	gpiod_set_value(ctx->reset_gpio, 1);
+	lcm_mdelay(15);
+
+	lcm_dcs_write_seq_static(ctx,0xFF,0x25);
+	lcm_dcs_write_seq_static(ctx,0xFB,0x01);
+	lcm_dcs_write_seq_static(ctx,0x18,0x21);
+	lcm_dcs_write_seq_static(ctx,0x21,0xc0);
+	lcm_dcs_write_seq_static(ctx,0xFF,0xE0);
+	lcm_dcs_write_seq_static(ctx,0xFB,0x01);
+	lcm_dcs_write_seq_static(ctx,0x35,0x82);
+
+	lcm_dcs_write_seq_static(ctx,0xFF,0xF0);
+	lcm_dcs_write_seq_static(ctx,0xFB,0x01);
+	lcm_dcs_write_seq_static(ctx,0x1C,0x01);
+	lcm_dcs_write_seq_static(ctx,0x33,0x01);
+	lcm_dcs_write_seq_static(ctx,0x5A,0x00);
+	lcm_dcs_write_seq_static(ctx,0x9C,0x17);
+	lcm_dcs_write_seq_static(ctx,0x9F,0x19);
+
+	lcm_dcs_write_seq_static(ctx,0xFF,0xD0);
+	lcm_dcs_write_seq_static(ctx,0xFB,0x01);
+	lcm_dcs_write_seq_static(ctx,0x53,0x22);
+	lcm_dcs_write_seq_static(ctx,0x54,0x02);
+
+	lcm_dcs_write_seq_static(ctx,0xFF,0xC0);
+	lcm_dcs_write_seq_static(ctx,0xFB,0x01);
+	lcm_dcs_write_seq_static(ctx,0x9C,0x11);
+	lcm_dcs_write_seq_static(ctx,0x9D,0x11);
+
+	lcm_dcs_write_seq_static(ctx,0xFF,0x23);
+	lcm_dcs_write_seq_static(ctx,0xFB,0x01);
+	lcm_dcs_write_seq_static(ctx,0x00,0x80);
+	lcm_dcs_write_seq_static(ctx,0x05,0x22);
+	lcm_dcs_write_seq_static(ctx,0x06,0x01);
+	lcm_dcs_write_seq_static(ctx,0x07,0x00);
+	lcm_dcs_write_seq_static(ctx,0x08,0x01);
+	lcm_dcs_write_seq_static(ctx,0x09,0x00);
+	lcm_dcs_write_seq_static(ctx,0x10,0x82);
+	lcm_dcs_write_seq_static(ctx,0x11,0x01);
+	lcm_dcs_write_seq_static(ctx,0x12,0x95);
+	lcm_dcs_write_seq_static(ctx,0x15,0x68);
+	lcm_dcs_write_seq_static(ctx,0x16,0x0B);
+
+	lcm_dcs_write_seq_static(ctx,0x30,0xFF);
+	lcm_dcs_write_seq_static(ctx,0x31,0xFD);
+	lcm_dcs_write_seq_static(ctx,0x32,0xFA);
+	lcm_dcs_write_seq_static(ctx,0x33,0xF7);
+	lcm_dcs_write_seq_static(ctx,0x34,0xF4);
+	lcm_dcs_write_seq_static(ctx,0x35,0xF0);
+	lcm_dcs_write_seq_static(ctx,0x36,0xED);
+	lcm_dcs_write_seq_static(ctx,0x37,0xEC);
+	lcm_dcs_write_seq_static(ctx,0x38,0xEB);
+	lcm_dcs_write_seq_static(ctx,0x39,0xEA);
+	lcm_dcs_write_seq_static(ctx,0x3A,0xE9);
+	lcm_dcs_write_seq_static(ctx,0x3B,0xE8);
+	lcm_dcs_write_seq_static(ctx,0x3D,0xE7);
+	lcm_dcs_write_seq_static(ctx,0x3F,0xE6);
+	lcm_dcs_write_seq_static(ctx,0x40,0xE5);
+	lcm_dcs_write_seq_static(ctx,0x41,0xE4);
+
+	lcm_dcs_write_seq_static(ctx,0x45,0xFF);
+	lcm_dcs_write_seq_static(ctx,0x46,0xFA);
+	lcm_dcs_write_seq_static(ctx,0x47,0xF2);
+	lcm_dcs_write_seq_static(ctx,0x48,0xE8);
+	lcm_dcs_write_seq_static(ctx,0x49,0xE4);
+	lcm_dcs_write_seq_static(ctx,0x4A,0xDC);
+	lcm_dcs_write_seq_static(ctx,0x4B,0xD7);
+	lcm_dcs_write_seq_static(ctx,0x4C,0xD5);
+	lcm_dcs_write_seq_static(ctx,0x4D,0xD3);
+	lcm_dcs_write_seq_static(ctx,0x4E,0xD2);
+	lcm_dcs_write_seq_static(ctx,0x4F,0xD0);
+	lcm_dcs_write_seq_static(ctx,0x50,0xCE);
+	lcm_dcs_write_seq_static(ctx,0x51,0xCD);
+	lcm_dcs_write_seq_static(ctx,0x52,0xCB);
+	lcm_dcs_write_seq_static(ctx,0x53,0xC6);
+	lcm_dcs_write_seq_static(ctx,0x54,0xC3);
+
+	lcm_dcs_write_seq_static(ctx,0xFF,0x10);
+	lcm_dcs_write_seq_static(ctx,0xFB,0x01);
+	lcm_dcs_write_seq_static(ctx,0x3B,0x03,0x14, 0x36, 0x04, 0x04);
+	lcm_dcs_write_seq_static(ctx,0xB0,0x00);
+	lcm_dcs_write_seq_static(ctx,0xC0,0x00);
+	lcm_dcs_write_seq_static(ctx,0x51,0x00,0x00);
+	lcm_dcs_write_seq_static(ctx,0x53,0x24);
+	lcm_dcs_write_seq_static(ctx,0x35,0x00);
+	lcm_dcs_write_seq_static(ctx,0x11,0x00);
+	lcm_mdelay(120);
+	lcm_dcs_write_seq_static(ctx,0x29,0x00);
+
+}
+
+static int lcm_disable(struct drm_panel *panel)
+{
+	struct lcm *ctx = panel_to_lcm(panel);
+
+	if (!ctx->enabled)
+		return 0;
+
+	if (ctx->backlight) {
+		ctx->backlight->props.power = FB_BLANK_POWERDOWN;
+		backlight_update_status(ctx->backlight);
+	}
+
+	ctx->enabled = false;
+	pr_info("%s:success\n", __func__);
+	return 0;
+}
+
+static int lcm_unprepare(struct drm_panel *panel)
+{
+	struct lcm *ctx = panel_to_lcm(panel);
+
+	if (!ctx->prepared)
+		return 0;
+
+	lcm_dcs_write_seq_static(ctx, 0x28);
+	lcm_mdelay(20);
+	lcm_dcs_write_seq_static(ctx, 0x10);
+	lcm_mdelay(120);
+
+	ctx->prepared = false;
+
+	pr_info("%s:success\n", __func__);
+	return 0;
+}
+
+static int lcm_prepare(struct drm_panel *panel)
+{
+	struct lcm *ctx = panel_to_lcm(panel);
+
+	if (ctx->prepared)
+		return 0;
+
+	lcm_panel_init(ctx);
+
+	ctx->prepared = true;
+
+	pr_info("%s:success\n", __func__);
+	return 0;
+}
+
+static int lcm_enable(struct drm_panel *panel)
+{
+	struct lcm *ctx = panel_to_lcm(panel);
+
+	if (ctx->enabled)
+		return 0;
+
+	if (ctx->backlight) {
+		ctx->backlight->props.power = FB_BLANK_UNBLANK;
+		backlight_update_status(ctx->backlight);
+	}
+
+	ctx->enabled = true;
+	pr_info("%s:success\n", __func__);
+	return 0;
+}
+
+#define HFP (30)
+#define HSA (18)
+#define HBP (30)
+#define VFP (54)
+#define VSA (10)
+#define VBP (10)
+#define VAC (2400)
+#define HAC (1080)
+
+static struct drm_display_mode default_mode = {
+	.clock = 171893,
+	.hdisplay = HAC,
+	.hsync_start = HAC + HFP,
+	.hsync_end = HAC + HFP + HSA,
+	.htotal = HAC + HFP + HSA + HBP,
+	.vdisplay = VAC,
+	.vsync_start = VAC + VFP,
+	.vsync_end = VAC + VFP + VSA,
+	.vtotal = VAC + VFP + VSA + VBP,
+	//.vrefresh = 60,
+};
+
+static int panel_ext_reset(struct drm_panel *panel, int on)
+{
+	struct lcm *ctx = panel_to_lcm(panel);
+
+	gpiod_set_value(ctx->reset_gpio, on);
+
+	return 0;
+
+}
+
+static int panel_ata_check(struct drm_panel *panel)
+{
+	/* Customer test by own ATA tool */
+	return 1;
+}
+
+static int lcm_panel_poweron(struct drm_panel *panel)
+{
+	struct lcm *ctx = panel_to_lcm(panel);
+	int blank;
+
+#if IS_ENABLED(CONFIG_OPLUS_MTK_DRM_GKI_NOTIFY)
+    blank = LCD_CTL_CS_ON;
+    mtk_disp_notifier_call_chain(MTK_DISP_EVENT_FOR_TOUCH, &blank);
+    pr_err("[TP]TP CS will chang to spi mode and high\n");
+    usleep_range(5000, 5100);
+    blank = LCD_CTL_TP_LOAD_FW;
+    mtk_disp_notifier_call_chain(MTK_DISP_EVENT_FOR_TOUCH, &blank);
+    pr_info("[TP] start to load fw!\n");
+#endif
+
+	lcm_mdelay(1);
+	gpiod_set_value(ctx->vdd18_gpio, 0);
+	lcm_mdelay(3);
+	gpiod_set_value(ctx->bias_pos, 1);
+	lcm_mdelay(3);
+	gpiod_set_value(ctx->bias_neg, 1);
+
+	pr_info("%s:success\n", __func__);
+	return 0;
+}
+
+static int lcm_panel_poweroff(struct drm_panel *panel)
+{
+	struct lcm *ctx = panel_to_lcm(panel);
+	int blank = 0;
+	int flag_poweroff = 1;
+
+	if (tp_gesture_enable_notifier && tp_gesture_enable_notifier(0)) {
+		is_pd_with_guesture = true;
+		flag_poweroff = 0;
+		pr_err("[TP] tp gesture  is enable,Display not to poweroff\n");
+	} else {
+		is_pd_with_guesture = false;
+		flag_poweroff = 1;
+#if IS_ENABLED(CONFIG_OPLUS_MTK_DRM_GKI_NOTIFY)
+		blank = LCD_CTL_RST_OFF;
+		mtk_disp_notifier_call_chain(MTK_DISP_EVENT_FOR_TOUCH, &blank);
+		pr_info("[TP] tp gesture is disable, Display goto power off , And TP reset will low\n");
+		blank = LCD_CTL_CS_OFF;
+		mtk_disp_notifier_call_chain(MTK_DISP_EVENT_FOR_TOUCH, &blank);
+		pr_info("[TP]TP CS will change to gpio mode and low\n");
+#endif
+	}
+
+	if(flag_poweroff == 1) {
+		lcm_mdelay(12);
+		gpiod_set_value(ctx->reset_gpio, 0);
+		lcm_mdelay(2);
+		gpiod_set_value(ctx->bias_neg, 0);
+		lcm_mdelay(2);
+		gpiod_set_value(ctx->bias_pos, 0);
+		lcm_mdelay(2);
+	}
+
+	pr_info("%s:success\n", __func__);
+	return 0;
+}
+
+static struct LCM_setting_table bl_level[] = {
+	{0x51, 2, {0x00, 0xFF} },
+/*	{REGFLAG_CMD,3, {0x51, 0xi900, 0xFF} },*/
+	{REGFLAG_END_OF_TABLE, 0x00, {} }
+};
+
+static void lcm_gamma_enter (void *dsi, dcs_write_gce cb, void *handle)
+{
+#if 0
+	struct mtk_dsi *dsi_ptr = (struct mtk_dsi *)dsi;
+	struct lcm *ctx = panel_to_lcm(dsi_ptr->panel);
+
+/*	char bl_tb0[] = {0x23, 0xFF, 0x20};
+	char bl_tb1[] = {0x23, 0xFB, 0x01};
+	char bl_tb2[] = {0x23, 0x95, 0x09};
+	char bl_tb3[] = {0x23, 0x96, 0x09};
+	char bl_tb4[] = {0x23, 0xFF, 0x20};
+	char bl_tb5[] = {0x23, 0xFB, 0x01};
+	char bl_tb6[] = {0x29, 0xB0, 0x00, 0x00, 0x00, 0x04, 0x00, 0x0D, 0x00, 0x15, 0x00, 0x1C, 0x00, 0x24, 0x00, 0x2B, 0x00, 0x33};
+	char bl_tb7[] = {0x29, 0xB1, 0x00, 0x39, 0x00, 0x54, 0x00, 0x6B, 0x00, 0x98, 0x00, 0xBF, 0x01, 0x09, 0x01, 0x4E, 0x01, 0x51};
+	char bl_tb8[] = {0x29, 0xB2, 0x01, 0x9B, 0x01, 0xFA, 0x02, 0x36, 0x02, 0x84, 0x02, 0xB9, 0x02, 0xF8, 0x03, 0x0D, 0x03, 0x22};
+	char bl_tb9[] = {0x29, 0xB3, 0x03, 0x39, 0x03, 0x52, 0x03, 0x6F, 0x03, 0x92, 0x03, 0xB6, 0x03, 0xBC, 0x00, 0x00};
+	char bl_tb10[] = {0x29, 0xB4, 0x00, 0x00, 0x00, 0x04, 0x00, 0x0D, 0x00, 0x15, 0x00, 0x1C, 0x00, 0x24, 0x00, 0x2B, 0x00, 0x33};
+	char bl_tb11[] = {0x29, 0xB5, 0x00, 0x39, 0x00, 0x54, 0x00, 0x6B, 0x00, 0x98, 0x00, 0xBF, 0x01, 0x09, 0x01, 0x4E, 0x01, 0x51};
+	char bl_tb12[] = {0x29, 0xB6, 0x01, 0x9B, 0x01, 0xFA, 0x02, 0x36, 0x02, 0x84, 0x02, 0xB9, 0x02, 0xF8, 0x03, 0x0D, 0x03, 0x22};
+	char bl_tb13[] = {0x29, 0xB7, 0x03, 0x39, 0x03, 0x52, 0x03, 0x6F, 0x03, 0x92, 0x03, 0xB6, 0x03, 0xBC, 0x00, 0x00};
+	char bl_tb14[] = {0x29, 0xB8, 0x00, 0x00, 0x00, 0x04, 0x00, 0x0D, 0x00, 0x15, 0x00, 0x1C, 0x00, 0x24, 0x00, 0x2B, 0x00, 0x33};
+	char bl_tb15[] = {0x29, 0xB9, 0x00, 0x39, 0x00, 0x54, 0x00, 0x6B, 0x00, 0x98, 0x00, 0xBF, 0x01, 0x09, 0x01, 0x4E, 0x01, 0x51};
+	char bl_tb16[] = {0x29, 0xBA, 0x01, 0x9B, 0x01, 0xFA, 0x02, 0x36, 0x02, 0x84, 0x02, 0xB9, 0x02, 0xF8, 0x03, 0x0D, 0x03, 0x22};
+	char bl_tb17[] = {0x29, 0xBB, 0x03, 0x39, 0x03, 0x52, 0x03, 0x6F, 0x03, 0x92, 0x03, 0xB6, 0x03, 0xBC, 0x00, 0x00};
+	char bl_tb18[] = {0x23, 0xFF, 0x21};
+	char bl_tb19[] = {0x23, 0xFB, 0x01};
+	char bl_tb20[] = {0x29, 0xB0, 0x00, 0x00, 0x00, 0x04, 0x00, 0x0D, 0x00, 0x15, 0x00, 0x1C, 0x00, 0x24, 0x00, 0x2B, 0x00, 0x33};
+	char bl_tb21[] = {0x29, 0xB1, 0x00, 0x39, 0x00, 0x54, 0x00, 0x6B, 0x00, 0x98, 0x00, 0xBF, 0x01, 0x09, 0x01, 0x4E, 0x01, 0x51};
+	char bl_tb22[] = {0x29, 0xB2, 0x01, 0x9B, 0x01, 0xFA, 0x02, 0x36, 0x02, 0x84, 0x02, 0xB9, 0x02, 0xF8, 0x03, 0x0D, 0x03, 0x22};
+	char bl_tb23[] = {0x29, 0xB3, 0x03, 0x39, 0x03, 0x52, 0x03, 0x6F, 0x03, 0x92, 0x03, 0xB6, 0x03, 0xBC, 0x00, 0x00};
+	char bl_tb24[] = {0x29, 0xB4, 0x00, 0x00, 0x00, 0x04, 0x00, 0x0D, 0x00, 0x15, 0x00, 0x1C, 0x00, 0x24, 0x00, 0x2B, 0x00, 0x33};
+	char bl_tb25[] = {0x29, 0xB5, 0x00, 0x39, 0x00, 0x54, 0x00, 0x6B, 0x00, 0x98, 0x00, 0xBF, 0x01, 0x09, 0x01, 0x4E, 0x01, 0x51};
+	char bl_tb26[] = {0x29, 0xB6, 0x01, 0x9B, 0x01, 0xFA, 0x02, 0x36, 0x02, 0x84, 0x02, 0xB9, 0x02, 0xF8, 0x03, 0x0D, 0x03, 0x22};
+	char bl_tb27[] = {0x29, 0xB7, 0x03, 0x39, 0x03, 0x52, 0x03, 0x6F, 0x03, 0x92, 0x03, 0xB6, 0x03, 0xBC, 0x00, 0x00};
+	char bl_tb28[] = {0x29, 0xB8, 0x00, 0x00, 0x00, 0x04, 0x00, 0x0D, 0x00, 0x15, 0x00, 0x1C, 0x00, 0x24, 0x00, 0x2B, 0x00, 0x33};
+	char bl_tb29[] = {0x29, 0xB9, 0x00, 0x39, 0x00, 0x54, 0x00, 0x6B, 0x00, 0x98, 0x00, 0xBF, 0x01, 0x09, 0x01, 0x4E, 0x01, 0x51};
+	char bl_tb30[] = {0x29, 0xBA, 0x01, 0x9B, 0x01, 0xFA, 0x02, 0x36, 0x02, 0x84, 0x02, 0xB9, 0x02, 0xF8, 0x03, 0x0D, 0x03, 0x22};
+	char bl_tb31[] = {0x29, 0xBB, 0x03, 0x39, 0x03, 0x52, 0x03, 0x6F, 0x03, 0x92, 0x03, 0xB6, 0x03, 0xBC, 0x00, 0x00};
+	char bl_tb32[] = {0x23, 0xFF, 0x10};
+	char bl_tb33[] = {0x23, 0xFB, 0x01};
+
+	cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
+	cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
+	cb(dsi, handle, bl_tb2, ARRAY_SIZE(bl_tb2));
+	cb(dsi, handle, bl_tb3, ARRAY_SIZE(bl_tb3));
+	cb(dsi, handle, bl_tb4, ARRAY_SIZE(bl_tb4));
+	cb(dsi, handle, bl_tb5, ARRAY_SIZE(bl_tb5));
+	cb(dsi, handle, bl_tb6, ARRAY_SIZE(bl_tb6));
+	cb(dsi, handle, bl_tb7, ARRAY_SIZE(bl_tb7));
+	cb(dsi, handle, bl_tb8, ARRAY_SIZE(bl_tb8));
+	cb(dsi, handle, bl_tb9, ARRAY_SIZE(bl_tb9));
+	cb(dsi, handle, bl_tb10, ARRAY_SIZE(bl_tb10));
+	cb(dsi, handle, bl_tb11, ARRAY_SIZE(bl_tb11));
+	cb(dsi, handle, bl_tb12, ARRAY_SIZE(bl_tb12));
+	cb(dsi, handle, bl_tb13, ARRAY_SIZE(bl_tb13));
+	cb(dsi, handle, bl_tb14, ARRAY_SIZE(bl_tb14));
+	cb(dsi, handle, bl_tb15, ARRAY_SIZE(bl_tb15));
+	cb(dsi, handle, bl_tb16, ARRAY_SIZE(bl_tb16));
+	cb(dsi, handle, bl_tb17, ARRAY_SIZE(bl_tb17));
+	cb(dsi, handle, bl_tb18, ARRAY_SIZE(bl_tb18));
+	cb(dsi, handle, bl_tb19, ARRAY_SIZE(bl_tb19));
+	cb(dsi, handle, bl_tb20, ARRAY_SIZE(bl_tb20));
+	cb(dsi, handle, bl_tb21, ARRAY_SIZE(bl_tb21));
+	cb(dsi, handle, bl_tb22, ARRAY_SIZE(bl_tb22));
+	cb(dsi, handle, bl_tb23, ARRAY_SIZE(bl_tb23));
+	cb(dsi, handle, bl_tb24, ARRAY_SIZE(bl_tb24));
+	cb(dsi, handle, bl_tb25, ARRAY_SIZE(bl_tb25));
+	cb(dsi, handle, bl_tb26, ARRAY_SIZE(bl_tb26));
+	cb(dsi, handle, bl_tb27, ARRAY_SIZE(bl_tb27));
+	cb(dsi, handle, bl_tb28, ARRAY_SIZE(bl_tb28));
+	cb(dsi, handle, bl_tb29, ARRAY_SIZE(bl_tb29));
+	cb(dsi, handle, bl_tb30, ARRAY_SIZE(bl_tb30));
+	cb(dsi, handle, bl_tb31, ARRAY_SIZE(bl_tb31));
+	cb(dsi, handle, bl_tb32, ARRAY_SIZE(bl_tb32));
+	cb(dsi, handle, bl_tb33, ARRAY_SIZE(bl_tb33));
+*/
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0xFF, 0x20);
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0xFB, 0x01);
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0x95, 0x09);
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0x96, 0x09);
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0xFF, 0x20);
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0xFB, 0x01);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB0, 0x00, 0x00, 0x00, 0x04, 0x00, 0x0D, 0x00, 0x15, 0x00, 0x1C, 0x00, 0x24, 0x00, 0x2B, 0x00, 0x33);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB1, 0x00, 0x39, 0x00, 0x54, 0x00, 0x6B, 0x00, 0x98, 0x00, 0xBF, 0x01, 0x09, 0x01, 0x4E, 0x01, 0x51);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB2, 0x01, 0x9B, 0x01, 0xFA, 0x02, 0x36, 0x02, 0x84, 0x02, 0xB9, 0x02, 0xF8, 0x03, 0x0D, 0x03, 0x22);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB3, 0x03, 0x39, 0x03, 0x52, 0x03, 0x6F, 0x03, 0x92, 0x03, 0xB6, 0x03, 0xBC, 0x00, 0x00);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB4, 0x00, 0x00, 0x00, 0x04, 0x00, 0x0D, 0x00, 0x15, 0x00, 0x1C, 0x00, 0x24, 0x00, 0x2B, 0x00, 0x33);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB5, 0x00, 0x39, 0x00, 0x54, 0x00, 0x6B, 0x00, 0x98, 0x00, 0xBF, 0x01, 0x09, 0x01, 0x4E, 0x01, 0x51);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB6, 0x01, 0x9B, 0x01, 0xFA, 0x02, 0x36, 0x02, 0x84, 0x02, 0xB9, 0x02, 0xF8, 0x03, 0x0D, 0x03, 0x22);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB7, 0x03, 0x39, 0x03, 0x52, 0x03, 0x6F, 0x03, 0x92, 0x03, 0xB6, 0x03, 0xBC, 0x00, 0x00);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB8, 0x00, 0x00, 0x00, 0x04, 0x00, 0x0D, 0x00, 0x15, 0x00, 0x1C, 0x00, 0x24, 0x00, 0x2B, 0x00, 0x33);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB9, 0x00, 0x39, 0x00, 0x54, 0x00, 0x6B, 0x00, 0x98, 0x00, 0xBF, 0x01, 0x09, 0x01, 0x4E, 0x01, 0x51);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xBA, 0x01, 0x9B, 0x01, 0xFA, 0x02, 0x36, 0x02, 0x84, 0x02, 0xB9, 0x02, 0xF8, 0x03, 0x0D, 0x03, 0x22);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xBB, 0x03, 0x39, 0x03, 0x52, 0x03, 0x6F, 0x03, 0x92, 0x03, 0xB6, 0x03, 0xBC, 0x00, 0x00);
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0xFF, 0x21);
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0xFB, 0x01);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB0, 0x00, 0x00, 0x00, 0x04, 0x00, 0x0D, 0x00, 0x15, 0x00, 0x1C, 0x00, 0x24, 0x00, 0x2B, 0x00, 0x33);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB1, 0x00, 0x39, 0x00, 0x54, 0x00, 0x6B, 0x00, 0x98, 0x00, 0xBF, 0x01, 0x09, 0x01, 0x4E, 0x01, 0x51);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB2, 0x01, 0x9B, 0x01, 0xFA, 0x02, 0x36, 0x02, 0x84, 0x02, 0xB9, 0x02, 0xF8, 0x03, 0x0D, 0x03, 0x22);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB3, 0x03, 0x39, 0x03, 0x52, 0x03, 0x6F, 0x03, 0x92, 0x03, 0xB6, 0x03, 0xBC, 0x00, 0x00);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB4, 0x00, 0x00, 0x00, 0x04, 0x00, 0x0D, 0x00, 0x15, 0x00, 0x1C, 0x00, 0x24, 0x00, 0x2B, 0x00, 0x33);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB5, 0x00, 0x39, 0x00, 0x54, 0x00, 0x6B, 0x00, 0x98, 0x00, 0xBF, 0x01, 0x09, 0x01, 0x4E, 0x01, 0x51);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB6, 0x01, 0x9B, 0x01, 0xFA, 0x02, 0x36, 0x02, 0x84, 0x02, 0xB9, 0x02, 0xF8, 0x03, 0x0D, 0x03, 0x22);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB7, 0x03, 0x39, 0x03, 0x52, 0x03, 0x6F, 0x03, 0x92, 0x03, 0xB6, 0x03, 0xBC, 0x00, 0x00);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB8, 0x00, 0x00, 0x00, 0x04, 0x00, 0x0D, 0x00, 0x15, 0x00, 0x1C, 0x00, 0x24, 0x00, 0x2B, 0x00, 0x33);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB9, 0x00, 0x39, 0x00, 0x54, 0x00, 0x6B, 0x00, 0x98, 0x00, 0xBF, 0x01, 0x09, 0x01, 0x4E, 0x01, 0x51);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xBA, 0x01, 0x9B, 0x01, 0xFA, 0x02, 0x36, 0x02, 0x84, 0x02, 0xB9, 0x02, 0xF8, 0x03, 0x0D, 0x03, 0x22);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xBB, 0x03, 0x39, 0x03, 0x52, 0x03, 0x6F, 0x03, 0x92, 0x03, 0xB6, 0x03, 0xBC, 0x00, 0x00);
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0xFF, 0x10);
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0xFB, 0x01);
+#endif
+}
+
+static void lcm_gamma_exit (void *dsi, dcs_write_gce cb, void *handle)
+{
+#if 0
+	struct mtk_dsi *dsi_ptr = (struct mtk_dsi *)dsi;
+	struct lcm *ctx = panel_to_lcm(dsi_ptr->panel);
+/*	char bl_tb0[] = {0x23, 0xFF, 0x20};
+	char bl_tb1[] = {0x23, 0xFB, 0x01};
+	char bl_tb2[] = {0x23, 0x95, 0xD1};
+	char bl_tb3[] = {0x23, 0x96, 0xD1};
+	char bl_tb4[] = {0x23, 0xFF, 0x20};
+	char bl_tb5[] = {0x23, 0xFB, 0x01};
+	char bl_tb6[] = {0x29, 0xB0, 0x00, 0x00, 0x00, 0x1C, 0x00, 0x47, 0x00, 0x6A, 0x00, 0x86, 0x00, 0x9E, 0x00, 0xB4, 0x00, 0xC7};
+	char bl_tb7[] = {0x29, 0xB1, 0x00, 0xD8, 0x01, 0x12, 0x01, 0x3A, 0x01, 0x7E, 0x01, 0xAC, 0x01, 0xF8, 0x02, 0x30, 0x02, 0x32};
+	char bl_tb8[] = {0x29, 0xB2, 0x02, 0x68, 0x02, 0xA5, 0x02, 0xCD, 0x02, 0xFE, 0x03, 0x21, 0x03, 0x48, 0x03, 0x57, 0x03, 0x65};
+	char bl_tb9[] = {0x29, 0xB3, 0x03, 0x76, 0x03, 0x89, 0x03, 0x9E, 0x03, 0xAF, 0x03, 0xD1, 0x03, 0xD8, 0x00, 0x00};
+	char bl_tb10[] ={0x29, 0xB4, 0x00, 0x00, 0x00, 0x1C, 0x00, 0x47, 0x00, 0x6A, 0x00, 0x86, 0x00, 0x9E, 0x00, 0xB4, 0x00, 0xC7};
+	char bl_tb11[] ={0x29, 0xB5, 0x00, 0xD8, 0x01, 0x12, 0x01, 0x3A, 0x01, 0x7E, 0x01, 0xAC, 0x01, 0xF8, 0x02, 0x30, 0x02, 0x32};
+	char bl_tb12[] ={0x29, 0xB6, 0x02, 0x68, 0x02, 0xA5, 0x02, 0xCD, 0x02, 0xFE, 0x03, 0x21, 0x03, 0x48, 0x03, 0x57, 0x03, 0x65};
+	char bl_tb13[] ={0x29, 0xB7, 0x03, 0x76, 0x03, 0x89, 0x03, 0x9E, 0x03, 0xAF, 0x03, 0xD1, 0x03, 0xD8, 0x00, 0x00};
+	char bl_tb14[] ={0x29, 0xB8, 0x00, 0x00, 0x00, 0x1C, 0x00, 0x47, 0x00, 0x6A, 0x00, 0x86, 0x00, 0x9E, 0x00, 0xB4, 0x00, 0xC7};
+	char bl_tb15[] ={0x29, 0xB9, 0x00, 0xD8, 0x01, 0x12, 0x01, 0x3A, 0x01, 0x7E, 0x01, 0xAC, 0x01, 0xF8, 0x02, 0x30, 0x02, 0x32};
+	char bl_tb16[] ={0x29, 0xBA, 0x02, 0x68, 0x02, 0xA5, 0x02, 0xCD, 0x02, 0xFE, 0x03, 0x21, 0x03, 0x48, 0x03, 0x57, 0x03, 0x65};
+	char bl_tb17[] ={0x29, 0xBB, 0x03, 0x76, 0x03, 0x89, 0x03, 0x9E, 0x03, 0xAF, 0x03, 0xD1, 0x03, 0xD8, 0x00, 0x00};
+	char bl_tb18[] ={0x23, 0xFF, 0x21};
+	char bl_tb19[] ={0x23, 0xFB, 0x01};
+	char bl_tb20[] ={0x29, 0xB0, 0x00, 0x00, 0x00, 0x1C, 0x00, 0x47, 0x00, 0x6A, 0x00, 0x86, 0x00, 0x9E, 0x00, 0xB4, 0x00, 0xC7};
+	char bl_tb21[] ={0x29, 0xB1, 0x00, 0xD8, 0x01, 0x12, 0x01, 0x3A, 0x01, 0x7E, 0x01, 0xAC, 0x01, 0xF8, 0x02, 0x30, 0x02, 0x32};
+	char bl_tb22[] ={0x29, 0xB2, 0x02, 0x68, 0x02, 0xA5, 0x02, 0xCD, 0x02, 0xFE, 0x03, 0x21, 0x03, 0x48, 0x03, 0x57, 0x03, 0x65};
+	char bl_tb23[] ={0x29, 0xB3, 0x03, 0x76, 0x03, 0x89, 0x03, 0x9E, 0x03, 0xAF, 0x03, 0xD1, 0x03, 0xD8, 0x00, 0x00};
+	char bl_tb24[] ={0x29, 0xB4, 0x00, 0x00, 0x00, 0x1C, 0x00, 0x47, 0x00, 0x6A, 0x00, 0x86, 0x00, 0x9E, 0x00, 0xB4, 0x00, 0xC7};
+	char bl_tb25[] ={0x29, 0xB5, 0x00, 0xD8, 0x01, 0x12, 0x01, 0x3A, 0x01, 0x7E, 0x01, 0xAC, 0x01, 0xF8, 0x02, 0x30, 0x02, 0x32};
+	char bl_tb26[] ={0x29, 0xB6, 0x02, 0x68, 0x02, 0xA5, 0x02, 0xCD, 0x02, 0xFE, 0x03, 0x21, 0x03, 0x48, 0x03, 0x57, 0x03, 0x65};
+	char bl_tb27[] ={0x29, 0xB7, 0x03, 0x76, 0x03, 0x89, 0x03, 0x9E, 0x03, 0xAF, 0x03, 0xD1, 0x03, 0xD8, 0x00, 0x00};
+	char bl_tb28[] ={0x29, 0xB8, 0x00, 0x00, 0x00, 0x1C, 0x00, 0x47, 0x00, 0x6A, 0x00, 0x86, 0x00, 0x9E, 0x00, 0xB4, 0x00, 0xC7};
+	char bl_tb29[] ={0x29, 0xB9, 0x00, 0xD8, 0x01, 0x12, 0x01, 0x3A, 0x01, 0x7E, 0x01, 0xAC, 0x01, 0xF8, 0x02, 0x30, 0x02, 0x32};
+	char bl_tb30[] ={0x29, 0xBA, 0x02, 0x68, 0x02, 0xA5, 0x02, 0xCD, 0x02, 0xFE, 0x03, 0x21, 0x03, 0x48, 0x03, 0x57, 0x03, 0x65};
+	char bl_tb31[] ={0x29, 0xBB, 0x03, 0x76, 0x03, 0x89, 0x03, 0x9E, 0x03, 0xAF, 0x03, 0xD1, 0x03, 0xD8, 0x00, 0x00};
+	char bl_tb32[] ={0x23, 0xFF, 0x10};
+	char bl_tb33[] ={0x23, 0xFB, 0x01};
+
+
+	cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
+	cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
+	cb(dsi, handle, bl_tb2, ARRAY_SIZE(bl_tb2));
+	cb(dsi, handle, bl_tb3, ARRAY_SIZE(bl_tb3));
+	cb(dsi, handle, bl_tb4, ARRAY_SIZE(bl_tb4));
+	cb(dsi, handle, bl_tb5, ARRAY_SIZE(bl_tb5));
+	cb(dsi, handle, bl_tb6, ARRAY_SIZE(bl_tb6));
+	cb(dsi, handle, bl_tb7, ARRAY_SIZE(bl_tb7));
+	cb(dsi, handle, bl_tb8, ARRAY_SIZE(bl_tb8));
+	cb(dsi, handle, bl_tb9, ARRAY_SIZE(bl_tb9));
+	cb(dsi, handle, bl_tb10, ARRAY_SIZE(bl_tb10));
+	cb(dsi, handle, bl_tb11, ARRAY_SIZE(bl_tb11));
+	cb(dsi, handle, bl_tb12, ARRAY_SIZE(bl_tb12));
+	cb(dsi, handle, bl_tb13, ARRAY_SIZE(bl_tb13));
+	cb(dsi, handle, bl_tb14, ARRAY_SIZE(bl_tb14));
+	cb(dsi, handle, bl_tb15, ARRAY_SIZE(bl_tb15));
+	cb(dsi, handle, bl_tb16, ARRAY_SIZE(bl_tb16));
+	cb(dsi, handle, bl_tb17, ARRAY_SIZE(bl_tb17));
+	cb(dsi, handle, bl_tb18, ARRAY_SIZE(bl_tb18));
+	cb(dsi, handle, bl_tb19, ARRAY_SIZE(bl_tb19));
+	cb(dsi, handle, bl_tb20, ARRAY_SIZE(bl_tb20));
+	cb(dsi, handle, bl_tb21, ARRAY_SIZE(bl_tb21));
+	cb(dsi, handle, bl_tb22, ARRAY_SIZE(bl_tb22));
+	cb(dsi, handle, bl_tb23, ARRAY_SIZE(bl_tb23));
+	cb(dsi, handle, bl_tb24, ARRAY_SIZE(bl_tb24));
+	cb(dsi, handle, bl_tb25, ARRAY_SIZE(bl_tb25));
+	cb(dsi, handle, bl_tb26, ARRAY_SIZE(bl_tb26));
+	cb(dsi, handle, bl_tb27, ARRAY_SIZE(bl_tb27));
+	cb(dsi, handle, bl_tb28, ARRAY_SIZE(bl_tb28));
+	cb(dsi, handle, bl_tb29, ARRAY_SIZE(bl_tb29));
+	cb(dsi, handle, bl_tb30, ARRAY_SIZE(bl_tb30));
+	cb(dsi, handle, bl_tb31, ARRAY_SIZE(bl_tb31));
+	cb(dsi, handle, bl_tb32, ARRAY_SIZE(bl_tb32));
+	cb(dsi, handle, bl_tb33, ARRAY_SIZE(bl_tb33));*/
+
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0xFF, 0x20);
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0xFB, 0x01);
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0x95, 0xD1);
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0x96, 0xD1);
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0xFF, 0x20);
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0xFB, 0x01);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB0, 0x00, 0x00, 0x00, 0x1C, 0x00, 0x47, 0x00, 0x6A, 0x00, 0x86, 0x00, 0x9E, 0x00, 0xB4, 0x00, 0xC7);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB1, 0x00, 0xD8, 0x01, 0x12, 0x01, 0x3A, 0x01, 0x7E, 0x01, 0xAC, 0x01, 0xF8, 0x02, 0x30, 0x02, 0x32);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB2, 0x02, 0x68, 0x02, 0xA5, 0x02, 0xCD, 0x02, 0xFE, 0x03, 0x21, 0x03, 0x48, 0x03, 0x57, 0x03, 0x65);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB3, 0x03, 0x76, 0x03, 0x89, 0x03, 0x9E, 0x03, 0xAF, 0x03, 0xD1, 0x03, 0xD8, 0x00, 0x00);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB4, 0x00, 0x00, 0x00, 0x1C, 0x00, 0x47, 0x00, 0x6A, 0x00, 0x86, 0x00, 0x9E, 0x00, 0xB4, 0x00, 0xC7);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB5, 0x00, 0xD8, 0x01, 0x12, 0x01, 0x3A, 0x01, 0x7E, 0x01, 0xAC, 0x01, 0xF8, 0x02, 0x30, 0x02, 0x32);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB6, 0x02, 0x68, 0x02, 0xA5, 0x02, 0xCD, 0x02, 0xFE, 0x03, 0x21, 0x03, 0x48, 0x03, 0x57, 0x03, 0x65);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB7, 0x03, 0x76, 0x03, 0x89, 0x03, 0x9E, 0x03, 0xAF, 0x03, 0xD1, 0x03, 0xD8, 0x00, 0x00);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB8, 0x00, 0x00, 0x00, 0x1C, 0x00, 0x47, 0x00, 0x6A, 0x00, 0x86, 0x00, 0x9E, 0x00, 0xB4, 0x00, 0xC7);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB9, 0x00, 0xD8, 0x01, 0x12, 0x01, 0x3A, 0x01, 0x7E, 0x01, 0xAC, 0x01, 0xF8, 0x02, 0x30, 0x02, 0x32);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xBA, 0x02, 0x68, 0x02, 0xA5, 0x02, 0xCD, 0x02, 0xFE, 0x03, 0x21, 0x03, 0x48, 0x03, 0x57, 0x03, 0x65);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xBB, 0x03, 0x76, 0x03, 0x89, 0x03, 0x9E, 0x03, 0xAF, 0x03, 0xD1, 0x03, 0xD8, 0x00, 0x00);
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0xFF, 0x21);
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0xFB, 0x01);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB0, 0x00, 0x00, 0x00, 0x1C, 0x00, 0x47, 0x00, 0x6A, 0x00, 0x86, 0x00, 0x9E, 0x00, 0xB4, 0x00, 0xC7);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB1, 0x00, 0xD8, 0x01, 0x12, 0x01, 0x3A, 0x01, 0x7E, 0x01, 0xAC, 0x01, 0xF8, 0x02, 0x30, 0x02, 0x32);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB2, 0x02, 0x68, 0x02, 0xA5, 0x02, 0xCD, 0x02, 0xFE, 0x03, 0x21, 0x03, 0x48, 0x03, 0x57, 0x03, 0x65);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB3, 0x03, 0x76, 0x03, 0x89, 0x03, 0x9E, 0x03, 0xAF, 0x03, 0xD1, 0x03, 0xD8, 0x00, 0x00);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB4, 0x00, 0x00, 0x00, 0x1C, 0x00, 0x47, 0x00, 0x6A, 0x00, 0x86, 0x00, 0x9E, 0x00, 0xB4, 0x00, 0xC7);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB5, 0x00, 0xD8, 0x01, 0x12, 0x01, 0x3A, 0x01, 0x7E, 0x01, 0xAC, 0x01, 0xF8, 0x02, 0x30, 0x02, 0x32);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB6, 0x02, 0x68, 0x02, 0xA5, 0x02, 0xCD, 0x02, 0xFE, 0x03, 0x21, 0x03, 0x48, 0x03, 0x57, 0x03, 0x65);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB7, 0x03, 0x76, 0x03, 0x89, 0x03, 0x9E, 0x03, 0xAF, 0x03, 0xD1, 0x03, 0xD8, 0x00, 0x00);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB8, 0x00, 0x00, 0x00, 0x1C, 0x00, 0x47, 0x00, 0x6A, 0x00, 0x86, 0x00, 0x9E, 0x00, 0xB4, 0x00, 0xC7);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xB9, 0x00, 0xD8, 0x01, 0x12, 0x01, 0x3A, 0x01, 0x7E, 0x01, 0xAC, 0x01, 0xF8, 0x02, 0x30, 0x02, 0x32);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xBA, 0x02, 0x68, 0x02, 0xA5, 0x02, 0xCD, 0x02, 0xFE, 0x03, 0x21, 0x03, 0x48, 0x03, 0x57, 0x03, 0x65);
+	lcm_dcs_write_seq_static(ctx,/*0x29,*/ 0xBB, 0x03, 0x76, 0x03, 0x89, 0x03, 0x9E, 0x03, 0xAF, 0x03, 0xD1, 0x03, 0xD8, 0x00, 0x00);
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0xFF, 0x10);
+	lcm_dcs_write_seq_static(ctx,/*0x23,*/ 0xFB, 0x01);
+#endif
+}
+
+static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb,
+	void *handle, unsigned int level)
+{
+
+	unsigned int mapped_level = 0;
+	char bl_tb0[] = {0x51, 0x07, 0xFF};
+
+	if (!dsi || !cb) {
+		return -EINVAL;
+	}
+
+	if (level == 1) {
+		pr_info("enter aod\n");
+		return 0;
+	}
+
+    pr_err("backlight =%d Gamma flag %d lcm_setbacklight_cmdq \n",level, g_GammaFlag);
+
+	if (level > 4095)
+		level = 4095;
+
+	if (!cb)
+		return -1;
+
+	if (level == 1) {
+		pr_info("enter aod!!!\n");
+		return 0;
+	}
+	pr_err("backlight =%d Gamma flag %d lcm_setbacklight_cmdq \n",level, g_GammaFlag);
+
+    if(level == 13 && g_GammaFlag == 1){
+        g_GammaFlag = 0;
+        pr_err("backlight is 13 enter gamma!\n");
+        lcm_gamma_enter(dsi, cb, handle);
+    }else if(level > 13 && g_GammaFlag == 0){
+        g_GammaFlag = 1;
+        pr_err("backlight > 13 exit gamma!\n");
+        lcm_gamma_exit(dsi, cb, handle);
+	}
+	
+	if(level == 0)
+	{
+		pr_info("Set Dimming off \n");
+		char bl_tb0[] = {0xFF, 0x10};
+		char bl_tb1[] = {0xFB, 0x01};
+		char bl_tb2[] = {0x53, 0x24};		
+		cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
+		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
+		cb(dsi, handle, bl_tb2, ARRAY_SIZE(bl_tb2));
+	}
+
+	bl_tb0[1] = level >> 8;
+	bl_tb0[2] = level & 0xFF;
+	mapped_level = level;
+	if (mapped_level > 1) {
+		//lcdinfo_notify(LCM_BRIGHTNESS_TYPE, &mapped_level);
+	}
+
+        cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
+
+	oplus_display_brightness = level;
+    pr_info("backlight=%d,paralist[1]=0x%x,paralist[2]=0x%x\n", level, bl_level[1].para_list[1], bl_level[1].para_list[2]);
+	return 0;
+
+}
+
+static struct mtk_panel_params ext_params = {
+	.pll_clk = 360,
+	.cust_esd_check = 1,
+	.esd_check_enable = 1,
+	.data_rate=1107,
+        .dyn = {
+                .switch_en = 1,
+                .data_rate = 1086,
+        },
+	.lcm_esd_check_table[0] = {
+		.cmd = 0x0a,
+		.count = 1,
+		.para_list[0] = 0x9c,
+	},
+};
+
+static void lcm_cabc_mode_switch(void *dsi, dcs_write_gce cb,
+		void *handle, unsigned int mode)
+{
+	//struct mtk_dsi *dsi_ptr = (struct mtk_dsi *)dsi;
+	//struct lcm *ctx = panel_to_lcm(dsi_ptr->panel);
+
+	pr_err("%s cabc = %d\n", __func__, mode);
+	if (mode == 3) {
+		mode = 2;
+		pr_info("[lcm] cabc set level_2 %d\n", mode);
+	}
+
+	char bl_tb0[] = {0xFF, 0x10};
+	char bl_tb1[] = {0xFB, 0x01};
+	char bl_tb2[] = {0x53, 0x2C};
+
+	if (mode == 0) {
+		char bl_tb3[] = {0x55, 0x00};
+		cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
+		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
+		cb(dsi, handle, bl_tb2, ARRAY_SIZE(bl_tb2));
+		cb(dsi, handle, bl_tb3, ARRAY_SIZE(bl_tb3));
+	} else if (mode == 1) {
+		char bl_tb3[] = {0x55, 0x01};
+		cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
+		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
+		cb(dsi, handle, bl_tb2, ARRAY_SIZE(bl_tb2));
+		cb(dsi, handle, bl_tb3, ARRAY_SIZE(bl_tb3));
+	} else if (mode == 2) {
+		char bl_tb3[] = {0x55, 0x02};
+		cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
+		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
+		cb(dsi, handle, bl_tb2, ARRAY_SIZE(bl_tb2));
+		cb(dsi, handle, bl_tb3, ARRAY_SIZE(bl_tb3));
+	} else {
+		pr_info("[lcm]  cabc_mode %d is not support\n", mode);
+	}
+
+	cabc_mode = mode;
+
+}
+
+static struct mtk_panel_funcs ext_funcs = {
+	.set_backlight_cmdq = lcm_setbacklight_cmdq,
+	.reset = panel_ext_reset,
+	.panel_poweron = lcm_panel_poweron,
+	.panel_poweroff = lcm_panel_poweroff,
+	.ata_check = panel_ata_check,
+	.cabc_switch = lcm_cabc_mode_switch,
+};
+
+
+static int lcm_get_modes(struct drm_panel *panel, struct drm_connector *connector)
+{
+	struct drm_display_mode *mode;
+
+	mode = drm_mode_duplicate(connector->dev, &default_mode);
+	if (!mode) {
+		dev_info(connector->dev->dev, "failed to add mode %ux%ux@%u\n",
+			default_mode.hdisplay, default_mode.vdisplay,
+			drm_mode_vrefresh(&default_mode));
+		return -ENOMEM;
+	}
+
+	drm_mode_set_name(mode);
+	mode->type = DRM_MODE_TYPE_DRIVER | DRM_MODE_TYPE_PREFERRED;
+	drm_mode_probed_add(connector, mode);
+
+	connector->display_info.width_mm = 75;
+	connector->display_info.height_mm = 151;
+
+	return 1;
+}
+
+static const struct drm_panel_funcs lcm_drm_funcs = {
+	.disable = lcm_disable,
+	.unprepare = lcm_unprepare,
+	.prepare = lcm_prepare,
+	.enable = lcm_enable,
+	.get_modes = lcm_get_modes,
+};
+
+
+static int lcm_probe(struct mipi_dsi_device *dsi)
+{
+	struct device *dev = &dsi->dev;
+	struct device_node *dsi_node, *remote_node = NULL, *endpoint = NULL;
+	struct lcm *ctx;
+	struct device_node *backlight;
+	int ret;
+
+	pr_info("[LCM] %s+ ac112_p_7_a0009_fhd_dsi_vdo_lcm_drv Start\n", __func__);
+
+	dsi_node = of_get_parent(dev->of_node);
+	if (dsi_node) {
+		endpoint = of_graph_get_next_endpoint(dsi_node, NULL);
+
+		if (endpoint) {
+			remote_node = of_graph_get_remote_port_parent(endpoint);
+			if (!remote_node) {
+				pr_err("No panel connected,skip probe lcm\n");
+				return -ENODEV;
+			}
+			pr_err("device node name:%s\n", remote_node->name);
+		}
+	}
+	if (remote_node != dev->of_node) {
+		pr_err("skip probe due to not current lcm\n");
+		return -ENODEV;
+	}
+
+	ctx = devm_kzalloc(dev, sizeof(struct lcm), GFP_KERNEL);
+	if (!ctx)
+		return -ENOMEM;
+
+	mipi_dsi_set_drvdata(dsi, ctx);
+
+	ctx->dev = dev;
+	dsi->lanes = 4;
+	dsi->format = MIPI_DSI_FMT_RGB888;
+	dsi->mode_flags = MIPI_DSI_MODE_VIDEO | MIPI_DSI_MODE_VIDEO_SYNC_PULSE
+			 | MIPI_DSI_MODE_LPM | MIPI_DSI_MODE_NO_EOT_PACKET
+			 | MIPI_DSI_CLOCK_NON_CONTINUOUS;
+
+	backlight = of_parse_phandle(dev->of_node, "backlight", 0);
+	if (backlight) {
+		ctx->backlight = of_find_backlight_by_node(backlight);
+		of_node_put(backlight);
+
+		if (!ctx->backlight) {
+			pr_err("skip probe due to lcm backlight null\n");
+			return -EPROBE_DEFER;
+		}
+	}
+
+	if(of_property_read_bool(dev->of_node, "vdd18_default_low"))
+		ctx->vdd18_gpio = devm_gpiod_get(dev, "vdd18", GPIOD_OUT_LOW);
+	else
+		ctx->vdd18_gpio = devm_gpiod_get(dev, "vdd18", GPIOD_OUT_HIGH);
+
+	if (IS_ERR(ctx->vdd18_gpio)) {
+		dev_err(ctx->dev, "%s: cannot get vdd18_gpio %ld\n",
+			__func__, PTR_ERR(ctx->vdd18_gpio));
+		return PTR_ERR(ctx->vdd18_gpio);
+	}
+	devm_gpiod_put(dev, ctx->vdd18_gpio);
+
+	ctx->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
+	if (IS_ERR_OR_NULL(ctx->reset_gpio)) {
+		pr_err("cannot get reset-gpios %ld\n",
+			 PTR_ERR(ctx->reset_gpio));
+		return PTR_ERR(ctx->reset_gpio);
+	}
+	devm_gpiod_put(dev, ctx->reset_gpio);
+
+  	ctx->bias_pos = devm_gpiod_get_index(dev, "bias", 0, GPIOD_OUT_HIGH);
+  	if (IS_ERR(ctx->bias_pos)) {
+  		dev_err(dev, "%s: cannot get bias-pos 0 %ld\n",
+  			__func__, PTR_ERR(ctx->bias_pos));
+  		return PTR_ERR(ctx->bias_pos);
+  	}
+  	devm_gpiod_put(dev, ctx->bias_pos);
+
+  	ctx->bias_neg = devm_gpiod_get_index(dev, "bias", 1, GPIOD_OUT_HIGH);
+  	if (IS_ERR(ctx->bias_neg)) {
+  		dev_err(dev, "%s: cannot get bias-neg 1 %ld\n",
+  			__func__, PTR_ERR(ctx->bias_neg));
+  		return PTR_ERR(ctx->bias_neg);
+  	}
+ 	devm_gpiod_put(dev, ctx->bias_neg);
+
+	//ctx->prepared = true;
+	//ctx->enabled = true;
+
+	ctx->panel.dev = dev;
+	ctx->panel.funcs = &lcm_drm_funcs;
+
+	drm_panel_init(&ctx->panel, dev, &lcm_drm_funcs, DRM_MODE_CONNECTOR_DSI);
+
+	drm_panel_add(&ctx->panel);
+
+	ret = mipi_dsi_attach(dsi);
+	if (ret < 0)
+		drm_panel_remove(&ctx->panel);
+
+#if defined(CONFIG_MTK_PANEL_EXT)
+	ret = mtk_panel_ext_create(dev, &ext_params, &ext_funcs, &ctx->panel);
+	if (ret < 0)
+		return ret;
+
+#endif
+	register_device_proc("lcd", "A0009", "P_7");
+	oplus_max_normal_brightness = 4095;
+
+	pr_info("ac112_p_7_a0009_fhd_dsi_vdo_lcm_drv End.\n");
+
+	return ret;
+}
+
+
+static void lcm_remove(struct mipi_dsi_device *dsi)
+{
+	struct lcm *ctx = mipi_dsi_get_drvdata(dsi);
+
+	mipi_dsi_detach(dsi);
+	drm_panel_remove(&ctx->panel);
+}
+
+static const struct of_device_id lcm_of_match[] = {
+	{ .compatible = "ac112,p_7,a0009,vdo", },
+	{ }
+};
+
+MODULE_DEVICE_TABLE(of, lcm_of_match);
+
+static struct mipi_dsi_driver lcm_driver = {
+	.probe = lcm_probe,
+	.remove = lcm_remove,
+	.driver = {
+		.name = "ac112_p_7_a0009_fhd_dsi_vdo",
+		.owner = THIS_MODULE,
+		.of_match_table = lcm_of_match,
+	},
+};
+
+
+static int __init lcm_drv_init(void)
+{
+	int ret = 0;
+
+	pr_notice("%s+\n", __func__);
+	mtk_panel_lock();
+	ret = mipi_dsi_driver_register(&lcm_driver);
+	if (ret < 0)
+		pr_notice("%s, Failed to register lcm driver: %d\n", __func__, ret);
+
+	mtk_panel_unlock();
+	pr_notice("%s- ret:%d\n", __func__, ret);
+	return 0;
+}
+
+static void __exit lcm_drv_exit(void)
+{
+	pr_notice("%s+\n", __func__);
+	mtk_panel_lock();
+	mipi_dsi_driver_unregister(&lcm_driver);
+	mtk_panel_unlock();
+	pr_notice("%s-\n", __func__);
+}
+
+module_init(lcm_drv_init);
+module_exit(lcm_drv_exit);
+
+MODULE_AUTHOR("Adigarla Bhargav");
+MODULE_DESCRIPTION("ac112_p_7_a0009 panel drm driver");
+MODULE_LICENSE("GPL v2");
+
