@@ -576,6 +576,8 @@ static struct mtk_panel_params ext_params = {//60hz
 		.count = 1,
 		.para_list[0] = 0x9C,
 	},
+	.oplus_esd_sleep_status = true,
+	.oplus_esd_sleep_ms = 5000,
 #if 0
 	.lcm_esd_check_table[1] = {
 		.cmd = 0xAB,
@@ -583,10 +585,9 @@ static struct mtk_panel_params ext_params = {//60hz
 		.para_list[0] = 0x00,
 		.para_list[1] = 0x00,
 	},
-
+#endif
 	.physical_width_um = PHYSICAL_WIDTH,
 	.physical_height_um = PHYSICAL_HEIGHT,
-#endif
 	.dsc_params = {
 		.bdg_dsc_enable = 1,
 		.ver                   =  DSC_VER,
@@ -666,6 +667,8 @@ static struct mtk_panel_params ext_params_mode_1 = {//90hz
 		.para_list[0] = 0x00,
 		.para_list[1] = 0x00,
 	},
+	.oplus_esd_sleep_status = true,
+	.oplus_esd_sleep_ms = 5000,
 	.physical_width_um = PHYSICAL_WIDTH,
 	.physical_height_um = PHYSICAL_HEIGHT,
 	.dsc_params = {
@@ -745,6 +748,8 @@ static struct mtk_panel_params ext_params_mode_2 = {//45hz
 		.para_list[0] = 0x00,
 		.para_list[1] = 0x00,
 	},
+	.oplus_esd_sleep_status = true,
+	.oplus_esd_sleep_ms = 5000,
 	.physical_width_um = PHYSICAL_WIDTH,
 	.physical_height_um = PHYSICAL_HEIGHT,
 	.dsc_params = {
@@ -1431,7 +1436,7 @@ static int lcm_get_modes(struct drm_panel *panel,
 	drm_mode_probed_add(connector, mode_4);
 #endif
 	connector->display_info.width_mm = 70;
-	connector->display_info.height_mm = 155;
+	connector->display_info.height_mm = 156;
 
 	return 1;
 }

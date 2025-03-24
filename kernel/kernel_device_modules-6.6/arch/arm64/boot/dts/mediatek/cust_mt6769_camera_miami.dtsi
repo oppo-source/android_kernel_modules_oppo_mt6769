@@ -239,7 +239,7 @@
 	status = "okay";
 
 };
-/*
+
 &flashlights_miami {
         pinctrl-names = "default",
                 "flash_light_en_pin_0",
@@ -297,5 +297,4 @@
                 };
         };
 };
-*/
 /* CAMERA GPIO end */

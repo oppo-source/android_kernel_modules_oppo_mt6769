@@ -73,6 +73,7 @@ static struct mtk_ddp_comp *default_comp1;
 struct mtk_drm_crtc *global_r2y_mtk_crtc[2] = {NULL, NULL};
 #endif
 
+static bool need_offset;
 static int disp_ccorr_write_coef_reg(struct mtk_ddp_comp *comp,
 	struct cmdq_pkt *handle, int lock);
 
@@ -178,9 +179,21 @@ static int disp_ccorr_write_coef_reg(struct mtk_ddp_comp *comp,
 		multiply_matrix->coef);
 	ccorr = multiply_matrix;
 
-	ccorr->offset[0] = primary_data->disp_ccorr_coef->offset[0];
-	ccorr->offset[1] = primary_data->disp_ccorr_coef->offset[1];
-	ccorr->offset[2] = primary_data->disp_ccorr_coef->offset[2];
+	if (((ccorr_data->g_prim_ccorr_force_linear && (ccorr_data->is_linear&0x01))) &&
+			(primary_data->disp_ccorr_number == 1) &&
+			(need_offset || primary_data->disp_ccorr_temp_linear == 1)) {
+		primary_data->disp_ccorr_without_gamma = primary_data->disp_ccorr_temp_linear;
+		ccorr->offset[0] = primary_data->disp_ccorr_coef->offset_temp[0];
+		ccorr->offset[1] = primary_data->disp_ccorr_coef->offset_temp[1];
+		ccorr->offset[2] = primary_data->disp_ccorr_coef->offset_temp[2];
+	} else {
+		ccorr->offset[0] = primary_data->disp_ccorr_coef->offset[0];
+		ccorr->offset[1] = primary_data->disp_ccorr_coef->offset[1];
+		ccorr->offset[2] = primary_data->disp_ccorr_coef->offset[2];
+	}
+	DDPINFO("ccorr color matrix offset {%d, %d, %d},ccorr_without_gamma:%d\n",
+		ccorr->offset[0], ccorr->offset[1], ccorr->offset[2],
+		primary_data->disp_ccorr_without_gamma);
 
 	// For 6885 need to left shift one bit
 	if (priv->data->mmsys_id != MMSYS_MT6768 &&
@@ -351,16 +364,22 @@ int disp_ccorr_set_color_matrix(struct mtk_ddp_comp *comp, struct cmdq_pkt *hand
 	struct mtk_disp_ccorr *ccorr_data = comp_to_ccorr(comp);
 	struct mtk_disp_ccorr_primary *primary_data = ccorr_data->primary_data;
 	struct DRM_DISP_CCORR_COEF_T *ccorr;
+	#ifdef OPLUS_FEATURE_DISPLAY
+	struct mtk_drm_crtc *mtk_crtc = comp->mtk_crtc;
+	#endif /* OPLUS_FEATURE_DISPLAY */
 
 	if (handle == NULL) {
 		DDPPR_ERR("%s: cmdq can not be NULL\n", __func__);
 		return -EFAULT;
 	}
 
-	if (ccorr_data->is_linear != linear) {
-		DDPMSG("%s: hwc_linear = %d, comp_linear =%d, comp:%s\n", __func__,
-			linear, ccorr_data->is_linear, mtk_dump_comp_str(comp));
-		return 2;
+	if (!(((ccorr_data->g_prim_ccorr_force_linear && (ccorr_data->is_linear&0x01))) &&
+		(primary_data->disp_ccorr_number == 1))) {
+		if ((!ccorr_data->g_prim_ccorr_force_linear)&& ccorr_data->is_linear != linear) {
+			DDPMSG("%s: hwc_linear = %d, comp_linear =%d, comp:%s\n", __func__,
+				linear, ccorr_data->is_linear, mtk_dump_comp_str(comp));
+			return 2;
+		}
 	}
 
 	if (primary_data->disp_ccorr_coef == NULL) {
@@ -370,13 +389,15 @@ int disp_ccorr_set_color_matrix(struct mtk_ddp_comp *comp, struct cmdq_pkt *hand
 			return -EFAULT;
 		}
 		primary_data->disp_ccorr_coef = ccorr;
-
-		for (i = 0; i < 3; i++) {
-			for (j = 0; j < 3; j++) {
-				primary_data->disp_ccorr_coef->coef[i][j] = 0;
-				if (i == j)
-					primary_data->disp_ccorr_coef->coef[i][j] =
-						primary_data->ccorr_offset_base;
+	if (!(((ccorr_data->g_prim_ccorr_force_linear && (ccorr_data->is_linear&0x01))) &&
+		(primary_data->disp_ccorr_number == 1))) {
+			for (i = 0; i < 3; i++) {
+				for (j = 0; j < 3; j++) {
+					primary_data->disp_ccorr_coef->coef[i][j] = 0;
+					if (i == j)
+						primary_data->disp_ccorr_coef->coef[i][j] =
+							primary_data->ccorr_offset_base;
+				}
 			}
 		}
 	}
@@ -409,6 +430,11 @@ int disp_ccorr_set_color_matrix(struct mtk_ddp_comp *comp, struct cmdq_pkt *hand
 	else
 		ccorr_without_gamma = 1;
 
+	#ifdef OPLUS_FEATURE_DISPLAY
+	if(mtk_crtc->panel_ext->params->oplus_panel_ccorr_gamma)
+		ccorr_without_gamma = 0;
+	#endif /* OPLUS_FEATURE_DISPLAY */
+
 	// hint: 0: identity matrix; 1: arbitraty matrix
 	// fte_flag: true: gpu overlay && hwc not identity matrix
 	// arbitraty matrix maybe identity matrix or color transform matrix;
@@ -429,6 +455,25 @@ int disp_ccorr_set_color_matrix(struct mtk_ddp_comp *comp, struct cmdq_pkt *hand
 		}
 	}
 
+	primary_data->disp_ccorr_without_gamma = ccorr_without_gamma;
+
+	if ((ccorr_data->g_prim_ccorr_force_linear && (ccorr_data->is_linear&0x01)) &&
+		(primary_data->disp_ccorr_number == 1)) {
+		if ((matrix[12] != 0) || (matrix[13] != 0) || (matrix[14] != 0))
+			need_offset = true;
+		else {
+			primary_data->disp_ccorr_without_gamma = 0;
+			need_offset = false;
+		}
+		primary_data->disp_ccorr_temp_linear = primary_data->disp_ccorr_without_gamma;
+
+		primary_data->disp_ccorr_coef->offset_temp[0] =
+			(matrix[12] << 1) << primary_data->ccorr_offset_mask;
+		primary_data->disp_ccorr_coef->offset_temp[1] =
+			(matrix[13] << 1) << primary_data->ccorr_offset_mask;
+		primary_data->disp_ccorr_coef->offset_temp[2] =
+			(matrix[14] << 1) << primary_data->ccorr_offset_mask;
+        }
 	primary_data->disp_ccorr_coef->offset[0] =
 		(matrix[12] << 1) << primary_data->ccorr_offset_mask;
 	primary_data->disp_ccorr_coef->offset[1] =
@@ -448,8 +493,6 @@ int disp_ccorr_set_color_matrix(struct mtk_ddp_comp *comp, struct cmdq_pkt *hand
 		primary_data->disp_ccorr_coef->offset[0],
 		primary_data->disp_ccorr_coef->offset[1],
 		primary_data->disp_ccorr_coef->offset[2], hint);
-
-	primary_data->disp_ccorr_without_gamma = ccorr_without_gamma;
 
 	disp_ccorr_write_coef_reg(comp, handle, 0);
 	if ((comp->mtk_crtc != NULL) && (comp->mtk_crtc->is_dual_pipe))
@@ -833,7 +876,8 @@ int mtk_drm_ioctl_ccorr_support_color_matrix(struct drm_device *dev, void *data,
 
 	//if only one ccorr and ccorr0 is linear, AOSP matrix unsupport
 	if ((primary_data->disp_ccorr_number == 1) &&
-		(ccorr_data->is_linear == 1) && (!identity_matrix))
+		(ccorr_data->is_linear == 1) && (!identity_matrix) &&
+		(!ccorr_data->g_prim_ccorr_force_linear))
 		ret = -EFAULT;
 	else
 		ret = 0;
@@ -864,7 +908,8 @@ static int disp_ccorr_update_dispsys_helper(struct mtk_ddp_comp *comp,
 	struct mtk_drm_private *private = dev->dev_private;
 
 	// All Support 3*4 matrix on drm architecture
-	if ((primary_data->disp_ccorr_number == 1) && (ccorr_data->is_linear == 1))
+	if ((primary_data->disp_ccorr_number == 1) && (ccorr_data->is_linear == 1)
+			&& (!ccorr_data->g_prim_ccorr_force_linear))
 		ret = mtk_drm_helper_set_opt_by_name(private->helper_opt,
 			"MTK_DRM_OPT_PQ_34_COLOR_MATRIX", 0);
 	else
@@ -946,6 +991,7 @@ static void disp_ccorr_get_property_value(struct mtk_ddp_comp *comp, struct devi
 	struct mtk_disp_ccorr *ccorr_data = comp_to_ccorr(comp);
 	struct mtk_disp_ccorr_primary *primary_data = ccorr_data->primary_data;
 	int ret;
+	int ccorr0_force_linear = 0;
 
 	ret = of_property_read_u32(node, "ccorr-bit", &primary_data->disp_ccorr_caps.ccorr_bit);
 	if (ret)
@@ -959,11 +1005,21 @@ static void disp_ccorr_get_property_value(struct mtk_ddp_comp *comp, struct devi
 	ret = of_property_read_u32(node, "ccorr-linear", &(ccorr_data->is_linear));
 	if (ret)
 		DDPPR_ERR("read ccorr-linear failed\n");
-	DDPINFO("%s(%s):ccorr_bit:%d,ccorr_number:%d, is_linear: %d\n",
+
+	ret = of_property_read_u32(node, "ccorr-prim-force-linear", &ccorr0_force_linear);
+	if (ret)
+		DDPPR_ERR("read ccorr-prim-force-linear failed\n");
+
+	DDPINFO("%s(%s):ccorr_bit:%d,ccorr_number:%d, is_linear: %d, force linear:%d\n",
 		__func__, mtk_dump_comp_str(comp), primary_data->disp_ccorr_caps.ccorr_bit,
-		primary_data->disp_ccorr_caps.ccorr_number, ccorr_data->is_linear);
+		primary_data->disp_ccorr_caps.ccorr_number, ccorr_data->is_linear,
+		ccorr0_force_linear);
 
 	primary_data->disp_ccorr_number = primary_data->disp_ccorr_caps.ccorr_number;
+	if (ccorr0_force_linear == 0x1)
+		ccorr_data->g_prim_ccorr_force_linear = true;
+	else
+		ccorr_data->g_prim_ccorr_force_linear = false;
 
 	disp_ccorr_update_ccorr_base(comp);
 }

@@ -126,6 +126,19 @@ extern pid_t save_top_app_tgid;
 extern unsigned int top_app_type;
 extern int global_lowend_plat_opt;
 
+#ifdef CONFIG_OPLUS_SCHED_HALT_MASK_PRT
+/* This must be the same as the definition of pause_type in walt_halt.c */
+enum oplus_pause_type {
+	OPLUS_HALT,
+	OPLUS_PARTIAL_HALT,
+
+	OPLUS_MAX_PAUSE_TYPE
+};
+extern cpumask_t cur_cpus_halt_mask;
+extern cpumask_t cur_cpus_phalt_mask;
+DECLARE_PER_CPU(int[OPLUS_MAX_PAUSE_TYPE], oplus_cur_pause_client);
+extern void sa_corectl_systrace_c(void);
+#endif /* CONFIG_OPLUS_SCHED_HALT_MASK_PRT */
 
 /* define for boost threshold unit */
 #define BOOST_THRESHOLD_UNIT (51)
@@ -231,6 +244,7 @@ extern int global_debug_enabled;
 extern int global_sched_assist_enabled;
 extern int global_sched_assist_scene;
 extern int global_silver_perf_core;
+extern int global_sched_group_enabled;
 
 struct rq;
 
@@ -247,6 +261,7 @@ struct sched_assist_locking_ops {
 	void (*check_preempt_wakeup)(struct rq *rq, struct task_struct *p, bool *preempt, bool *nopreempt);
 	void (*state_systrace_c)(unsigned int cpu, struct task_struct *p);
 	void (*locking_tick_hit)(struct task_struct *prev, struct task_struct *next);
+	void (*opt_ss_lock_contention)(struct task_struct *p, int old_im, int new_im);
 };
 
 extern struct sched_assist_locking_ops *locking_ops;
@@ -657,10 +672,15 @@ void set_im_flag_with_bit(int im_flag, struct task_struct *task);
 void android_vh_cgroup_set_task_handler(void *unused, int ret, struct task_struct *task);
 /* register vendor hook in kernel/signal.c  */
 void android_vh_exit_signal_handler(void *unused, struct task_struct *p);
-void android_rvh_sched_setaffinity_handler(void *unused, struct task_struct *p, const struct cpumask *in_mask, int *retval);
+void android_rvh_set_cpus_allowed_by_task_handler(void *unused, const struct cpumask *cpu_valid_mask,
+	const struct cpumask *new_mask, struct task_struct *task, unsigned int *dest_cpu);
 void android_rvh_setscheduler_handler(void *unused, struct task_struct *p);
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_BAN_APP_SET_AFFINITY)
 void android_vh_sched_setaffinity_early_handler(void *unused, struct task_struct *task, const struct cpumask *new_mask, bool *skip);
+#endif
+
+#ifdef CONFIG_OPLUS_SCHED_GROUP_OPT
+void android_vh_reweight_entity_handler(void *unused, struct sched_entity *se);
 #endif
 
 #ifdef CONFIG_BLOCKIO_UX_OPT

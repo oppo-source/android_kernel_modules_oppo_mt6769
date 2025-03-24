@@ -868,21 +868,18 @@
 	};
 };
 
-&odm {
-	mediatek_phy_tuning: mediatek_phy_tuning {
-		phy_tuning {
-			compatible = "mediatek,phy_tuning";
-			eye-vrt = <7>;
-			eye-term = <5>;
-			eye-rev6 = <3>;
-			eye-disc = <7>;
-			host-eye-vrt = <6>;
-			host-eye-term = <3>;
-			host-eye-rev6 = <3>;
-			host-eye-disc = <0xf>;
-		};
-	};
+&u2port0 {
+	mediatek,eye-vrt = <7>; /* 0~7 */
+	mediatek,eye-term = <5>; /* 0~7 */
+	mediatek,rev6 = <3>; /* 0~3 */
+	mediatek,discth = <7>; /* 0~8 */
+	mediatek,eye-vrt-host = <6>; /* 0~7 */
+	mediatek,eye-term-host = <3>; /* 0~7 */
+	mediatek,rev6-host = <3>; /* 0~3 */
+	mediatek,disc-host = <0xf>; /* 0~8 */
+};
 
+&odm {
 	optiga {
 		compatible = "oplus-optiga";
 		status = "ok";

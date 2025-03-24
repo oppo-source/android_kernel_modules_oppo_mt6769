@@ -4,9 +4,9 @@
  */
 
 &i2c5 {
-	rt1711_charger: rt1711h@62 {
+	rt1711_charger: rt1711h@4e {
 		compatible = "richtek,rt1711h";
-		reg = <0x62>;
+		reg = <0x4e>;
 		status = "okay";
 		tcpc-dual,supported_modes = <0>; /* 0: dfp/ufp, */
 						/* 1: dfp, 2: ufp */

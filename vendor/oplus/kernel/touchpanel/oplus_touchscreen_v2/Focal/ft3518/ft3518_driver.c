@@ -709,6 +709,7 @@ static int fts_get_rawdata(struct chip_data_ft3518 *ts_data, int *raw,
 	u8 raw_addr = 0;
 	u8 regval = 0;
 	u8 *buf = NULL;
+	u8 retval = 0;
 
 	TPD_INFO("%s:call", __func__);
 	/*kzalloc buffer*/
@@ -732,6 +733,11 @@ static int fts_get_rawdata(struct chip_data_ft3518 *ts_data, int *raw,
 
 		if (ret < 0) {
 			TPD_INFO("%s:write 0x01 to reg0x06 fail", __func__);
+			goto reg_restore;
+		}
+		retval = touch_i2c_read_byte(ts_data->client, FACTORY_REG_DATA_SELECT);
+		if (retval != 0x01) {
+			TPD_INFO("%s:read reg0x06 != 0x01, maybe write fail", __func__);
 			goto reg_restore;
 		}
 	}
@@ -1363,7 +1369,7 @@ static int fts_enable_headset_mode(struct chip_data_ft3518 *ts_data,
 static void fts_force_glove_mode(struct chip_data_ft3518 *ts_data, bool enable)
 {
 	int retval = 0;
-	u8 regval = 0;
+	int regval = 0;
 
 	TPD_INFO("%s: %s force glove mode.\n", __func__, enable ? "Enter" : "Exit");
 
@@ -2613,7 +2619,7 @@ static int ft3518_parse_dts(struct chip_data_ft3518 *ts_data, struct i2c_client 
 
 static void fts_get_glove_mode(void *chip_data, int *enable, int *count)
 {
-	u8 regval = 0;
+	int regval = 0;
 	struct chip_data_ft3518 *ts_data = (struct chip_data_ft3518 *)chip_data;
 
 	if (!ts_data || !enable || !count) {

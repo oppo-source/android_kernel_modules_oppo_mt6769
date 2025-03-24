@@ -734,7 +734,7 @@ static struct subdrv_static_ctx static_ctx = {
 
 	.frame_length_max = 0x1FFFFE,   /* (3ffffc / 2) */
 	.ae_effective_frame = 2,
-	.frame_time_delay_frame = 3,
+	.frame_time_delay_frame = 2,
 	.start_exposure_offset = 934000,
 	.pdaf_type = PDAF_SUPPORT_NA,
 	.g_gain2reg = get_gain2reg,
@@ -783,8 +783,8 @@ static struct subdrv_ops ops = {
 
 static struct subdrv_pw_seq_entry pw_seq[] = {
 	{HW_ID_RST, {0}, 1000},
-	{HW_ID_DOVDD, {1800000, 1800000}, 0},
-	{HW_ID_AVDD, {2800000, 2800000}, 0},
+	{HW_ID_DOVDD, {1800000, 1800000}, 5000},
+	{HW_ID_AVDD, {2800000, 2800000}, 9000},
 	{HW_ID_DVDD, {1200000, 1200000}, 5000},
 	{HW_ID_MCLK, {24}, 0},
 	{HW_ID_RST, {1}, 1000},
@@ -1227,8 +1227,8 @@ static int open(struct subdrv_ctx *ctx)
 		return ERROR_SENSOR_CONNECT_FAIL;
 
 	/* initail setting */
-	subdrv_i2c_wr_regs_u8_u8(ctx, brzauwide_soft_reset, ARRAY_SIZE(brzauwide_soft_reset));
-	mdelay(3);
+	/*subdrv_i2c_wr_regs_u8_u8(ctx, brzauwide_soft_reset, ARRAY_SIZE(brzauwide_soft_reset));
+	mdelay(3);*/
 	subdrv_i2c_wr_regs_u8_u8(ctx, brzauwide_init_setting, ARRAY_SIZE(brzauwide_init_setting));
 
 	memset(ctx->exposure, 0, sizeof(ctx->exposure));
@@ -1443,8 +1443,8 @@ static int brzauwide_set_shutter_frame_length_convert(struct subdrv_ctx *ctx, u6
 	cit_step = ctx->s_ctx.mode[ctx->current_scenario_id].coarse_integ_step;
 	if (cit_step)
 		shutter = round_up(shutter, cit_step);
-
-	ctx->frame_length =	max(shutter + exposure_margin, (u64)ctx->min_frame_length);
+	ctx->frame_length =	max(shutter + exposure_margin, (u64)ctx->frame_length);
+	ctx->frame_length =	max((u64)ctx->min_frame_length, (u64)ctx->frame_length);
 	ctx->frame_length =	min(ctx->frame_length, ctx->s_ctx.frame_length_max);
 
 	/* restore shutter */
@@ -1759,8 +1759,8 @@ static int brzauwide_common_control(struct subdrv_ctx *ctx,
 			time_boot_begin = ktime_get_boottime_ns();
 
 		/* initail setting */
-		subdrv_i2c_wr_regs_u8_u8(ctx, brzauwide_soft_reset, ARRAY_SIZE(brzauwide_soft_reset));
-		mdelay(3);
+		/*subdrv_i2c_wr_regs_u8_u8(ctx, brzauwide_soft_reset, ARRAY_SIZE(brzauwide_soft_reset));
+		mdelay(3);*/
 
 		i2c_table_rewrite(ctx, ctx->s_ctx.mode[scenario_id].mode_setting_table,
 				ctx->s_ctx.mode[scenario_id].mode_setting_len);

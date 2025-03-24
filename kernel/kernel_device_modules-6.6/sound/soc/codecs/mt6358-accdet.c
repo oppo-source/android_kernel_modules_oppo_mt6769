@@ -65,6 +65,10 @@
 #define EINT_PLUG_IN			(1)
 #define EINT_MOISTURE_DETECTED	(2)
 
+#if IS_ENABLED(CONFIG_SND_SOC_OPLUS_TYPEC_SWITCH) || IS_ENABLED(CONFIG_SND_SOC_FSA)
+static u32 typec_switch_type = 0;
+#endif
+
 struct mt63xx_accdet_data {
 	u32 base;
 	struct snd_soc_card card;
@@ -1588,6 +1592,39 @@ static irqreturn_t mtk_accdet_irq_handler_thread(int irq, void *data)
 	return IRQ_HANDLED;
 }
 
+
+#if IS_ENABLED(CONFIG_SND_SOC_FSA)
+//#ifdef OPLUS_ARCH_EXTENDS
+extern void fsa4480_register_ext_eint_handler(int (*phandler)(bool plug_flag));
+int typec_sw_eint_handler(bool plug_flag)
+{
+	int ret = 0;
+	pr_info("Error: %s called cur_eint_state %d\n",
+				__func__, accdet->cur_eint_state);
+	if (!plug_flag) {
+		/* To trigger EINT when the headset was plugged in
+		 * We set the polarity back as we initialed.
+		 */
+		accdet->cur_eint_state = EINT_PLUG_OUT;
+	} else {
+		/* To trigger EINT when the headset was plugged out
+		 * We set the opposite polarity to what we initialed.
+		 */
+		accdet->cur_eint_state = EINT_PLUG_IN;
+		if (accdet_dts.moisture_detect_mode != 0x5) {
+			mod_timer(&micbias_timer,
+				jiffies + MICBIAS_DISABLE_TIMER);
+		}
+	}
+
+	ret = queue_work(accdet->eint_workqueue, &accdet->eint_work);
+	pr_info("%s end cur_eint_state %d\n",
+				__func__, accdet->cur_eint_state);
+
+	return IRQ_HANDLED;
+}
+#endif
+
 static irqreturn_t ex_eint_handler(int irq, void *data)
 {
 	int ret = 0;
@@ -1698,6 +1735,21 @@ static int accdet_get_dts_data(void)
 		return -1;
 	}
 
+#if IS_ENABLED(CONFIG_SND_SOC_OPLUS_TYPEC_SWITCH) || IS_ENABLED(CONFIG_SND_SOC_FSA)
+	/* 2024/3/5, add for supporting type-c headphone detect bypass*/
+	/* if headset eint0 disable, the pmic eint0 is not be used */
+	ret = of_property_read_u32(node,
+			"headset-eint0-disable", &accdet_dts.headset_eint0_disable);
+	if (ret) {
+		/* enable eint0 */
+		pr_info("%s: read prop headset-eint0-disable fail\n", __func__);
+		accdet_dts.headset_eint0_disable = 0;
+	}
+
+	ret = of_property_read_u32(node, "typec_switch_type", &typec_switch_type);
+	if (ret)
+		pr_notice("Error: %s typec_switch_type err(%d)\n", __func__, ret);
+#endif
 	ret = of_property_read_u32(node, "mediatek,accdet-pmic", &accdet_pmic);
 	if (ret)
 		accdet_pmic = 0x0;
@@ -1832,6 +1884,11 @@ static int accdet_get_dts_data(void)
 		/* eint use internal resister */
 		accdet_dts.eint_use_ext_res = 0x0;
 	}
+#if IS_ENABLED(CONFIG_SND_SOC_FSA)
+	if (typec_switch_type == 2) { //use fsa4480 typec audio switch
+		fsa4480_register_ext_eint_handler(typec_sw_eint_handler);
+	}
+#endif
 	return 0;
 }
 
@@ -2012,6 +2069,19 @@ static void accdet_init_once(void)
 
 	/* accdet eint enable*/
 	accdet_write(0x250a, 0x4);
+	pr_info("accdet eint enable!");
+
+#if IS_ENABLED(CONFIG_SND_SOC_OPLUS_TYPEC_SWITCH) || IS_ENABLED(CONFIG_SND_SOC_FSA)
+		//accdet eint disable
+		if (accdet_dts.headset_eint0_disable) {
+			pr_info("accdet eint disable");
+			accdet_write(0x250a, 0x0);
+			//disable fast discharge.
+			accdet_clear_bit(RG_AUDSPARE_ADDR, 5);
+			accdet_clear_bit(RG_AUDSPARE_ADDR, 6);
+			pr_info("accdet disable fast discharge!");
+		}
+#endif
 
 	pr_info("%s done!\n", __func__);
 }

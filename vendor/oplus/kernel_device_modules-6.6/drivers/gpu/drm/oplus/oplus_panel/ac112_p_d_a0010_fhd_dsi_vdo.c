@@ -42,7 +42,6 @@
 extern unsigned int oplus_display_brightness;
 extern unsigned int oplus_max_normal_brightness;
 extern unsigned int cabc_mode;
-static unsigned char g_GammaFlag = 1;
 
 #if IS_ENABLED(CONFIG_OPLUS_MTK_DRM_GKI_NOTIFY)
 #include "../mediatek/mediatek_v2/mtk_panel_ext.h"
@@ -82,92 +81,6 @@ struct LCM_setting_table {
  	unsigned char para_list[128];
 };
 
-#if 0
-static int blmap_table[] = {
-                36, 8,
-                16, 11,
-                17, 12,
-                19, 13,
-                19, 15,
-                20, 14,
-                22, 14,
-                22, 14,
-                24, 10,
-                24, 8 ,
-                26, 4 ,
-                27, 0 ,
-                29, 9 ,
-                29, 9 ,
-                30, 14,
-                33, 25,
-                34, 30,
-                36, 44,
-                37, 49,
-                40, 65,
-                40, 69,
-                43, 88,
-                46, 109,
-                47, 112,
-                50, 135,
-                53, 161,
-                53, 163,
-                60, 220,
-                60, 223,
-                64, 257,
-                63, 255,
-                71, 334,
-                71, 331,
-                75, 375,
-                80, 422,
-                84, 473,
-                89, 529,
-                88, 518,
-                99, 653,
-                98, 640,
-                103, 707,
-                117, 878,
-                115, 862,
-                122, 947,
-                128, 1039,
-                135, 1138,
-                132, 1102,
-                149, 1355,
-                157, 1478,
-                166, 1611,
-                163, 1563,
-                183, 1900,
-                180, 1844,
-                203, 2232,
-                199, 2169,
-                209, 2344,
-                236, 2821,
-                232, 2742,
-                243, 2958,
-                255, 3188,
-                268, 3433,
-                282, 3705,
-                317, 4400,
-                176, 1555};
-#endif
-
-/*
-static struct LCM_setting_table set_dimming_off[] = {
-	{0xFF, 0x01, {0x10}},
-	{0xFB, 0x01, {0x01}},
-	{0x53, 0x01, {0x24}}
-};
-
-static struct LCM_setting_table init_setting_cmd[] = {
-	{ 0xFF, 0x03, {0x98, 0x07, 0x00} },
-};
-*/
-/*
-static struct LCM_setting_table bl_level[] = {
-	 { 0xFF, 0x03, {0x98, 0x81, 0x00} },
-	{0x51, 2, {0x00, 0xFF} },
-	{REGFLAG_END_OF_TABLE, 0x00, {} }
-};
-*/
 #define lcm_dcs_write_seq(ctx, seq...) \
 ({\
 	const u8 d[] = { seq };\
@@ -216,29 +129,6 @@ static void lcm_mdelay(unsigned int ms)
 		usleep_range(ms * 1000 - 100, ms * 1000);
 }
 
-
-/*static void push_table(struct lcm *ctx, struct LCM_setting_table *table, unsigned int count)
-{
-	unsigned int i;
-	unsigned int cmd;
-
-	for (i = 0; i < count; i++) {
-		cmd = table[i].cmd;
-		switch (cmd) {
-		case REGFLAG_DELAY:
-			usleep_range(table[i].count*1000, table[i].count*1000 + 100);
-			break;
-		case REGFLAG_UDELAY:
-			usleep_range(table[i].count, table[i].count + 100);
-			break;
-		case REGFLAG_END_OF_TABLE:
-			break;
-		default:
-			lcm_dcs_write(ctx, table[i].para_list, table[i].count);
-			break;
-		}
-	}
-}*/
 
 static void lcm_panel_init(struct lcm *ctx)
 {
@@ -504,39 +394,8 @@ static int lcm_panel_poweroff(struct drm_panel *panel)
 
 static struct LCM_setting_table bl_level[] = {
 	{0x51, 2, {0x00, 0xFF} },
-/*	{REGFLAG_CMD,3, {0x51, 0xi900, 0xFF} },*/
 	{REGFLAG_END_OF_TABLE, 0x00, {} }
 };
-
-static void lcm_gamma_enter (void *dsi, dcs_write_gce cb, void *handle)
-{
-#if 0
-	char bl_tb0[] = {0x29, 0xFF, 0x78, 0x07, 0x08};
-	char bl_tb1[] = {0x29, 0xE0, 0x15, 0x9B, 0x9D, 0xA2, 0x15, 0xAB, 0xB3, 0xBC, 0x15, 0xCC, 0xDA, 0xF5, 0x2A, 0x0D, 0x3B, 0x65, 0x2A, 0x94, 0xCA, 0xEF, 0x3F, 0x1E, 0x3C, 0x65, 0x3F, 0x7E, 0x9A, 0xC5, 0x0F, 0xD8, 0xD9};
-	char bl_tb2[] = {0x29, 0xE1, 0x15, 0x9B, 0x9D, 0xA2, 0x15, 0xAB, 0xB3, 0xBC, 0x15, 0xCC, 0xDA, 0xF5, 0x2A, 0x0D, 0x3B, 0x65, 0x2A, 0x94, 0xCA, 0xEF, 0x3F, 0x1E, 0x3C, 0x65, 0x3F, 0x7E, 0x9A, 0xC5, 0x0F, 0xD8, 0xD9};
-	char bl_tb3[] = {0x29, 0xFF, 0x78, 0x07, 0x00};
-
-	cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
-	cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
-	cb(dsi, handle, bl_tb2, ARRAY_SIZE(bl_tb2));
-	cb(dsi, handle, bl_tb3, ARRAY_SIZE(bl_tb3));
-#endif
-}
-
-static void lcm_gamma_exit (void *dsi, dcs_write_gce cb, void *handle)
-{
-#if 0
-	char bl_tb0[] = {0x29, 0xFF, 0x78, 0x07, 0x08};
-	char bl_tb1[] = {0x29, 0xE0, 0x00, 0x00, 0x20, 0x52, 0x00, 0x94, 0xC4, 0xEA, 0x15, 0x20, 0x4B, 0x8A, 0x25, 0xB9, 0xFF, 0x3B, 0x2A, 0x6F, 0xAC, 0xD2, 0x3F, 0x05, 0x23, 0x4C, 0x3F, 0x69, 0x8D, 0xB7, 0x0F, 0xCE, 0xD7};
-	char bl_tb2[] = {0x29, 0xE1, 0x00, 0x00, 0x20, 0x52, 0x00, 0x94, 0xC4, 0xEA, 0x15, 0x20, 0x4B, 0x8A, 0x25, 0xB9, 0xFF, 0x3B, 0x2A, 0x6F, 0xAC, 0xD2, 0x3F, 0x05, 0x23, 0x4C, 0x3F, 0x69, 0x8D, 0xB7, 0x0F, 0xCE, 0xD7};
-	char bl_tb3[] = {0x29, 0xFF, 0x78, 0x07, 0x00};
-
-	cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
-	cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
-	cb(dsi, handle, bl_tb2, ARRAY_SIZE(bl_tb2));
-	cb(dsi, handle, bl_tb3, ARRAY_SIZE(bl_tb3));
-#endif
-}
 
 
 static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb,
@@ -549,7 +408,7 @@ static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb,
 		return -EINVAL;
 	}
 
-     pr_err("backlight =%d Gamma flag %d lcm_setbacklight_cmdq \n",level, g_GammaFlag);
+        pr_err("backlight =%d lcm_setbacklight_cmdq \n",level);
 
 	if (level > 4095)
 		level = 4095;
@@ -561,17 +420,7 @@ static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb,
 		pr_err("enter aod!!!\n");
 		return 0;
 	}
-	
-    if(level == 13 && g_GammaFlag == 1){
-        g_GammaFlag = 0;
-        pr_info(" backlight < 14 enter gamma!\n");
-        lcm_gamma_enter(dsi, cb, handle);
-    }else if(level > 13 && g_GammaFlag == 0){
-        g_GammaFlag = 1;
-        pr_info(" backlight > 13 exit gamma!\n");
-        lcm_gamma_exit(dsi, cb, handle);
-	}
-	
+
 	if(level == 0)
 	{
 		pr_info("Set Dimming off \n");
@@ -584,9 +433,6 @@ static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb,
 	bl_tb0[1] = level >> 8;
 	bl_tb0[2] = level & 0xFF;
 	mapped_level = level;
-	if (mapped_level > 1) {
-		//lcdinfo_notify(LCM_BRIGHTNESS_TYPE, &mapped_level);
-	}
 	cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
 
 	oplus_display_brightness = level;
@@ -615,33 +461,30 @@ static struct mtk_panel_params ext_params = {
 static void lcm_cabc_mode_switch(void *dsi, dcs_write_gce cb,
 		void *handle, unsigned int mode)
 {
-	//struct mtk_dsi *dsi_ptr = (struct mtk_dsi *)dsi;
-	//struct lcm *ctx = panel_to_lcm(dsi_ptr->panel);
-
 	pr_err("%s cabc = %d\n", __func__, mode);
 	if (mode == 3) {
 		mode = 2;
 		pr_info("[lcm] cabc set level_2 %d\n", mode);
 	}
-	
+
 	char bl_tb0[] = {0xFF, 0x78, 0x07, 0x00};
 	char bl_tb1[] = {0x53, 0x2C};
 
 	if (mode == 0) {
 		char bl_tb2[] = {0x55, 0x00};
-		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb0));
+		cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
 		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
-		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb2));
+		cb(dsi, handle, bl_tb2, ARRAY_SIZE(bl_tb2));
 	} else if (mode == 1) {
 		char bl_tb2[] = {0x55, 0x01};
-		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb0));
+		cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
 		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
-		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb2));
+		cb(dsi, handle, bl_tb2, ARRAY_SIZE(bl_tb2));
 	} else if (mode == 2) {
 		char bl_tb2[] = {0x55, 0x02};
-		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb0));
+		cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
 		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
-		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb2));
+		cb(dsi, handle, bl_tb2, ARRAY_SIZE(bl_tb2));
 	} else {
 		pr_info("[lcm]  cabc_mode %d is not support\n", mode);
 	}
@@ -713,7 +556,6 @@ static int lcm_probe(struct mipi_dsi_device *dsi)
 			pr_info("device node name:%s\n", remote_node->name);
 		}
 	}
-	//pr_err("remote_node dev->of_node")
 	if (remote_node != dev->of_node) {
 		pr_err("skip probe due to not current lcm\n");
 		return -ENODEV;
@@ -778,9 +620,6 @@ static int lcm_probe(struct mipi_dsi_device *dsi)
   		return PTR_ERR(ctx->bias_neg);
   	}
  	devm_gpiod_put(dev, ctx->bias_neg);
-
-	//ctx->prepared = true;
-	//ctx->enabled = true;
 
 	ctx->panel.dev = dev;
 	ctx->panel.funcs = &lcm_drm_funcs;

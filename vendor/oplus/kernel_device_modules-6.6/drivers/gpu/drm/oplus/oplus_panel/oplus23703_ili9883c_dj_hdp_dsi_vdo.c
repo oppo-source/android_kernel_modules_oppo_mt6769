@@ -85,7 +85,8 @@ static int current_esd_fps;
 #include <linux/i2c.h>
 //#include "lcm_i2c.h"
 //#include "gate_ic/ocp2130_drv.h"
-
+#define LCM_PHYSICAL_WIDTH		(69401)
+#define LCM_PHYSICAL_HEIGHT		(154610)
 
 static char bl_tb0[] = { 0x51, 0x0F, 0xFF};
 //static char bl_open[] = { 0x53, 0x2C };
@@ -666,6 +667,8 @@ static const struct drm_display_mode performance_mode_60hz = {
 static struct mtk_panel_params ext_params = {
 	//.change_fps_by_vfp_send_cmd = 1,
 	//.vfp_low_power = 148,
+	.oplus_esd_sleep_status = true,
+	.oplus_esd_sleep_ms = 5000,
 	.cust_esd_check = 0,
 	.esd_check_enable = 1,
 	.lcm_esd_check_table[0] = {
@@ -675,7 +678,8 @@ static struct mtk_panel_params ext_params = {
 
 	.data_rate = 1030, /* 943 */
 	//.data_rate_khz = 1030000, /* 943307 */
-
+	.physical_width_um = LCM_PHYSICAL_WIDTH,
+	.physical_height_um = LCM_PHYSICAL_HEIGHT,
 	.oplus_display_global_dre = 1,
 };
 
@@ -684,6 +688,8 @@ static struct mtk_panel_params ext_params = {
 static struct mtk_panel_params ext_params_50hz = {
 	//.change_fps_by_vfp_send_cmd = 1,
 	//.vfp_low_power = 4484,
+	.oplus_esd_sleep_status = true,
+	.oplus_esd_sleep_ms = 5000,
 	.cust_esd_check = 0,
 	.esd_check_enable = 1,
 	.lcm_esd_check_table[0] = {
@@ -717,12 +723,16 @@ static struct mtk_panel_params ext_params_50hz = {
 		.clk_hs_post = 0x0F,
 	},*/
 #endif
+	.physical_width_um = LCM_PHYSICAL_WIDTH,
+	.physical_height_um = LCM_PHYSICAL_HEIGHT,
 	.oplus_display_global_dre = 1,
 };
 
 static struct mtk_panel_params ext_params_60hz = {
 	//.change_fps_by_vfp_send_cmd = 1,
 	//.vfp_low_power = 2316, /* 60 FPS */
+	.oplus_esd_sleep_status = true,
+	.oplus_esd_sleep_ms = 5000,
 	.cust_esd_check = 0,
 	.esd_check_enable = 1,
 	.lcm_esd_check_table[0] = {
@@ -756,6 +766,8 @@ static struct mtk_panel_params ext_params_60hz = {
 	//	.clk_hs_post = 0x0F,
 	//},
 #endif
+	.physical_width_um = LCM_PHYSICAL_WIDTH,
+	.physical_height_um = LCM_PHYSICAL_HEIGHT,
 	.oplus_display_global_dre = 1,
 };
 #endif
@@ -1065,8 +1077,8 @@ static int lcm_get_modes(struct drm_panel *panel,
 	mode3->type = DRM_MODE_TYPE_DRIVER;
 	drm_mode_probed_add(connector, mode3);
 #endif
-	connector->display_info.width_mm = 152;
-	connector->display_info.height_mm = 248;
+	connector->display_info.width_mm = 69;
+	connector->display_info.height_mm = 155;
 
 	return 1;
 }

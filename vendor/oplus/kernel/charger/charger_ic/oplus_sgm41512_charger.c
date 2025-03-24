@@ -2538,7 +2538,6 @@ static int sgm41512_driver_probe(struct i2c_client *client, const struct i2c_dev
 	chip->tcpc = tcpc_dev_get_by_name("type_c_port0");
 	if (!chip->tcpc) {
 		pr_err("%s get tcpc device type_c_port0 fail\n", __func__);
-		return 0;
 	}
 	chip->pd_nb.notifier_call = pd_tcp_notifier_call;
 	ret = register_tcp_dev_notifier(chip->tcpc, &chip->pd_nb,

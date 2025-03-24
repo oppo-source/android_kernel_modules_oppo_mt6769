@@ -108,7 +108,7 @@ static int get_md_gpio_val(unsigned int num)
 {
     //#ifdef OPLUS_FEATURE_THREESTATE_GPIO
     //NETWORK.RF, 2024/07/16, Add for tristate gpio
-    if(is_project(24713) || is_project(24714) || is_project(24715) || is_project(24728) || is_project(0x226AF)|| is_project(0x226AE)|| is_project(0x226AD) ||is_project(23703)|| is_project(23704))
+    if(is_project(24700) || is_project(24701) || is_project(24702) || is_project(24709) || is_project(24713) || is_project(24714) || is_project(24715) || is_project(24728) || is_project(0x226AF)|| is_project(0x226AE)|| is_project(0x226AD) ||is_project(23703)|| is_project(23704))
     {
         return gpio_get_tristate_input(num);
     }

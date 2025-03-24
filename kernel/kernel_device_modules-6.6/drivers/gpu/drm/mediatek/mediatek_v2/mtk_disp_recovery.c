@@ -779,7 +779,16 @@ static int mtk_drm_esd_check_worker_kthread(void *data)
 #endif /* OPLUS_FEATURE_DISPLAY */
 
 	while (1) {
+#ifdef OPLUS_FEATURE_DISPLAY
+		if( (mtk_crtc->panel_ext && mtk_crtc->panel_ext->params) && (mtk_crtc->panel_ext->params->oplus_esd_sleep_status != 0) &&
+			(mtk_crtc->panel_ext->params->oplus_esd_sleep_ms != 0) ){
+				msleep(mtk_crtc->panel_ext->params->oplus_esd_sleep_ms);
+		}
+		else
+			msleep(ESD_CHECK_PERIOD);
+#else /* OPLUS_FEATURE_DISPLAY */
 		msleep(ESD_CHECK_PERIOD);
+#endif /* OPLUS_FEATURE_DISPLAY */
 		if (esd_ctx->chk_en == 0)
 			continue;
 

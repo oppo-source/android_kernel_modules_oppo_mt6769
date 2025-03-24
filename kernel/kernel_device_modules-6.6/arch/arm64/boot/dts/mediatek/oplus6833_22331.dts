@@ -1009,4 +1009,21 @@ helper-value = <0>, /*MTK_DRM_OPT_STAGE*/
     sdcard-hlact = <0>;
 };
 
+&odm {
+	oplus_mm_config: oplus,mm_config {
+		compatible = "oplus,mm_osvelte-config";
+		ram-4g {
+			oplus_boost_pool {
+				feature-disable;
+			};
+			oplus_bsp_uxmem_opt {
+				feature-disable;
+			};
+			oplus_bsp_zram_opt {
+				balance_anon_file_reclaim_always_true;
+			};
+		};
+	};
+};
+
 /*End of this file, DO NOT ADD ANYTHING HERE*/

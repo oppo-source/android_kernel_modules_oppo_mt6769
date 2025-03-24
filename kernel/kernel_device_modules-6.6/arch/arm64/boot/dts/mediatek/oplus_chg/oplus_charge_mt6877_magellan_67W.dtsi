@@ -105,6 +105,7 @@
 	sub_board_temp_ts_adc_support;
 	sub_board_pull_up_r = <6800>;
 	support_tuv_authentication;
+	support_hot_enter_kpoc;
 	support_sdp_screenoff;
 	sdp_screenon_voltage = <3250>;
 	support_battery_authentication;
@@ -112,6 +113,7 @@
 	cpu-id = <7>;
 	key-id = <1>;
 	led_brightness = <102>;
+	over_high_temp_thr = <60>;
 	max_charger_voltage = <15000000>;
 	boot_battery_voltage = <3400000>;//lk no use/lk2 use
 	usb_charger_current = <500000>;//sdp input current
@@ -454,6 +456,13 @@
 	oplus,subboard_ntc_abnormal_high_temp = <1000>;
 	oplus,subboard_abnormal_method_support;
 	oplus,otg_current_limit = <1100000>;
+
+	/* Feature avoid battery swelling caused by high temp */
+	oplus,support_hot_enter_kpoc;
+	oplus,poweroff_high_batt_temp = <720>;
+	oplus,poweroff_emergency_batt_temp = <770>;
+	oplus,usbtemp_batt_temp_over_hot = <60>;
+	oplus,usbtemp_temp_gap_with_batt_temp_in_over_hot = <15>;
 };
 
 &pio {

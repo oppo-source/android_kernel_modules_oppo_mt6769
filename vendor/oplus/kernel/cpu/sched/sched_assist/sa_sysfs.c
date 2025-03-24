@@ -52,6 +52,8 @@ int global_silver_perf_core;
 EXPORT_SYMBOL(global_silver_perf_core);
 int global_lowend_plat_opt;
 EXPORT_SYMBOL(global_lowend_plat_opt);
+int global_sched_group_enabled = 0;
+EXPORT_SYMBOL(global_sched_group_enabled);
 
 pid_t global_ux_task_pid = -1;
 pid_t global_im_flag_pid = -1;
@@ -143,6 +145,41 @@ static ssize_t proc_sched_assist_enabled_read(struct file *file, char __user *bu
 	size_t len = 0;
 
 	len = snprintf(buffer, sizeof(buffer), "enabled=%d\n", global_sched_assist_enabled);
+
+	return simple_read_from_buffer(buf, count, ppos, buffer, len);
+}
+
+static ssize_t proc_sched_group_enabled_write(struct file *file, const char __user *buf,
+		size_t count, loff_t *ppos)
+{
+	char buffer[20];
+	int err, val;
+
+	memset(buffer, 0, sizeof(buffer));
+
+	if (count > sizeof(buffer) - 1)
+		count = sizeof(buffer) - 1;
+
+	if (copy_from_user(buffer, buf, count))
+		return -EFAULT;
+
+	buffer[count] = '\0';
+	err = kstrtoint(strstrip(buffer), 10, &val);
+	if (err)
+		return err;
+
+	global_sched_group_enabled = val;
+
+	return count;
+}
+
+static ssize_t proc_sched_group_enabled_read(struct file *file, char __user *buf,
+		size_t count, loff_t *ppos)
+{
+	char buffer[20];
+	size_t len = 0;
+
+	len = snprintf(buffer, sizeof(buffer), "enabled=%d\n", global_sched_group_enabled);
 
 	return simple_read_from_buffer(buf, count, ppos, buffer, len);
 }
@@ -584,8 +621,12 @@ static int im_flag_set_handle(struct task_struct *task, int im_flag)
 {
 	struct oplus_task_struct *ots = get_oplus_task_struct(task);
 
+	int old_im;
+
 	if (IS_ERR_OR_NULL(ots))
 		return 0;
+
+	old_im = ots->im_flag;
 
 #ifdef CONFIG_OPLUS_CPU_AUDIO_PERF
 	oplus_sched_assist_audio_perf_addIm(task, im_flag);
@@ -612,6 +653,9 @@ static int im_flag_set_handle(struct task_struct *task, int im_flag)
 
 		oplus_set_ux_state_lock(task, ux_state | SA_TYPE_HEAVY, -1, true);
 	}
+
+	/* Optimization of ams/wsm lock contention */
+	LOCKING_CALL_OP(opt_ss_lock_contention, task, old_im, im_flag);
 	return 0;
 }
 
@@ -1022,6 +1066,12 @@ static const struct proc_ops proc_sched_assist_enabled_fops = {
 	.proc_lseek		= default_llseek,
 };
 
+static const struct proc_ops proc_sched_group_enabled_fops = {
+	.proc_write		= proc_sched_group_enabled_write,
+	.proc_read		= proc_sched_group_enabled_read,
+	.proc_lseek		= default_llseek,
+};
+
 static const struct proc_ops proc_sched_assist_scene_fops = {
 	.proc_write		= proc_sched_assist_scene_write,
 	.proc_read		= proc_sched_assist_scene_read,
@@ -1125,6 +1175,12 @@ int oplus_sched_assist_proc_init(void)
 	if (!proc_node) {
 		ux_err("failed to create proc node sched_assist_scene\n");
 		goto err_creat_sched_assist_scene;
+	}
+
+	proc_node = proc_create("sched_group_enabled", 0666, d_sched_assist, &proc_sched_group_enabled_fops);
+	if (!proc_node) {
+		ux_err("failed to create proc node sched_group_enabled\n");
+		remove_proc_entry("sched_group_enabled", d_sched_assist);
 	}
 
 	proc_node = proc_create("ux_task", 0666, d_sched_assist, &proc_ux_task_fops);

@@ -34,7 +34,7 @@ def define_oplus_local_modules():
             "//vendor/oplus/kernel/mm:oplus_bsp_zsmalloc",
         ],
         includes = ["."],
-        local_defines = ["CONFIG_HYBRIDSWAP","CONFIG_HYBRIDSWAP_SWAPD","CONFIG_HYBRIDSWAP_CORE","CONFIG_CRYPTO_LZ4K"],
+        local_defines = ["CONFIG_HYBRIDSWAP","CONFIG_HYBRIDSWAP_SWAPD","CONFIG_HYBRIDSWAP_CORE","CONFIG_CRYPTO_LZ4K","CONFIG_CRYPTO_ZSTDN"],
         conditional_defines = {
              "qcom":  ["CONFIG_QCOM_PANEL_EVENT_NOTIFIER"],
              "mtk":  ["CONFIG_OPLUS_MTK_DRM_GKI_NOTIFY"],
@@ -171,6 +171,16 @@ def define_oplus_local_modules():
         )
 
     define_oplus_ddk_module(
+        name = "oplus_bsp_zstdn",
+        srcs = native.glob([
+            "**/*.h",
+            "hybridswap_zram/zstd/crypto_zstd.c",
+        ]),
+        includes = ["."],
+        local_defines = ["CONFIG_CRYPTO_ZSTDN"],
+        )
+
+    define_oplus_ddk_module(
         name = "oplus_bsp_look_around",
         srcs = native.glob([
             "**/*.h",
@@ -194,7 +204,8 @@ def define_oplus_local_modules():
             "oplus_bsp_dynamic_readahead",
             "oplus_bsp_pcppages_opt",
             "oplus_bsp_kswapd_opt",
-            "oplus_bsp_look_around",
+#            "oplus_bsp_look_around",
             "oplus_bsp_memleak_detect",
+            "oplus_bsp_zstdn",
         ],
     )

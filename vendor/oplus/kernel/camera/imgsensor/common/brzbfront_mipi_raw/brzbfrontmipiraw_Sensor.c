@@ -684,7 +684,7 @@ static struct subdrv_static_ctx static_ctx = {
 	.frame_length_max = 0xffff,
 	.ae_effective_frame = 2,
 	.frame_time_delay_frame = 3,
-	.start_exposure_offset = 6590000,
+	.start_exposure_offset = 1891000,
 
 	.pdaf_type = PDAF_SUPPORT_NA,
 	.hdr_type = HDR_SUPPORT_NA,
@@ -1502,7 +1502,8 @@ static int brzbfront_set_test_pattern(struct subdrv_ctx *ctx, u8 *para, u32 *len
 	/* 1:Solid Color 2:Color Bar 5:Black */
 	if (mode) {
 		if (mode == 5) {
-			subdrv_i2c_wr_u8(ctx, 0x0600, 0x0001); /*black*/
+			subdrv_i2c_wr_u8(ctx, 0x0600, mode >> 4); /*black*/
+			subdrv_i2c_wr_u8(ctx, 0x0601, mode); /*black*/
 		} else {
 			subdrv_i2c_wr_u8(ctx, 0x0600, mode); /*100% Color bar*/
 		}

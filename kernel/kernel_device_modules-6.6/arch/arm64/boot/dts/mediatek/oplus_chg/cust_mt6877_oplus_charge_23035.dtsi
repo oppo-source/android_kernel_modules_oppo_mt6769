@@ -117,8 +117,11 @@
 		};
 	};
 
-	dpm_caps {
-		attemp-discover-svid;
+	dpm-caps {
+		attempt-enter-dp-mode;
+		attempt-discover-cable;
+		attempt-discover-id;
+		attempt-discover-svids;
 	};
 };
 

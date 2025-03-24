@@ -123,6 +123,10 @@ static int shutdown_event_handler(struct mtk_battery *gm)
 		sdu->shutdown_status.is_dlpt_shutdown,
 		sdu->shutdown_status.is_under_shutdown_voltage);
 
+#ifdef OPLUS_FEATURE_CHG_BASIC
+		pr_err("%s: No need to shutdown,return!!!\n", __func__);
+		return 0;
+#endif /*OPLUS_FEATURE_CHG_BASIC*/
 	if (gm->bm->gm_no == 1)
 		is_single = true;
 	else

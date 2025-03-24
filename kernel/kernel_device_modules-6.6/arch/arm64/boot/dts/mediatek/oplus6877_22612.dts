@@ -736,6 +736,37 @@
 	};
 };
 
+&accdet {
+	/* accdet micbias voltage: 0x09:2.85v 0x08:2.8v 0x07,
+	 * 2.7v;0x05,2.5v;0x02,1.9v
+	 */
+	accdet-mic-vol = <7>;
+	/* accdet pwm_width, pwm_thresh, fall_delay, rise_delay
+	 * debounce0, debounce1, debounce3, debounce4
+	 * eint pwm_width, eint pwm_thresh
+	 * eint deb(debounce0, debounce1, debounce2, debounce3), inv_debounce
+	 */
+	headset-mode-setting = <0x500 0x500 1 0x1f0
+				0x800 0x800 0x20 0x44
+				0x4 0x1
+				0x5 0x3 0x3 0x5 0xe>;
+	accdet-plugout-debounce = <1>;
+	/*1:ACC mode, 2:low cost without in bias, 6:low cost with in bias*/
+	accdet-mic-mode = <2>;
+	/*0--MD_MAX--UP_MAX--DW_MAX*/
+	headset-three-key-threshold = <0 82 170 306>;
+	//#else
+	//headset-three-key-threshold = <0 80 220 400>;
+	//#endif
+	headset-three-key-threshold-CDD = <0 121 192 600>;
+	/*0--MD_MAX--VOICE_MAX--UP_MAX--DW_MAX*/
+	headset-four-key-threshold = <0 58 121 192 400>;
+
+	/* select VTH to 2v and 500k, use internal resitance */
+	eint_use_ext_res = <0>;
+	status = "okay";
+};
+
 &pio{
 	aw_irq_gpio_default: aw_irq_gpio_default {		//check
 		pins_cmd_dat {
@@ -767,14 +798,14 @@
 
 
 &odm {
-	sia81xx_L: sia81xx@L {
+	si_pa_L: si_pa@L {
 		compatible = "si,sia81xx";
-		si,sia81xx_type = "sia8109";
-		si,sia81xx_reset = <&pio 31 0>;
-		si,sia81xx_owi = <&pio 31 0>;
-		pinctrl-names = "sia81xx_gpio";
+		si,si_pa_type = "sia8109";
+		si,si_pa_reset = <&pio 31 0>;
+		si,si_pa_owi = <&pio 31 0>;
+		pinctrl-names = "si_pa_gpio";
 		pinctrl-0 = <&sia81xx_gpio_L>;
-		si,sia81xx_disable_pin = <0>;
+		si,si_pa_disable_pin = <0>;
 		/* the same value share a same task
 		* valid value range : 0 ~ 7 */
 		timer_task_hdl = <0>;
@@ -786,14 +817,14 @@
 		dynamic_updata_vdd_port = <0x2>;
 		en_spk_sia8109 = <1>;
 	};
-	sia81xx_R: sia81xx@R {
+	si_pa_R: si_pa@R {
 		compatible = "si,sia81xx";
-		si,sia81xx_type = "sia8109";
-		si,sia81xx_reset = <&pio 24 0>;
-		si,sia81xx_owi = <&pio 24 0>;
-		pinctrl-names = "sia81xx_gpio";
+		si,si_pa_type = "sia8109";
+		si,si_pa_reset = <&pio 24 0>;
+		si,si_pa_owi = <&pio 24 0>;
+		pinctrl-names = "si_pa_gpio";
 		pinctrl-0 = <&sia81xx_gpio_R>;
-		si,sia81xx_disable_pin = <0>;
+		si,si_pa_disable_pin = <0>;
 		/* the same value share a same task
 		* valid value range : 0 ~ 7 */
 		timer_task_hdl = <0>;
@@ -809,8 +840,9 @@
 
 
 &sound {
+	si,is_analog_pa = <1>;
 	si,sia81xx-max-num = <2>;
-	si,sia81xx-aux-devs = <&sia81xx_L>, <&sia81xx_R>;
+	si,sia81xx-aux-devs = <&si_pa_L>, <&si_pa_R>;
 	si,sia81xx-aux-devs-prefix = "SpkrLeft", "SpkrRight";
 };
 
@@ -824,13 +856,13 @@
 	sia81xx_i2c_L: sia81xx_i2c@L {
 		compatible = "si,sia81xx-i2c";
 		reg = <0x28>;
-		si,sia81xx-dev = <&sia81xx_L>;
+		si,si_pa-dev = <&si_pa_L>;
 	};
 
 	sia81xx_i2c_R: sia81xx_i2c@R {
 		compatible = "si,sia81xx-i2c";
 		reg = <0x29>;
-		si,sia81xx-dev = <&sia81xx_R>;
+		si,si_pa-dev = <&si_pa_R>;
 	};
 };
 
@@ -863,22 +895,23 @@
 &u2port0 {
 	mediatek,eye-vrt = <7>; /* 0~7 */
 	mediatek,eye-term = <7>; /* 0~7 */
-	mediatek,eye-rev6 = <3>; /* 0~3 */
-	mediatek,eye-disc = <7>; /* 0~8 */
-	mediatek,host-eye-vrt = <7>; /* 0~7 */
-	mediatek,host-eye-term = <7>; /* 0~7 */
-	mediatek,host-eye-rev6 = <3>; /* 0~3 */
-	mediatek,host-eye-disc = <0xa>; /* 0~8 */
+	mediatek,rev6 = <3>; /* 0~3 */
+	mediatek,discth = <7>; /* 0~8 */
+	mediatek,eye-vrt-host = <7>; /* 0~7 */
+	mediatek,eye-term-host = <7>; /* 0~7 */
+	mediatek,rev6-host = <3>; /* 0~3 */
+	mediatek,disc-host = <0xa>; /* 0~8 */
 };
 &extcon_usb {
 	vbus-current = <1300000>;
 };
-&adsp_core0 {
-	system = <0 0x56000000 0 0xC00000>;
-};
 
 &mt6315_3_vbuck3 {
 	regulator-always-on;
+};
+
+&mmc0 {
+	status = "disabled";
 };
 
 //#endif  /*OPLUS_VENDOR_SWTP*/

@@ -20,7 +20,7 @@ int rear_als_data_report_t(int value, int status, int64_t time_stamp)
 	int err = 0;
 	struct rear_als_context *cxt = NULL;
 	struct sensor_event event;
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	memset(&event, 0, sizeof(struct sensor_event));
 
 	cxt = rear_als_context_obj;
@@ -57,7 +57,7 @@ int rear_als_cali_report(int *value)
 {
 	int err = 0;
 	struct sensor_event event;
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	memset(&event, 0, sizeof(struct sensor_event));
 	event.handle = ID_REAR_ALS;
 	event.flush_action = CALI_ACTION;
@@ -71,7 +71,7 @@ int rear_als_flush_report(void)
 {
 	struct sensor_event event;
 	int err = 0;
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	memset(&event, 0, sizeof(struct sensor_event));
 
 	event.handle = ID_REAR_ALS;
@@ -88,7 +88,7 @@ static void rear_als_work_func(struct work_struct *work)
 	int value, status;
 	int64_t nt;
 	int err;
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	cxt = rear_als_context_obj;
 	if (cxt->rear_als_data.get_data == NULL) {
 		pr_err("alsps driver not register data path\n");
@@ -128,7 +128,7 @@ rear_als_loop:
 static void rear_als_poll(struct timer_list *t)
 {
 	struct rear_als_context *obj = from_timer(obj, t, timer_rear_als);
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	if ((obj != NULL) && (obj->is_rear_als_polling_run))
 		schedule_work(&obj->report_rear_als);
 }
@@ -137,7 +137,7 @@ static struct rear_als_context *rear_als_context_alloc_object(void)
 {
 	struct rear_als_context *obj = kzalloc(sizeof(*obj), GFP_KERNEL);
 
-	pr_err("%s start\n", __func__);
+	pr_debug("%s start\n", __func__);
 	if (!obj) {
 		pr_err("Alloc rear als object error!\n");
 		return NULL;
@@ -159,7 +159,7 @@ static struct rear_als_context *rear_als_context_alloc_object(void)
 	obj->rear_als_delay_ns = -1;
 	obj->rear_als_latency_ns = -1;
 
-	pr_err("%s end\n", __func__);
+	pr_debug("%s end\n", __func__);
 	return obj;
 }
 
@@ -417,13 +417,13 @@ static ssize_t rear_alscali_store(struct device *dev,
 
 static int rear_light_remove(struct platform_device *pdev)
 {
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	return 0;
 }
 
 static int rear_light_probe(struct platform_device *pdev)
 {
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	rear_als_pltfm_dev = pdev;
 	return 0;
 }
@@ -454,7 +454,7 @@ static int rear_als_real_driver_init(void)
 	int i = 0;
 	int err = 0;
 
-	pr_err("%s start\n", __func__);
+	pr_debug("%s start\n", __func__);
 	for (i = 0; i < MAX_CHOOSE_REAR_ALS_NUM; i++) {
 		pr_err("%s i=%d\n", __func__, i);
 		if (rear_als_init_list[i] != 0) {
@@ -482,7 +482,7 @@ int rear_als_driver_add(struct rear_als_init_info *obj)
 	int err = 0;
 	int i = 0;
 
-	pr_err("%s:Start\n", __func__);
+	pr_debug("%s:Start\n", __func__);
 
 	if (!obj) {
 		pr_err(
@@ -550,7 +550,7 @@ static ssize_t light_read(struct file *file, char __user *buffer, size_t count,
 			  loff_t *ppos)
 {
 	ssize_t read_cnt = 0;
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 
 	read_cnt = sensor_event_read(rear_als_context_obj->rear_als_mdev.minor, file,
 				     buffer, count, ppos);
@@ -560,7 +560,7 @@ static ssize_t light_read(struct file *file, char __user *buffer, size_t count,
 
 static unsigned int light_poll(struct file *file, poll_table *wait)
 {
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	return sensor_event_poll(rear_als_context_obj->rear_als_mdev.minor, file, wait);
 }
 
@@ -574,7 +574,7 @@ static const struct file_operations light_fops = {
 static int rear_als_misc_init(struct rear_als_context *cxt)
 {
 	int err = 0;
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 
 	cxt->rear_als_mdev.minor = ID_REAR_ALS;
 	cxt->rear_als_mdev.name = REAR_ALS_MISC_DEV_NAME;
@@ -589,7 +589,7 @@ static int rear_als_misc_init(struct rear_als_context *cxt)
 int rear_als_register_data_path(struct rear_als_data_path *data)
 {
 	struct rear_als_context *cxt = NULL;
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	/* int err =0; */
 	cxt = rear_als_context_obj;
 	cxt->rear_als_data.get_data = data->get_data;
@@ -609,7 +609,7 @@ int rear_als_register_control_path(struct rear_als_control_path *ctl)
 {
 	struct rear_als_context *cxt = NULL;
 	int err = 0;
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 
 	cxt = rear_als_context_obj;
 	cxt->rear_als_ctl.set_delay = ctl->set_delay;
@@ -650,7 +650,7 @@ int rear_als_probe(void)
 {
 	int err;
 
-	pr_err("%s start!!\n", __func__);
+	pr_debug("%s start!!\n", __func__);
 	rear_als_context_obj = rear_als_context_alloc_object();
 	if (!rear_als_context_obj) {
 		err = -ENOMEM;
@@ -663,7 +663,7 @@ int rear_als_probe(void)
 		pr_err("rear_als real driver init fail\n");
 		goto real_driver_init_fail;
 	}
-	pr_err("%s OK !!\n", __func__);
+	pr_debug("%s OK !!\n", __func__);
 	return 0;
 
 real_driver_init_fail:
@@ -679,7 +679,7 @@ int rear_als_remove(void)
 {
 	int err = 0;
 
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	sysfs_remove_group(&rear_als_context_obj->rear_als_mdev.this_device->kobj,
 			   &rear_als_attribute_group);
 
@@ -696,7 +696,7 @@ EXPORT_SYMBOL_GPL(rear_als_remove);
 
 static int __init rear_als_init(void)
 {
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 #if 0
 	if (rear_als_probe()) {
 		pr_err("failed to register rear_als driver\n");

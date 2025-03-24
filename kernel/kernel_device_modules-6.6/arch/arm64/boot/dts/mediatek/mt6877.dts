@@ -4561,6 +4561,7 @@
 			 <&infracfg_ao_clk CLK_IFRAO_GCE_26M>;
 		clock-names = "gce", "gce-timer";
 		cpr-not-support-cookie;
+		skip-poll-sleep;
 	};
 
 	gce_mbox_sec: gce_mbox_sec@10228000 {

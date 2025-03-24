@@ -29,6 +29,8 @@
 #include <mtk_boot_common.h>
 
 #define CONFIG_MTK_PANEL_EXT
+#define LCM_PHYSICAL_WIDTH		(69401)
+#define LCM_PHYSICAL_HEIGHT		(154610)
 #if defined(CONFIG_MTK_PANEL_EXT)
 #include "../mediatek/mediatek_v2/mtk_panel_ext.h"
 #include "../mediatek/mediatek_v2/mtk_drm_graphics_base.h"
@@ -712,6 +714,8 @@ static const struct drm_display_mode performance_mode_60hz = {
 static struct mtk_panel_params ext_params = {
 	//.change_fps_by_vfp_send_cmd = 1,
 	//.vfp_low_power = 148,
+	.oplus_esd_sleep_status = true,
+	.oplus_esd_sleep_ms = 5000,
 	.cust_esd_check = 0,
 	.esd_check_enable = 1,
 	.lcm_esd_check_table[0] = {
@@ -721,7 +725,8 @@ static struct mtk_panel_params ext_params = {
 
 	.data_rate = 1030, /* 943 */
 	//.data_rate_khz = 1030000, /* 943307 */
-
+	.physical_width_um = LCM_PHYSICAL_WIDTH,
+	.physical_height_um = LCM_PHYSICAL_HEIGHT,
 	.oplus_display_global_dre = 1,
 };
 
@@ -729,12 +734,15 @@ static struct mtk_panel_params ext_params = {
 static struct mtk_panel_params ext_params_50hz = {
 	//.change_fps_by_vfp_send_cmd = 1,
 	//.vfp_low_power = 4484,
+	.oplus_esd_sleep_status = true,
+	.oplus_esd_sleep_ms = 5000,
 	.cust_esd_check = 0,
 	.esd_check_enable = 1,
 	.lcm_esd_check_table[0] = {
 		.cmd = 0x09, .count = 3, .para_list[0] = 0x80, .para_list[1] = 0x03, .para_list[2] = 0x06,
 	},
-
+	.physical_width_um = LCM_PHYSICAL_WIDTH,
+	.physical_height_um = LCM_PHYSICAL_HEIGHT,
 	.data_rate = 1030, /* 943 */
 	//.data_rate_khz = 920190, /* 943307 */
 
@@ -769,6 +777,8 @@ static struct mtk_panel_params ext_params_50hz = {
 static struct mtk_panel_params ext_params_60hz = {
 	//.change_fps_by_vfp_send_cmd = 1,
 	//.vfp_low_power = 2316, /* 60 FPS */
+	.oplus_esd_sleep_status = true,
+	.oplus_esd_sleep_ms = 5000,
 	.cust_esd_check = 0,
 	.esd_check_enable = 1,
 	.lcm_esd_check_table[0] = {
@@ -802,6 +812,8 @@ static struct mtk_panel_params ext_params_60hz = {
 	//	.clk_hs_post = 0x0F,
 	//},
 #endif
+	.physical_width_um = LCM_PHYSICAL_WIDTH,
+	.physical_height_um = LCM_PHYSICAL_HEIGHT,
 	.oplus_display_global_dre = 1,
 };
 #endif
@@ -1111,8 +1123,8 @@ static int lcm_get_modes(struct drm_panel *panel,
 	mode3->type = DRM_MODE_TYPE_DRIVER;
 	drm_mode_probed_add(connector, mode3);
 #endif
-	connector->display_info.width_mm = 152;
-	connector->display_info.height_mm = 248;
+	connector->display_info.width_mm = 69;
+	connector->display_info.height_mm = 155;
 
 	return 1;
 }

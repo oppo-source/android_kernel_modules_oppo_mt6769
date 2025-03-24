@@ -206,7 +206,8 @@ static struct mtk_panel_params ext_params = {
 	.lcm_esd_check_table[0] = {
 		.cmd = 0x0A, .count = 1, .para_list[0] = 0x9D, .mask_list[0] = 0x9D,
 	},
-
+	.oplus_esd_sleep_status = true,
+	.oplus_esd_sleep_ms = 5000,
 	#ifdef CONFIG_MTK_ROUND_CORNER_SUPPORT
 		.round_corner_en = 1,
 		.corner_pattern_height = ROUND_CORNER_H_TOP,
@@ -216,6 +217,7 @@ static struct mtk_panel_params ext_params = {
 	#endif
 
 	.oplus_display_global_dre = 1,
+	.oplus_panel_ccorr_gamma = 1,
 /*	.oplus_custom_hdr_color_tmp = true,
 	.oplus_custom_hdr_red = 950,
 	.oplus_custom_hdr_green = 1024,
@@ -291,7 +293,8 @@ static struct mtk_panel_params ext_params_120hz = {
 	.lcm_esd_check_table[0] = {
 		.cmd = 0x0A, .count = 1, .para_list[0] = 0x9D, .mask_list[0] = 0x9D,
 	},
-
+	.oplus_esd_sleep_status = true,
+	.oplus_esd_sleep_ms = 5000,
 	#ifdef CONFIG_MTK_ROUND_CORNER_SUPPORT
 		.round_corner_en = 1,
 		.corner_pattern_height = ROUND_CORNER_H_TOP,
@@ -301,6 +304,7 @@ static struct mtk_panel_params ext_params_120hz = {
 	#endif
 
 	.oplus_display_global_dre = 1,
+	.oplus_panel_ccorr_gamma = 1,
 //	.oplus_custom_hdr_color_tmp = true,
 //	.oplus_custom_hdr_red = 950,
 //	.oplus_custom_hdr_green = 1024,

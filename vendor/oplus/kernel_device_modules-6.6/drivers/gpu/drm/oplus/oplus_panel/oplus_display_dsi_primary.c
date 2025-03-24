@@ -449,6 +449,9 @@ static int oplus_panel_set_backlight_cmdq(void *dsi, dcs_write_gce_pack cb, void
 {
 	enum dsi_cmd_func cmd_state = DSI_CMD_FUNC_DEFAULT;
 	u32 panel_info = 0;
+	bool normal_backlight_compensate1 = false;
+	bool normal_backlight_compensate2 = false;
+	struct oplus_pwm_turbo_params *pwm_params = oplus_pwm_turbo_get_params();
 
 	if (!dsi) {
 		OPLUS_DSI_ERR("Invalid dsi\n");
@@ -485,9 +488,9 @@ static int oplus_panel_set_backlight_cmdq(void *dsi, dcs_write_gce_pack cb, void
 	}
 #endif /* OPLUS_FEATURE_DISPLAY_ONSCREENFINGERPRINT */
 
-	last_backlight = level;
 	if (level == 1) {
 		OPLUS_DSI_INFO("filter backlight %u setting\n", level);
+		last_backlight = level;
 		return 0;
 	} else if (level > oplus_display0_params->backlight_info.oplus_brightness_hw_max) {
 		level = oplus_display0_params->backlight_info.oplus_brightness_hw_max;
@@ -502,6 +505,17 @@ static int oplus_panel_set_backlight_cmdq(void *dsi, dcs_write_gce_pack cb, void
 		level = 0;
 	}
 
+	if ((pwm_params != NULL) && pwm_params->pwm_aid_switch_enable && (level > 1) && !oplus_panel_pwm_onepulse_is_enabled()) {
+		normal_backlight_compensate1 = (last_backlight <= get_pwm_turbo_pulse_bl()) && (level > get_pwm_turbo_pulse_bl());
+		normal_backlight_compensate2 = (last_backlight > get_pwm_turbo_pulse_bl()) && (level <= get_pwm_turbo_pulse_bl());
+		if (normal_backlight_compensate1) {
+			OPLUS_DSI_INFO("last_backlight=%d, level=%d, Normal mode send PWM_SWITCH_18TO3PUL cmd\n", last_backlight, level);
+			oplus_dsi_panel_send_cmd(dsi, DSI_CMD_PWM_SWITCH_18TO3PUL, handle, cmd_state);
+		} else if (normal_backlight_compensate2) {
+			OPLUS_DSI_INFO("last_backlight=%d, level=%d, Normal mode send PWM_SWITCH_3TO18PUL cmd\n", last_backlight, level);
+			oplus_dsi_panel_send_cmd(dsi, DSI_CMD_PWM_SWITCH_3TO18PUL, handle, cmd_state);
+		}
+	}
 	oplus_display_brightness = level;
 	if ((lcm_all_cmd_table[DSI_CMD_SET_BACKLIGHT].cmd_lines > 0) &&
 			(lcm_all_cmd_table[DSI_CMD_SET_BACKLIGHT].para_table[0].count > 2)) {
@@ -524,16 +538,34 @@ static int oplus_panel_set_backlight_cmdq(void *dsi, dcs_write_gce_pack cb, void
 #ifdef OPLUS_FEATURE_DISPLAY_HPWM
 static int oplus_panel_set_pwm_pulse(void *dsi, dcs_write_gce_pack cb, void *handle, unsigned int enable)
 {
+	struct oplus_pwm_turbo_params *pwm_params = oplus_pwm_turbo_get_params();
+
 	if (!dsi) {
+		return -EINVAL;
+	}
+	if (!pwm_params) {
+		OPLUS_PWM_ERR("pwm_params is NULL\n");
 		return -EINVAL;
 	}
 
 	OPLUS_DSI_INFO("set to %dpulse\n", enable ? 1 : 3);
 
-	if (enable) {
-		oplus_dsi_panel_send_cmd(dsi, DSI_CMD_PWM_SWITCH_3TO1PUL, handle, DSI_CMD_FUNC_DEFAULT);
-	} else {
+	switch (pwm_params->pwm_pul_cmd_id) {
+	case PWM_SWITCH_1TO3:
 		oplus_dsi_panel_send_cmd(dsi, DSI_CMD_PWM_SWITCH_1TO3PUL, handle, DSI_CMD_FUNC_DEFAULT);
+		break;
+	case PWM_SWITCH_3TO1:
+		oplus_dsi_panel_send_cmd(dsi, DSI_CMD_PWM_SWITCH_3TO1PUL, handle, DSI_CMD_FUNC_DEFAULT);
+		break;
+	case PWM_SWITCH_18TO1:
+		oplus_dsi_panel_send_cmd(dsi, DSI_CMD_PWM_SWITCH_18TO1PUL, handle, DSI_CMD_FUNC_DEFAULT);
+		break;
+	case PWM_SWITCH_1TO18:
+		oplus_dsi_panel_send_cmd(dsi, DSI_CMD_PWM_SWITCH_1TO18PUL, handle, DSI_CMD_FUNC_DEFAULT);
+		break;
+	default:
+		OPLUS_PWM_WARN("Invalid pwm_pul_cmd_id CMD\n");
+		break;
 	}
 
 	return 0;

@@ -81,7 +81,7 @@ static void rear_flicker_work_func(struct work_struct *work)
 	int value, status;
 	int64_t nt;
 	int err;
-	pr_err("%s start\n", __func__);
+	pr_debug("%s start\n", __func__);
 
 	cxt = rear_flicker_context_obj;
 	if (cxt->rear_flicker_data.get_data == NULL) {
@@ -131,7 +131,7 @@ static struct rear_flicker_context *rear_flicker_context_alloc_object(void)
 {
 	struct rear_flicker_context *obj = kzalloc(sizeof(*obj), GFP_KERNEL);
 
-	pr_err("%s start\n", __func__);
+	pr_debug("%s start\n", __func__);
 	if (!obj) {
 		pr_err("Alloc rear flicker object error!\n");
 		return NULL;
@@ -153,7 +153,7 @@ static struct rear_flicker_context *rear_flicker_context_alloc_object(void)
 	obj->rear_flicker_delay_ns = -1;
 	obj->rear_flicker_latency_ns = -1;
 
-	pr_err("%s end\n", __func__);
+	pr_debug("%s end\n", __func__);
 	return obj;
 }
 
@@ -417,7 +417,7 @@ static int rear_light_remove(struct platform_device *pdev)
 
 static int rear_light_probe(struct platform_device *pdev)
 {
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	rear_flicker_pltfm_dev = pdev;
 	return 0;
 }
@@ -448,7 +448,7 @@ static int rear_flicker_real_driver_init(void)
 	int i = 0;
 	int err = 0;
 
-	pr_err("%s start\n", __func__);
+	pr_debug("%s start\n", __func__);
 	for (i = 0; i < MAX_CHOOSE_REAR_FLICKER_NUM; i++) {
 		pr_err("%s i=%d\n", __func__, i);
 		if (rear_flicker_init_list[i] != 0) {
@@ -476,7 +476,7 @@ int rear_flicker_driver_add(struct rear_flicker_init_info *obj)
 	int err = 0;
 	int i = 0;
 
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 
 	if (!obj) {
 		pr_err(
@@ -584,7 +584,7 @@ int rear_flicker_register_data_path(struct rear_flicker_data_path *data)
 	cxt->rear_flicker_data.get_data = data->get_data;
 	cxt->rear_flicker_data.vender_div = data->vender_div;
 	cxt->rear_flicker_data.rear_flicker_get_raw_data = data->rear_flicker_get_raw_data;
-	pr_err("rear_flicker register data path vender_div: %d\n",
+	pr_debug("rear_flicker register data path vender_div: %d\n",
 		  cxt->rear_flicker_data.vender_div);
 	if (cxt->rear_flicker_data.get_data == NULL) {
 		pr_err("rear_flicker register data path fail\n");
@@ -638,7 +638,7 @@ int rear_flicker_probe(void)
 {
 	int err;
 
-	pr_err("%s start!!\n", __func__);
+	pr_debug("%s start!!\n", __func__);
 	rear_flicker_context_obj = rear_flicker_context_alloc_object();
 	if (!rear_flicker_context_obj) {
 		err = -ENOMEM;
@@ -651,7 +651,7 @@ int rear_flicker_probe(void)
 		pr_err("rear_flicker real driver init fail\n");
 		goto real_driver_init_fail;
 	}
-	pr_err("%s OK !!\n", __func__);
+	pr_debug("%s OK !!\n", __func__);
 	return 0;
 
 real_driver_init_fail:
@@ -667,7 +667,7 @@ int rear_flicker_remove(void)
 {
 	int err = 0;
 
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	sysfs_remove_group(&rear_flicker_context_obj->rear_flicker_mdev.this_device->kobj,
 			   &rear_flicker_attribute_group);
 
@@ -684,7 +684,7 @@ EXPORT_SYMBOL_GPL(rear_flicker_remove);
 
 static int __init rear_flicker_init(void)
 {
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	#if 0
 		if (rear_flicker_probe()) {
 			pr_err("failed to register rear_flicker driver\n");

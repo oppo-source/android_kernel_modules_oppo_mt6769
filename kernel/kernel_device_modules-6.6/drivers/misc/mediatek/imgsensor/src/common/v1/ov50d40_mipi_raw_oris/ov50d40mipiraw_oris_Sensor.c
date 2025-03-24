@@ -107,15 +107,15 @@ static struct imgsensor_info_struct imgsensor_info = {
     },
 
     .hs_video = {
-        .pclk = 100000000, /*1280x720@120fps*/
+        .pclk = 100000000, /*1920x1080@120fps*/
         .linelength = 425,
-        .framelength = 1962,
+        .framelength = 1960,
         .startx = 0,
         .starty = 0,
-        .grabwindow_width = 1280,
-        .grabwindow_height = 720,
+        .grabwindow_width = 1920,
+        .grabwindow_height = 1080,
         .mipi_data_lp2hs_settle_dc = 85,
-        .mipi_pixel_rate = 768000000,
+        .mipi_pixel_rate = 760800000,
         .max_framerate = 1200,
     },
 
@@ -228,7 +228,7 @@ static struct SENSOR_WINSIZE_INFO_STRUCT imgsensor_winsize_info[8] = {
 	{ 8192,  6144,  0,   0,  8192,  6144,  4096,  3072,  0000,  0000,  4096,  3072,  0,  0,  4096,  3072},	/*Preview*/
 	{ 8192,  6144,  0,   0,  8192,  6144,  4096,  3072,  0000,  0000,  4096,  3072,  0,  0,  4096,  3072},/*Capture*/
 	{ 8192,  6144,  0,   0,  8192,  4608,  4096,  2304,  0000,  0000,  4096,  2304,  0,  0,  4096,  2304},	/*normal video*/
-	{ 8192,  6144, 256, 912,  7680,  4320,  1280,  720,   0000,  0000,  1280,  720,   0,  0,  1280,  720},	/*hs video*/
+	{ 8192,  6144, 256, 912, 7680,  4320,  1920,  1080,  0000,  0000,  1920,  1080,  0,  0,  1920,  1080},	/*hs video*/
 	{ 8192,  6144,  16, 776,  8160,  4592,  4080,  2296,  0000,  0000,  4080,  2296,  0,  0,  4080,  2296},	/*slim video*/
 	{ 8192,  6144,  0,   0,  8192,  6144,  4096,  3072,  0000,  0000,  4096,  3072,  0,  0,  4096,  3072},	/*custom1 DualCam */
 	{ 8192,  6144,  16,   0,  8160,  6144,  4080,  3072,  0000,  0000,  4080,  3072,  0,  0,  4080,  3072},	/*custom2 DualCam */

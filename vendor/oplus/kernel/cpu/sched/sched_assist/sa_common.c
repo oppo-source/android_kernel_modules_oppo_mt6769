@@ -22,6 +22,7 @@
 #include <linux/cpufeature.h>
 #include <linux/sched/clock.h>
 #include <linux/thread_info.h>
+#include <linux/threads.h>
 #include <linux/profile.h>
 #include <linux/kprobes.h>
 #include <linux/cgroup.h>
@@ -86,6 +87,17 @@
 #define RT_R_MULT_UNIT (CFS_R_MULT_UNIT * SCHED_MAX_CFS_R)
 #define AFFINITY_MASK_MULT_UNIT (RT_R_MULT_UNIT * SCHED_MAX_RT_R)
 #define AFFINITY_SET_MULT_UNIT (AFFINITY_MASK_MULT_UNIT * SCHED_MAX_AFFINITY_MASK)
+
+#ifdef CONFIG_OPLUS_SCHED_HALT_MASK_PRT
+#define SCHED_PARTIAL_HALT_OFFSET 10000LL
+
+cpumask_t cur_cpus_halt_mask = { CPU_BITS_NONE };
+EXPORT_SYMBOL(cur_cpus_halt_mask);
+cpumask_t cur_cpus_phalt_mask = { CPU_BITS_NONE };
+EXPORT_SYMBOL(cur_cpus_phalt_mask);
+DEFINE_PER_CPU(int[OPLUS_MAX_PAUSE_TYPE], oplus_cur_pause_client);
+EXPORT_SYMBOL(oplus_cur_pause_client);
+#endif /* CONFIG_OPLUS_SCHED_HALT_MASK_PRT */
 
 #ifdef CONFIG_OPLUS_FEATURE_TICK_GRAN
 DEFINE_PER_CPU(u64, retired_instrs);
@@ -669,7 +681,7 @@ void sched_info_systrace_c(unsigned int cpu, struct task_struct *p)
 	s_info += ((u8)cpumask_bits(&p->cpus_mask)[0]) * AFFINITY_MASK_MULT_UNIT;
 	if (cpumask_weight(&p->cpus_mask) < nr_cpu_ids) {
 		if (ots && likely(test_bit(OTS_STATE_SET_AFFINITY, &ots->state))
-			&& ots->affinity_pid > 0 && ots->affinity_pid < MAX_PID)
+			&& ots->affinity_pid > 0 && ots->affinity_pid < PID_MAX_LIMIT)
 			s_info += ((u64)ots->affinity_pid) * AFFINITY_SET_MULT_UNIT;
 	}
 	snprintf(buf, sizeof(buf), "C|9999|Cpu%d_sched_info|%llu\n", cpu, s_info);
@@ -700,6 +712,38 @@ void sa_scene_systrace_c(void)
 	}
 }
 
+#ifdef CONFIG_OPLUS_SCHED_HALT_MASK_PRT
+void sa_corectl_systrace_c(void)
+{
+	char buf[256];
+	int cur_mask;
+	u64 halt_info = 0;
+	unsigned int cpu;
+	int *cur_client_state;
+
+	if (likely(!(global_debug_enabled & DEBUG_SYSTRACE))) {
+		return;
+	}
+
+	cur_mask = cpumask_bits(&cur_cpus_halt_mask)[0];
+	snprintf(buf, sizeof(buf), "C|9999|Cpu_Halt_Mask|%d\n", cur_mask);
+	tracing_mark_write(buf);
+
+	cur_mask = cpumask_bits(&cur_cpus_phalt_mask)[0];
+	snprintf(buf, sizeof(buf), "C|9999|Cpu_Partial_Halt_Mask|%d\n", cur_mask);
+	tracing_mark_write(buf);
+
+
+	for_each_present_cpu(cpu) {
+		cur_client_state = per_cpu_ptr(oplus_cur_pause_client, cpu);
+		halt_info = cur_client_state[OPLUS_HALT];
+		halt_info += cur_client_state[OPLUS_PARTIAL_HALT] * SCHED_PARTIAL_HALT_OFFSET;
+		snprintf(buf, sizeof(buf), "C|9999|Cpu%d_Pause_Client|%llu\n", cpu, halt_info);
+		tracing_mark_write(buf);
+	}
+}
+EXPORT_SYMBOL(sa_corectl_systrace_c);
+#endif /* CONFIG_OPLUS_SCHED_HALT_MASK_PRT */
 
 void hwbinder_systrace_c(unsigned int cpu, int flag)
 {
@@ -1277,7 +1321,7 @@ bool im_mali(const char *comm)
 {
 	return !strcmp(comm, "mali-event-hand") ||
 		!strcmp(comm, "mali-mem-purge") || !strcmp(comm, "mali-cpu-comman") ||
-		!strcmp(comm, "mali-compiler");
+		!strcmp(comm, "mali-compiler") || !strcmp(comm, "mali-cmar-backe");
 }
 #endif
 
@@ -1310,6 +1354,7 @@ void adjust_rt_lowest_mask(struct task_struct *p, struct cpumask *local_cpu_mask
 		return;
 
 	cpumask_copy(&mask_backup, local_cpu_mask);
+
 
 	drop_cpu = cpumask_first(local_cpu_mask);
 	while (drop_cpu < nr_cpu_ids) {
@@ -1735,7 +1780,6 @@ static inline void do_boost_kill_task(struct task_struct *p)
 		cpumask_copy(&p->cpus_mask, boost_mask);
 		p->nr_cpus_allowed = cpumask_weight(boost_mask);
 	}
-
 }
 
 void android_vh_exit_signal_handler(void *unused, struct task_struct *p)
@@ -1800,30 +1844,26 @@ void sched_setaffinity_tracking(struct task_struct *task, const struct cpumask *
 	}
 }
 
-void android_rvh_sched_setaffinity_handler(void *unused, struct task_struct *p,
-					const struct cpumask *in_mask,
-					int *retval)
+void android_rvh_set_cpus_allowed_by_task_handler(void *unused, const struct cpumask *cpu_valid_mask,
+	const struct cpumask *new_mask, struct task_struct *task, unsigned int *dest_cpu)
 {
 	struct oplus_task_struct *ots;
-	/* nothing to do if the affinity call failed */
-	if (*retval)
-		return;
 
-	ots = get_oplus_task_struct(p);
+	ots = get_oplus_task_struct(task);
 	if (IS_ERR_OR_NULL(ots))
 		return;
 
-	if (cpumask_weight(in_mask) == nr_cpu_ids) {
+	if (cpumask_weight(new_mask) == nr_cpu_ids) {
 		clear_bit(OTS_STATE_SET_AFFINITY, &ots->state);
 		ots->affinity_pid = -1;
 		ots->affinity_tgid = -1;
 		if (unlikely(global_debug_enabled & DEBUG_FTRACE)) {
-			pr_info("clear affinity to task pid=%d comm=%s\n", p->pid, p->comm);
+			pr_info("clear affinity to task pid=%d comm=%s\n", task->pid, task->comm);
 		}
 		return;
 	}
 
-	sched_setaffinity_tracking(p, in_mask);
+	sched_setaffinity_tracking(task, new_mask);
 }
 
 /* TODO: [ALM:7849986] This code should be removed after 2024.09.27 */
@@ -1865,5 +1905,251 @@ void android_vh_sched_setaffinity_early_handler(void *unused, struct task_struct
 
 	if (test_bit(IM_FLAG_FORBID_SET_CPU_AFFINITY, &im_flag))
 		*skip = 1;
+}
+#endif
+
+#ifdef CONFIG_OPLUS_SCHED_GROUP_OPT
+
+static inline s64 entity_key(struct cfs_rq *cfs_rq, struct sched_entity *se)
+{
+	return (s64)(se->vruntime - cfs_rq->min_vruntime);
+}
+
+u64 avg_vruntime(struct cfs_rq *cfs_rq)
+{
+	struct sched_entity *curr = cfs_rq->curr;
+	s64 avg = cfs_rq->avg_vruntime;
+	long load = cfs_rq->avg_load;
+
+	if (curr && curr->on_rq) {
+		unsigned long weight = scale_load_down(curr->load.weight);
+
+		avg += entity_key(cfs_rq, curr) * weight;
+		load += weight;
+	}
+
+	if (load) {
+		/* sign flips effective floor / ceil */
+		if (avg < 0)
+			avg -= (load - 1);
+		avg = div_s64(avg, load);
+	}
+
+	return cfs_rq->min_vruntime + avg;
+}
+
+static inline void update_load_set(struct load_weight *lw, unsigned long w)
+{
+	lw->weight = w;
+	lw->inv_weight = 0;
+}
+
+#define WMULT_CONST	(~0U)
+#define WMULT_SHIFT	32
+
+static void __update_inv_weight(struct load_weight *lw)
+{
+	unsigned long w;
+
+	if (likely(lw->inv_weight))
+		return;
+
+	w = scale_load_down(lw->weight);
+
+	if (BITS_PER_LONG > 32 && unlikely(w >= WMULT_CONST))
+		lw->inv_weight = 1;
+	else if (unlikely(!w))
+		lw->inv_weight = WMULT_CONST;
+	else
+		lw->inv_weight = WMULT_CONST / w;
+}
+
+/*
+ * delta_exec * weight / lw.weight
+ *   OR
+ * (delta_exec * (weight * lw->inv_weight)) >> WMULT_SHIFT
+ *
+ * Either weight := NICE_0_LOAD and lw \e sched_prio_to_wmult[], in which case
+ * we're guaranteed shift stays positive because inv_weight is guaranteed to
+ * fit 32 bits, and NICE_0_LOAD gives another 10 bits; therefore shift >= 22.
+ *
+ * Or, weight =< lw.weight (because lw.weight is the runqueue weight), thus
+ * weight/lw.weight <= 1, and therefore our shift will also be positive.
+ */
+static u64 __calc_delta(u64 delta_exec, unsigned long weight, struct load_weight *lw)
+{
+	u64 fact = scale_load_down(weight);
+	u32 fact_hi = (u32)(fact >> 32);
+	int shift = WMULT_SHIFT;
+	int fs;
+
+	__update_inv_weight(lw);
+
+	if (unlikely(fact_hi)) {
+		fs = fls(fact_hi);
+		shift -= fs;
+		fact >>= fs;
+	}
+
+	fact = mul_u32_u32(fact, lw->inv_weight);
+
+	fact_hi = (u32)(fact >> 32);
+	if (fact_hi) {
+		fs = fls(fact_hi);
+		shift -= fs;
+		fact >>= fs;
+	}
+
+	return mul_u64_u32_shr(delta_exec, fact, shift);
+}
+
+/*
+ * delta /= w
+ */
+static inline u64 calc_delta_fair(u64 delta, struct sched_entity *se)
+{
+	if (unlikely(se->load.weight != NICE_0_LOAD))
+		delta = __calc_delta(delta, NICE_0_LOAD, &se->load);
+
+	return delta;
+}
+
+static s64 entity_lag(u64 avruntime, struct sched_entity *se)
+{
+	s64 vlag, limit;
+
+	vlag = avruntime - se->vruntime;
+	limit = calc_delta_fair(max_t(u64, 2*se->slice, TICK_NSEC), se);
+
+	return clamp(vlag, -limit, limit);
+}
+
+static void reweight_eevdf(struct sched_entity *se, u64 avruntime,
+			   unsigned long weight)
+{
+	unsigned long old_weight = se->load.weight;
+	s64 vlag, vslice;
+
+	/*
+	 * VRUNTIME
+	 * ========
+	 *
+	 * COROLLARY #1: The virtual runtime of the entity needs to be
+	 * adjusted if re-weight at !0-lag point.
+	 *
+	 * Proof: For contradiction assume this is not true, so we can
+	 * re-weight without changing vruntime at !0-lag point.
+	 *
+	 *             Weight	VRuntime   Avg-VRuntime
+	 *     before    w          v            V
+	 *      after    w'         v'           V'
+	 *
+	 * Since lag needs to be preserved through re-weight:
+	 *
+	 *	lag = (V - v)*w = (V'- v')*w', where v = v'
+	 *	==>	V' = (V - v)*w/w' + v		(1)
+	 *
+	 * Let W be the total weight of the entities before reweight,
+	 * since V' is the new weighted average of entities:
+	 *
+	 *	V' = (WV + w'v - wv) / (W + w' - w)	(2)
+	 *
+	 * by using (1) & (2) we obtain:
+	 *
+	 *	(WV + w'v - wv) / (W + w' - w) = (V - v)*w/w' + v
+	 *	==> (WV-Wv+Wv+w'v-wv)/(W+w'-w) = (V - v)*w/w' + v
+	 *	==> (WV - Wv)/(W + w' - w) + v = (V - v)*w/w' + v
+	 *	==>	(V - v)*W/(W + w' - w) = (V - v)*w/w' (3)
+	 *
+	 * Since we are doing at !0-lag point which means V != v, we
+	 * can simplify (3):
+	 *
+	 *	==>	W / (W + w' - w) = w / w'
+	 *	==>	Ww' = Ww + ww' - ww
+	 *	==>	W * (w' - w) = w * (w' - w)
+	 *	==>	W = w	(re-weight indicates w' != w)
+	 *
+	 * So the cfs_rq contains only one entity, hence vruntime of
+	 * the entity @v should always equal to the cfs_rq's weighted
+	 * average vruntime @V, which means we will always re-weight
+	 * at 0-lag point, thus breach assumption. Proof completed.
+	 *
+	 *
+	 * COROLLARY #2: Re-weight does NOT affect weighted average
+	 * vruntime of all the entities.
+	 *
+	 * Proof: According to corollary #1, Eq. (1) should be:
+	 *
+	 *	(V - v)*w = (V' - v')*w'
+	 *	==>    v' = V' - (V - v)*w/w'		(4)
+	 *
+	 * According to the weighted average formula, we have:
+	 *
+	 *	V' = (WV - wv + w'v') / (W - w + w')
+	 *	   = (WV - wv + w'(V' - (V - v)w/w')) / (W - w + w')
+	 *	   = (WV - wv + w'V' - Vw + wv) / (W - w + w')
+	 *	   = (WV + w'V' - Vw) / (W - w + w')
+	 *
+	 *	==>  V'*(W - w + w') = WV + w'V' - Vw
+	 *	==>	V' * (W - w) = (W - w) * V	(5)
+	 *
+	 * If the entity is the only one in the cfs_rq, then reweight
+	 * always occurs at 0-lag point, so V won't change. Or else
+	 * there are other entities, hence W != w, then Eq. (5) turns
+	 * into V' = V. So V won't change in either case, proof done.
+	 *
+	 *
+	 * So according to corollary #1 & #2, the effect of re-weight
+	 * on vruntime should be:
+	 *
+	 *	v' = V' - (V - v) * w / w'		(4)
+	 *	   = V  - (V - v) * w / w'
+	 *	   = V  - vl * w / w'
+	 *	   = V  - vl'
+	 */
+	if (avruntime != se->vruntime) {
+		vlag = entity_lag(avruntime, se);
+		vlag = div_s64(vlag * old_weight, weight);
+		se->vruntime = avruntime - vlag;
+	}
+
+	/*
+	 * DEADLINE
+	 * ========
+	 *
+	 * When the weight changes, the virtual time slope changes and
+	 * we should adjust the relative virtual deadline accordingly.
+	 *
+	 *	d' = v' + (d - v)*w/w'
+	 *	   = V' - (V - v)*w/w' + (d - v)*w/w'
+	 *	   = V  - (V - v)*w/w' + (d - v)*w/w'
+	 *	   = V  + (d - V)*w/w'
+	 */
+	vslice = (s64)(se->deadline - avruntime);
+	vslice = div_s64(vslice * old_weight, weight);
+	se->deadline = avruntime + vslice;
+}
+
+void android_vh_reweight_entity_handler(void *unused, struct sched_entity *se)
+{
+	if (!(global_sched_group_enabled & 0x1))
+		return;
+	if (!entity_is_task(se)) {
+		unsigned long group_weight = clamp(group_cfs_rq(se)->load.weight,
+			scale_load(MIN_SHARES), scale_load(MAX_SHARES));
+		struct cfs_rq *cfs_rq = cfs_rq_of(se);
+		if (se->on_rq) {
+			u64 avruntime = avg_vruntime(cfs_rq);
+			reweight_eevdf(se, avruntime, group_weight);
+		} else {
+				/*
+				 * Because we keep se->vlag = V - v_i, while: lag_i = w_i*(V - v_i),
+				 * we need to scale se->vlag when w_i changes.
+				 */
+				se->vlag = div_s64(se->vlag * se->load.weight, group_weight);
+		}
+
+		update_load_set(&se->load, group_weight);
+	}
 }
 #endif

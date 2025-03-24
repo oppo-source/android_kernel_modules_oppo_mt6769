@@ -833,6 +833,36 @@
 	};
 };
 
+&accdet {
+	/* accdet micbias voltage: 0x09:2.85v 0x08:2.8v 0x07,
+	 * 2.7v;0x05,2.5v;0x02,1.9v
+	 */
+	accdet-mic-vol = <7>;
+	/* accdet pwm_width, pwm_thresh, fall_delay, rise_delay
+	 * debounce0, debounce1, debounce3, debounce4
+	 * eint pwm_width, eint pwm_thresh
+	 * eint deb(debounce0, debounce1, debounce2, debounce3), inv_debounce
+	 */
+	headset-mode-setting = <0x500 0x500 1 0x1f0
+				0x800 0x800 0x20 0x44
+				0x4 0x1
+				0x5 0x3 0x3 0x5 0xe>;
+	accdet-plugout-debounce = <1>;
+	/*1:ACC mode, 2:low cost without in bias, 6:low cost with in bias*/
+	accdet-mic-mode = <2>;
+	/*0--MD_MAX--UP_MAX--DW_MAX*/
+	headset-three-key-threshold = <0 82 170 306>;
+	//#else
+	//headset-three-key-threshold = <0 80 220 400>;
+	//#endif
+	headset-three-key-threshold-CDD = <0 121 192 600>;
+	/*0--MD_MAX--VOICE_MAX--UP_MAX--DW_MAX*/
+	headset-four-key-threshold = <0 58 121 192 400>;
+
+	/* select VTH to 2v and 500k, use internal resitance */
+	eint_use_ext_res = <0>;
+	status = "okay";
+};
 
 &pio {
 	fsa_hs_det: fsa_hs_det {
@@ -862,12 +892,12 @@
 &u2port0 {
 	mediatek,eye-vrt = <7>; /* 0~7 */
 	mediatek,eye-term = <5>; /* 0~7 */
-	mediatek,eye-rev6 = <3>; /* 0~3 */
-	mediatek,eye-disc = <7>; /* 0~8 */
-	mediatek,host-eye-vrt = <6>; /* 0~7 */
-	mediatek,host-eye-term = <3>; /* 0~7 */
-	mediatek,host-eye-rev6 = <3>; /* 0~3 */
-	mediatek,host-eye-disc = <0xf>; /* 0~8 */
+	mediatek,rev6 = <3>; /* 0~3 */
+	mediatek,discth = <7>; /* 0~8 */
+	mediatek,eye-vrt-host = <6>; /* 0~7 */
+	mediatek,eye-term-host = <3>; /* 0~7 */
+	mediatek,rev6-host = <3>; /* 0~3 */
+	mediatek,disc-host = <0xf>; /* 0~8 */
 };
 &extcon_usb {
 	vbus-current = <1300000>;

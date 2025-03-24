@@ -67,6 +67,7 @@ struct oplus_pwm_turbo_params {
 	u32  oplus_pwm_switch_state;
 	u32  oplus_pwm_threshold;
 	u32  pwm_pul_cmd_id;
+	bool pwm_aid_switch_enable;
 	bool pwm_onepulse_support;
 	bool pwm_onepulse_enabled;
 	bool oplus_pwm_switch_state_changed;

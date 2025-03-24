@@ -1747,9 +1747,7 @@ void Oplusimgsensor_powerstate_notify(bool val)
           || is_project(22277) || is_project(23031) || is_project(23231) || is_project(23035) || is_project(23321)
           || is_project(23053) || is_project(23054) || is_project(23253) || is_project(23055)
           || is_project(23613) || is_project(23686) || is_project(23687) || is_project(23689) || is_project(23707) || is_project(23709)
-          || is_project(23051) || is_project(23241) || is_project(23243) || is_project(22351) || is_project(22352) || is_project(22353)
-          || is_project(22361) || is_project(22362) || is_project(22363) || is_project(22364) || is_project(22365)
-          || is_project(22367) || is_project(22368)){
+		  || is_project(23051) || is_project(23241) || is_project(23243)) {
 
         static int notify_cnt = 0;
 

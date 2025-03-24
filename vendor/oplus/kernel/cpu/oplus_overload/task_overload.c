@@ -381,9 +381,11 @@ void set_task_state(struct task_struct *p)
 	unsigned long flags;
 	const struct cred *tcred;
 
-	if (p->pid >= MAX_PID || atd_count >= MAX_SIZE)
-		return;
 	spin_lock_irqsave(&tol_lock, flags);
+	if (p->pid >= MAX_PID || atd_count >= MAX_SIZE) {
+		spin_unlock_irqrestore(&tol_lock, flags);
+		return;
+	}
 	tsk = task_info + atd_count;
 	tsk->pid = p->pid;
 	rcu_read_lock();

@@ -7,7 +7,16 @@
 #define __MT_PWM_H__
 
 #include <linux/types.h>
+
+#ifndef OPLUS_FEATURE_CAMERA_COMMON
+#define OPLUS_FEATURE_CAMERA_COMMON
+#endif
+
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+#include "mtk_pwm_hal.h"
+#else
 #include <mt-plat/mtk_pwm_hal.h>
+#endif
 
 struct pwm_easy_config {
 	u32 pwm_no;

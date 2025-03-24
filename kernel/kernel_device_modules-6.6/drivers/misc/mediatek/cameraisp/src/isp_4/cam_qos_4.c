@@ -25,6 +25,7 @@
 
 #include <linux/pm_qos.h>
 #include <dt-bindings/interconnect/mtk,mmqos.h>
+#include <soc/mediatek/mmqos.h>
 
 #define MyTag "[ISP]"
 
@@ -594,6 +595,7 @@ int ISP4_SetPMQOS(
 			ptr = (struct ISP_BW *)pvalue;
 			mtk_pmqos_set(module, i, ptr[i]);
 		}
+		mtk_mmqos_wait_throttle_done();
 		LOG_DBG(
 			"PM_QoS: module[%d]-bw_update, bw(peak avg)(%d %d) MB/s\n",
 			module, ptr[_rrzo_].peak, ptr[_rrzo_].avg);

@@ -1,14 +1,10 @@
 #!/bin/bash
 
-function init_build_environment() {
-
+function set_build_environment_common() {
     export CHIPSET_COMPANY=MTK
-    export OPLUS_VND_BUILD_PLATFORM=MT6991
     source vendor/oplus/kernel/prebuilt/vendorsetup.sh
     export BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
-    export DEFCONFIG_OVERLAYS=""
     export KERNEL_VERSION=kernel-6.6
-    export OPLUS_DEFCONFIG_OVERLAYS=k6991v1_64
     export OPLUS_FEATURES=""
     export SOURCE_DATE_EPOCH="0"
     # export OPLUS_USE_JFROG_CACHE="false"
@@ -44,14 +40,9 @@ function init_build_environment() {
     BIN="${ACKDIR}/prebuilts/kernel-build-tools/linux-x86/bin/"
     KERNEL_OUT=${ACKDIR}/out
     KRN_MGK=mgk_64_k66
-    KRN_PLATFORM=k6991v1_64
-    KLEAF_OBJ=${TOPDIR}/out_krn/target/product/${KRN_MGK}/obj/KLEAF_OBJ
-    OUTPUT_BASE=${KLEAF_OBJ}/bazel/output_user_root/output_base
-    DIST_DIR=${KLEAF_OBJ}/dist
     VERSION="6.6"
     CURRENT_LOG="$(date +"%Y_%m_%d_%H_%M_%S")"
     MKDTIMG="${TOPDIR}/kernel/prebuilts/kernel-build-tools/linux-x86/bin/mkdtimg"
-    RELATIVE_KERNEL_OBJ=out/target/product/${KRN_PLATFORM}/obj/KERNEL_OBJ
     KERNEL_OBJ=${TOPDIR}/${RELATIVE_KERNEL_OBJ}
     DEVICE_TREE_OUT=${KERNEL_OBJ}/kernel/kernel_device_modules-${VERSION}/arch/arm64/boot/dts
     DEVICE_TREE_SRC=${TOPDIR}/kernel/kernel_device_modules-${VERSION}/arch/arm64/boot/dts/mediatek
@@ -59,19 +50,140 @@ function init_build_environment() {
     BUILD_TOOLS=device/mediatek/build/build/tools
     KERNEL_IMG=${TOPDIR}/kernel/bazel-bin/kernel_device_modules-${VERSION}/${KRN_MGK}_kernel_aarch64.${variants_type}
     MODULE_KO=${TOPDIR}/kernel/bazel-bin/kernel_device_modules-${VERSION}/${KRN_MGK}_customer_modules_install.${variants_type}
-    dtb_support_list="mt6991"
-    dtbo_support_list="k6991v1_64 oplus6991_23101 oplus6991_23105 oplus6991_23205 oplus6991_23216 oplus6991_23106"
     DWS_SRC=${TOPDIR}/vendor/mediatek/proprietary/tools/dct/dws/${dtb_support_list}
     STRIP="${TOPDIR}/prebuilts/clang/host/linux-x86/llvm-binutils-stable/llvm-strip"
     VENDOR_MODULES_DIR=${DIST_DIR}/kernel_device_modules-${VERSION}/${KRN_MGK}_customer_modules_install.${variants_type}
-    VENDOR_INTREE_MODULES_DIR=${OUTPUT_BASE}/execroot/__main__/bazel-out/k8-fastbuild/bin/kernel_device_modules-${VERSION}/${KRN_MGK}_modules.user
     SYSTEM_MODULES_DIR=${DIST_DIR}/kernel_device_modules-${VERSION}/${KRN_MGK}_kernel_aarch64.${variants_type}
     INTREE_MODULE_OUT=${TOPDIR}/kernel/bazel-bin/kernel_device_modules-${VERSION}/${KRN_MGK}_modules.${variants_type}
     MANIFEST=${TOPDIR}/kernel/kernel_device_modules-${VERSION}/fake_manifest.xml
-    ko_order_table=device/mediateksample/${KRN_PLATFORM}/ko_order_table.csv
     my_dtbo_id=0
     mkdir -p ${IMAGE_OUT}
     set_platform
+}
+
+function set_build_environment_mt6991() {
+    export OPLUS_VND_BUILD_PLATFORM=MT6991
+    export DEFCONFIG_OVERLAYS=""
+    export OPLUS_DEFCONFIG_OVERLAYS=k6991v1_64
+
+    KRN_PLATFORM=k6991v1_64
+    MAINDTB_PATH=${TOPDIR}/out/target/product/${KRN_PLATFORM}/obj/PACKAGING/dtb
+    RELATIVE_KERNEL_OBJ=out/target/product/${KRN_PLATFORM}/obj/KERNEL_OBJ
+    KLEAF_OBJ=${TOPDIR}/out_krn/target/product/${KRN_MGK}/obj/KLEAF_OBJ
+    OUTPUT_BASE=${KLEAF_OBJ}/bazel/output_user_root/output_base
+    DIST_DIR=${KLEAF_OBJ}/dist
+    VENDOR_INTREE_MODULES_DIR=${OUTPUT_BASE}/execroot/__main__/bazel-out/k8-fastbuild/bin/kernel_device_modules-${VERSION}/${KRN_MGK}_modules.user
+    VENDOR_OUTTREE_MODULES_DIR=${OUTPUT_BASE}/execroot/__main__/bazel-out/k8-fastbuild/bin/vendor
+    dtb_support_list="mt6991"
+    dtbo_support_list="k6991v1_64 oplus6991_23101 oplus6991_23105 oplus6991_23205 oplus6991_23216 oplus6991_23106"
+    ko_order_table=device/mediateksample/${KRN_PLATFORM}/ko_order_table.csv
+}
+
+function set_build_environment_mt6899() {
+    export OPLUS_VND_BUILD_PLATFORM=MT6899
+    export DEFCONFIG_OVERLAYS="oplus6899.config"
+    export OPLUS_DEFCONFIG_OVERLAYS=k6899v1_64
+
+    KRN_PLATFORM=k6899v1_64
+    MAINDTB_PATH=${TOPDIR}/out/target/product/${KRN_PLATFORM}/obj/PACKAGING/dtb
+    RELATIVE_KERNEL_OBJ=out/target/product/${KRN_PLATFORM}/obj/KERNEL_OBJ
+    KLEAF_OBJ=${TOPDIR}/out_krn/target/product/${KRN_MGK}/obj/KLEAF_OBJ
+    OUTPUT_BASE=${KLEAF_OBJ}/bazel/output_user_root/output_base
+    DIST_DIR=${KLEAF_OBJ}/dist
+    VENDOR_INTREE_MODULES_DIR=${OUTPUT_BASE}/execroot/__main__/bazel-out/k8-fastbuild/bin/kernel_device_modules-${VERSION}/${KRN_MGK}_modules.user
+    VENDOR_OUTTREE_MODULES_DIR=${OUTPUT_BASE}/execroot/__main__/bazel-out/k8-fastbuild/bin/vendor
+    dtb_support_list="mt6899"
+    dtbo_support_list="k6899v1_64 oplus6899_24613 oplus6899_24720"
+    ko_order_table=device/mediateksample/${KRN_PLATFORM}/ko_order_table.csv
+}
+
+function set_build_environment_mt6877() {
+    export OPLUS_VND_BUILD_PLATFORM=MT6877
+    export DEFCONFIG_OVERLAYS="mt6877_overlay.config"
+    export OPLUS_DEFCONFIG_OVERLAYS=k6877v1_64
+
+    KRN_PLATFORM=k6877v1_64
+    MAINDTB_PATH=${TOPDIR}/out/target/product/${KRN_PLATFORM}/obj/PACKAGING/dtb
+    RELATIVE_KERNEL_OBJ=out/target/product/${KRN_PLATFORM}/obj/KERNEL_OBJ
+    KLEAF_OBJ=${TOPDIR}/out/target/product/${KRN_PLATFORM}/obj/KLEAF_OBJ
+    OUTPUT_BASE=${KLEAF_OBJ}/bazel/output_user_root/output_base
+    DIST_DIR=${KLEAF_OBJ}/dist
+    VENDOR_INTREE_MODULES_DIR=${OUTPUT_BASE}/execroot/__main__/bazel-out/k8-fastbuild/bin/kernel_device_modules-${VERSION}/${KRN_MGK}_modules.user
+    VENDOR_OUTTREE_MODULES_DIR=${OUTPUT_BASE}/execroot/__main__/bazel-out/k8-fastbuild/bin/vendor
+    dtb_support_list="mt6877"
+    dtbo_support_list="mediatek/oplus6877_23231 mediatek/oplus6877_23051 mediatek/oplus6877_23241 mediatek/oplus6877_23243 mediatek/oplus6877_23035 mediatek/oplus6877_23321 mediatek/oplus6877_22277 mediatek/oplus6877_23686 mediatek/oplus6877_23687 mediatek/oplus6877_23689 mediatek/oplus6877_23707 mediatek/oplus6877_23709 mediatek/oplus6877_22629 mediatek/oplus6877_22710 mediatek/oplus6877_22711 mediatek/oplus6877_22633 mediatek/oplus6877_22712 mediatek/oplus6877_22713 mediatek/oplus6877_22612 mediatek/oplus6877_22693 mediatek/oplus6877_226B1 mediatek/oplus6877_22694"
+    ko_order_table=device/mediateksample/${KRN_PLATFORM}/ko_order_table.csv
+}
+
+function set_build_environment_mt6833() {
+    export OPLUS_VND_BUILD_PLATFORM=MT6833
+    export DEFCONFIG_OVERLAYS="mt6833_overlay.config"
+    export OPLUS_DEFCONFIG_OVERLAYS=k6833v1_64
+
+    KRN_PLATFORM=k6833v1_64
+    MAINDTB_PATH=${TOPDIR}/out/target/product/${KRN_PLATFORM}/obj/PACKAGING/dtb
+    RELATIVE_KERNEL_OBJ=out/target/product/${KRN_PLATFORM}/obj/KERNEL_OBJ
+    KLEAF_OBJ=${TOPDIR}/out/target/product/${KRN_PLATFORM}/obj/KLEAF_OBJ
+    OUTPUT_BASE=${KLEAF_OBJ}/bazel/output_user_root/output_base
+    DIST_DIR=${KLEAF_OBJ}/dist
+    VENDOR_INTREE_MODULES_DIR=${OUTPUT_BASE}/execroot/__main__/bazel-out/k8-fastbuild/bin/kernel_device_modules-${VERSION}/${KRN_MGK}_modules.user
+    VENDOR_OUTTREE_MODULES_DIR=${OUTPUT_BASE}/execroot/__main__/bazel-out/k8-fastbuild/bin/vendor
+    dtb_support_list="mt6833"
+    dtbo_support_list="mediatek/oplus6833_22331 mediatek/oplus6833_22333 mediatek/oplus6833_22869 mediatek/oplus6833_22291 mediatek/oplus6833_22292 mediatek/oplus6833_23253 mediatek/oplus6833_22705 mediatek/oplus6833_22706 mediatek/oplus6833_22610"
+    ko_order_table=device/mediateksample/${KRN_PLATFORM}/ko_order_table.csv
+}
+
+function set_build_environment_mt6768() {
+    export OPLUS_VND_BUILD_PLATFORM=MT6769
+    export DEFCONFIG_OVERLAYS="mt6768_overlay.config"
+    export OPLUS_DEFCONFIG_OVERLAYS=k69v1_64
+
+    KRN_PLATFORM=k69v1_64
+    MAINDTB_PATH=${TOPDIR}/out/target/product/${KRN_PLATFORM}/obj/PACKAGING/dtb
+    RELATIVE_KERNEL_OBJ=out/target/product/${KRN_PLATFORM}/obj/KERNEL_OBJ
+    KLEAF_OBJ=${TOPDIR}/out/target/product/${KRN_PLATFORM}/obj/KLEAF_OBJ
+    OUTPUT_BASE=${KLEAF_OBJ}/bazel/output_user_root/output_base
+    DIST_DIR=${KLEAF_OBJ}/dist
+    VENDOR_INTREE_MODULES_DIR=${OUTPUT_BASE}/execroot/__main__/bazel-out/k8-fastbuild/bin/kernel_device_modules-${VERSION}/${KRN_MGK}_modules.user
+    VENDOR_OUTTREE_MODULES_DIR=${OUTPUT_BASE}/execroot/__main__/bazel-out/k8-fastbuild/bin/vendor
+    dtb_support_list="mt6768"
+    dtbo_support_list="mediatek/oplus6769_22351_EVT mediatek/oplus6769_22351 mediatek/oplus6769_22352_EVT mediatek/oplus6769_22352 mediatek/oplus6769_22361_T0 mediatek/oplus6769_22361_EVT mediatek/oplus6769_22361 mediatek/oplus6769_22362_T0 mediatek/oplus6769_22362_EVT mediatek/oplus6769_22362 mediatek/oplus6769_22365_T0 mediatek/oplus6769_22365_EVT mediatek/oplus6769_22365 mediatek/oplus6769_22368"
+    ko_order_table=device/mediateksample/${KRN_PLATFORM}/ko_order_table.csv
+}
+
+function init_build_environment() {
+    set_build_environment_common
+    case $variants_platform in
+        mt6991)
+            echo "mt6991 path"
+            set_build_environment_mt6991
+        ;;
+
+        mt6899)
+            echo "mt6899 path"
+            set_build_environment_mt6899
+        ;;
+
+        mt6877)
+            echo "mt6877 path"
+            set_build_environment_mt6877
+        ;;
+
+        mt6833)
+            echo "mt6833 path"
+            set_build_environment_mt6833
+        ;;
+
+        mt6769|mt6768)
+            echo "mt6768 path"
+            set_build_environment_mt6768
+        ;;
+
+        *)
+            echo "default path"
+            set_build_environment_mt6991
+        ;;
+    esac    # --- end of case ---
 }
 
 set_platform()
@@ -194,13 +306,22 @@ choose_platform()
     echo
 
     case $ANSWER in
-        1)
-            variants_platform=mt6991
-        ;;
         mt6991)
             variants_platform=mt6991
         ;;
-       *)
+        mt6899)
+            variants_platform=mt6899
+        ;;
+        mt6877)
+            variants_platform=mt6877
+        ;;
+        mt6833)
+            variants_platform=mt6833
+        ;;
+        mt6769|mt6768)
+            variants_platform=mt6768
+        ;;
+        *)
             variants_platform=mt6991
         ;;
     esac

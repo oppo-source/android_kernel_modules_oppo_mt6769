@@ -3775,6 +3775,12 @@ static int oplus_pd_set_aicr(int current_ma, bool en)
 		return -EINVAL;
 
 	g_chip->pd_curr_max = current_ma;
+	if (current_ma == 0 && oplus_pps_get_pps_fastchg_started() == true) {
+		chg_info("close buck and cp to avoid power issue\n");
+		sc6607_set_input_current_limit(g_chip, 0);
+		sc6607_field_write(g_chip, F_CP_EN, false);
+	}
+
 	if (en)
 		return oplus_sc6607_set_aicr(g_chip->pd_curr_max);
 	else
@@ -5952,10 +5958,6 @@ struct tsbus_charger_temp {
 	struct thermal_zone_device *tzd;
 };
 
-struct tsbat_charger_temp {
-	struct thermal_zone_device *tzd_tsbat;
-};
-
 static int sc6607_voocphy_get_tsbus_temp(struct thermal_zone_device *tz,
 		int *temp)
 {
@@ -5968,24 +5970,8 @@ static int sc6607_voocphy_get_tsbus_temp(struct thermal_zone_device *tz,
 	return 0;
 }
 
-static int sc6607_voocphy_get_tsbat_temp(struct thermal_zone_device *tz,
-		int *temp)
-{
-	struct tsbat_charger_temp *hst;
-	if (!temp || !tz)
-		return -EINVAL;
-	hst = tz->devdata;
-	*temp = sc6607_voocphy_get_tsbat();
-
-	return 0;
-}
-
 static struct thermal_zone_device_ops charger_temp_ops = {
 	.get_temp = sc6607_voocphy_get_tsbus_temp,
-};
-
-static struct thermal_zone_device_ops charger_temp_tsbat_ops = {
-	.get_temp = sc6607_voocphy_get_tsbat_temp,
 };
 
 static int register_charger_thermal(struct sc6607 *info)
@@ -6011,22 +5997,6 @@ static int register_charger_thermal(struct sc6607 *info)
 #endif
 	if (IS_ERR(tz_dev)) {
 		chg_err("charger_temp register fail");
-		ret = -ENODEV;
-	}
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0))
-	ret = thermal_zone_device_enable(tz_dev);
-	if (ret)
-		thermal_zone_device_unregister(tz_dev);
-#endif
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0))
-	tz_dev = thermal_tripless_zone_device_register("charger_temp_tsbat",
-					NULL, &charger_temp_tsbat_ops, NULL);
-#else
-	tz_dev = thermal_zone_device_register("charger_temp_tsbat",
-					0, 0, NULL, &charger_temp_tsbat_ops, NULL, 0, 0);
-#endif
-	if (IS_ERR(tz_dev)) {
-		chg_err("charger_temp_tsbat register fail");
 		ret = -ENODEV;
 	}
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0))
@@ -7335,6 +7305,7 @@ static int sc6607_charger_probe(struct i2c_client *client, const struct i2c_devi
 
 	sc6607_track_check_buck_err(chip);
 	probe_done = true;
+	oplus_chg_ops_register("ext-sc6607", &oplus_chg_sc6607_ops);
 	pr_err("sc6607_voocphy_parse_dt successfully!\n");
 
 	return 0;
@@ -7540,7 +7511,6 @@ int sc6607_charger_init(void)
 {
 	int ret = 0;
 
-	oplus_chg_ops_register("ext-sc6607", &oplus_chg_sc6607_ops);
 	if (i2c_add_driver(&sc6607_charger_driver) != 0)
 		pr_err("failed to register sc6607 i2c driver.\n");
 	else

@@ -33,6 +33,10 @@ subdir-ccflags-y += -I$(MTK_CUSTOM_PATH)/lens/vcm/proprietary/main/common/dw9827
 subdir-ccflags-y += -I$(MTK_CUSTOM_PATH)/lens/vcm/proprietary/main/common/dw9827af_23687_imx882pd
 subdir-ccflags-y += -I$(MTK_CUSTOM_PATH)/lens/vcm/proprietary/main/common/jd5516we4af_23689_imx890
 subdir-ccflags-y += -I$(MTK_CUSTOM_PATH)/lens/vcm/proprietary/main/common/fp5513af
+
+subdir-ccflags-y += -I$(MTK_CUSTOM_PATH)/lens/vcm/proprietary/main/common/gt9764afi
+subdir-ccflags-y += -I$(MTK_CUSTOM_PATH)/lens/vcm/proprietary/main/common/gt9764afii
+
 ifeq ($(CONFIG_MTK_LENS_BU63165AF_SUPPORT), y)
   subdir-ccflags-y += -I$(MTK_CUSTOM_PATH)/lens/vcm/proprietary/main/common/bu63165af/inc
 else
@@ -67,6 +71,8 @@ mainaf-y  += common/dw9839af/DW9839AF.o
 mainaf-y  += common/gt9764af/GT9764AF.o
 mainaf-y  += common/gt9764af_23051_ov64b/GT9764AF_23051_OV64B.o
 mainaf-y  += common/gt9764af_23035/GT9764AF_23035.o
+mainaf-y  += common/gt9764afi/GT9764AFI.o
+mainaf-y  += common/gt9764afii/GT9764AFII.o
 mainaf-y  += common/lc898212af/LC898212AF.o
 mainaf-y  += common/lc898212xdaf/LC898212XDAF.o
 mainaf-y  += common/lc898212xdaf/AfInter.o
@@ -90,9 +96,11 @@ mainaf-y  += common/bu63169af/OIS_user.o
 mainaf-y  += common/bu64253gwzaf/BU64253GWZAF.o
 mainaf-y  += common/gt9768af/GT9768AF.o
 mainaf-y  += common/gt9772af/GT9772AF.o
+mainaf-y  += common/gt9778af/GT9778AF.o
 mainaf-y  += common/gt9772af_atom/GT9772AF_ATOM.o
 mainaf-y  += common/gt9772af_atom_imx355/GT9772AF_ATOM_IMX355.o
 mainaf-y  += common/gt9772af_aladdin/GT9772AF_ALADDIN.o
+mainaf-y  += common/gt9772af_orisa/GT9772AF_ORISA.o
 mainaf-y  += common/fp5513e4af/FP5513E4AF.o
 mainaf-y  += common/fp5513e4af_s5kjn103/fp5513e4af_s5kjn103.o
 mainaf-y  += common/jd5516we4/JD5516WE4.o

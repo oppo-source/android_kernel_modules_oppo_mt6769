@@ -2288,6 +2288,7 @@ static int init_parse_dts(struct device *dev, struct touchpanel_data *ts)
 	ts->edge_pull_out_support = of_property_read_bool(np, "edge_pull_out_support");
 	ts->diaphragm_touch_support = of_property_read_bool(np, "diaphragm_touch_support");
 	ts->disable_touch_event_support = of_property_read_bool(np, "disable_touch_event_support");
+	ts->lpwg_fw_support = of_property_read_bool(np, "lpwg_fw_support");
 
 #ifdef CONFIG_TOUCHPANEL_TRUSTED_TOUCH
 	ts->trusted_touch_support = of_property_read_bool(np, "trusted_touch_support");

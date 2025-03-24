@@ -429,6 +429,7 @@
 	oplus,switch2-ctrl-gpio = <&pio 23 0x00>;
 	oplus,uart_tx-gpio = <&pio 178 0x00>;
 	oplus,uart_rx-gpio = <&pio 179 0x00>;
+	oplus,otg_current_limit = <1100000>;
 };
 
 &pio {
@@ -867,20 +868,18 @@
 	};
 };
 
+&u2port0 {
+	mediatek,eye-vrt = <7>; /* 0~7 */
+	mediatek,eye-term = <7>; /* 0~7 */
+	mediatek,rev6 = <3>; /* 0~3 */
+	mediatek,discth = <7>; /* 0~8 */
+	mediatek,eye-vrt-host = <7>; /* 0~7 */
+	mediatek,eye-term-host = <7>; /* 0~7 */
+	mediatek,rev6-host = <3>; /* 0~3 */
+	mediatek,disc-host = <7>; /* 0~8 */
+};
+
 &odm {
-	mediatek_phy_tuning: mediatek_phy_tuning {
-		phy_tuning {
-			compatible = "mediatek,phy_tuning";
-			eye-vrt = <7>;
-			eye-term = <7>;
-			eye-rev6 = <3>;
-			eye-disc = <7>;
-			host-eye-vrt = <7>;
-			host-eye-term = <7>;
-			host-eye-rev6 = <3>;
-			host-eye-disc = <7>;
-		};
-	};
 /*
 	optiga {
 		compatible = "oplus-optiga";
@@ -916,4 +915,8 @@
 	};
 };
 */
+
+&extcon_usb {
+	vbus-current = <1100000>;
+};
 //#endif /*OPLUS_FEATURE_CHG_BASIC*/

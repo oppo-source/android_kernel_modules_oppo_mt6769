@@ -609,15 +609,22 @@ static irqreturn_t hbp_irq_threaded_fn(int irq, void *dev_id)
 	//black gesture or fingerprint flow
 	if (unlikely(hbp_dev->state == HBP_PANEL_EVENT_SUSPEND ||
 		(hbp_dev->state == HBP_PANEL_EVENT_EARLY_SUSPEND))) {
-		memset(&gesture, 0, sizeof(gesture));
-		ret = hbp_dev->dev_ops->get_gesture(hbp_dev->priv, &gesture);
-		if (ret < 0) {
-			hbp_err("failed to get gesture type\n");
-		} else {
-			hbp_gesture_report(hbp_dev, &gesture);
+		if (reason == IRQ_REASON_GESTURE_DIFF) {
 			//for debug gesture, record frame data
 			if (hbp_dev->debug.report_gesture_frm) {
 				goto report_frame;
+			}
+		} else {
+			memset(&gesture, 0, sizeof(gesture));
+			ret = hbp_dev->dev_ops->get_gesture(hbp_dev->priv, &gesture);
+			if (ret < 0) {
+				hbp_err("failed to get gesture type\n");
+			} else {
+				hbp_gesture_report(hbp_dev, &gesture);
+				//for debug gesture, record frame data
+				if (hbp_dev->debug.report_gesture_frm) {
+					goto report_frame;
+				}
 			}
 		}
 		goto exit;

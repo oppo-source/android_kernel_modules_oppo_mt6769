@@ -113,6 +113,10 @@ struct head_dts_data {
 	unsigned int moisture_comp_vth;
 	unsigned int moisture_comp_vref2;
 	unsigned int moisture_use_ext_res;
+#if IS_ENABLED(CONFIG_SND_SOC_OPLUS_TYPEC_SWITCH) || IS_ENABLED(CONFIG_SND_SOC_FSA)
+	/* 2024/1/8, add for supporting type-c headphone detect bypass */
+	unsigned int headset_eint0_disable;
+#endif
 };
 
 enum {

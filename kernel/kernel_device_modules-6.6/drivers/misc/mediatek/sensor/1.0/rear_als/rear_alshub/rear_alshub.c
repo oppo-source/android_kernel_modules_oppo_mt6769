@@ -61,7 +61,7 @@ long rear_alshub_read_als(u16 *als)
 		return -1;
 	}
 	*als = data_t.data[0];//als raw data;
-	pr_err("rear_alshub_read_als:als_raw data = %d\n",*als);
+	pr_debug("rear_alshub_read_als:als_raw data = %d\n",*als);
 	return 0;
 }
 
@@ -224,7 +224,7 @@ static void rear_alshub_init_done_work(struct work_struct *work)
 	int32_t cfg_data[2] = {0};
 #endif /*OPLUS_FEATURE_SENSOR*/
 #endif
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 
 	if (atomic_read(&obj->scp_init_done) == 0) {
 		pr_err("wait for nvram to set calibration\n");
@@ -257,7 +257,7 @@ static int als_recv_data(struct data_unit_t *event, void *reserved)
 {
 	int err = 0;
 	struct rear_alshub_ipi_data *obj = obj_ipi_data;
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	if (!obj)
 		return 0;
 
@@ -337,7 +337,7 @@ static int alshub_factory_set_cali(int32_t als_factor)
 	cfg_data = als_factor;
 	sensor_cfg_to_hub(ID_REAR_ALS,(uint8_t *)&cfg_data, sizeof(cfg_data));
 
-	pr_err("als_factor = %d\n", obj->rear_als_factor);
+	pr_debug("als_factor = %d\n", obj->rear_als_factor);
 	return ret;
 }
 static int alshub_factory_get_cali(int32_t data[6])
@@ -448,7 +448,7 @@ static int als_get_data(int *value, int *status)
 	int err = 0;
 	struct data_unit_t data;
 	uint64_t time_stamp = 0;
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	err = sensor_get_data_from_hub(ID_REAR_ALS, &data);
 	if (err) {
 		pr_err("sensor_get_data_from_hub fail!\n");
@@ -492,7 +492,7 @@ static int rear_alshub_probe(struct platform_device *pdev)
 	struct rear_als_control_path als_ctl = { 0 };
 	struct rear_als_data_path als_data = { 0 };
 
-	pr_err("%s:Start\n", __func__);
+	pr_debug("%s:Start\n", __func__);
 	obj = kzalloc(sizeof(*obj), GFP_KERNEL);
 	if (!obj) {
 		err = -ENOMEM;
@@ -506,7 +506,7 @@ static int rear_alshub_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, obj);
 
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	atomic_set(&obj->rear_als_suspend, 0);
 	atomic_set(&obj->scp_init_done, 0);
 	atomic_set(&obj->first_ready_after_boot, 0);
@@ -578,7 +578,7 @@ static int rear_alshub_remove(struct platform_device *pdev)
 	int err = 0;
 	struct platform_driver *paddr =
 			rear_alshub_init_info.platform_diver_addr;
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	err = rear_alshub_delete_attr(&paddr->driver);
 	if (err)
 		pr_err("rear_alshub_delete_attr fail: %d\n", err);
@@ -617,7 +617,7 @@ static struct platform_driver rear_alshub_driver = {
 
 static int rear_alshub_local_init(void)
 {
-	pr_err("%s:Start\n", __func__);
+	pr_debug("%s:Start\n", __func__);
 	if (platform_driver_register(&rear_alshub_driver)) {
 		pr_err("add driver error\n");
 		return -1;

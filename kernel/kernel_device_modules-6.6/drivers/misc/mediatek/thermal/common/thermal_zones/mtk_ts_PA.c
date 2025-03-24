@@ -38,7 +38,7 @@ static int trip_temp[10] = { 120000, 110000, 100000, 90000, 80000,
 /* static unsigned int cl_dev_dis_charge_state = 0; */
 static struct thermal_zone_device *thz_dev;
 /* static struct thermal_cooling_device *cl_dev_dis_charge; */
-static int mtk_PA_4G_debug_log = 1;
+static int mtk_PA_4G_debug_log;
 static int kernelmode;
 static int g_THERMAL_TRIP[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 static struct thermal_trip trips[10];

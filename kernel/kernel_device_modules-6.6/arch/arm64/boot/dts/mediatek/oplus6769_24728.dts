@@ -94,7 +94,7 @@
                         use_tristate_gpio;
                         compatible = "hw-match, main-sub";
                         aboard-gpio0 = <&pio 36 0x00>;
-                        aboard-patterns = <1 2 0 0>;    /*0[high-resistance] 1[pull-down] 2[pull-up]*/
+                        aboard-patterns = <0 0 0 0>;    /*0[high-resistance] 1[pull-down] 2[pull-up]*/
                         /*main board*/
                         match-projects = <24713 24714 24715 24728>;
                 };
@@ -182,6 +182,9 @@
 	};
 
 /* sensor start */
+	sensor_fb: sensor_fb {
+		compatible = "oplus,sensor-feedback";
+	};
 	/*
 	enum {
 		LIS3DH,
@@ -501,11 +504,20 @@
 	};
 };
 
+&i2c3 {
+	fsa4480: fsa4480@42 {
+		compatible = "qcom,fsa4480-i2c";
+		reg = <0x42>;
+		fsa4480,hp-bypass = <1>;
+		status = "okay";
+	};
+};
+
 /* accdet start */
 &accdet {
 	/* accdet micbias voltage: 0x07,2.7v;0x05,2.5v;0x02,1.9v */
 	accdet-mic-vol = <7>;
-	headset-mode-setting = <0x500 0x500 1 0x1f0 0x800 0x800 0x20 0x44>;
+	headset-mode-setting = <0x500 0x500 1 0x1f0 0x800 0x800 0x20 0x44 0x4 0x1 0x5 0x3 0x3 0x5 0xe>;
 	accdet-plugout-debounce = <1>;
 	/*1:ACC mode, 2:low cost without in bias, 6:low cost with in bias*/
 	accdet-mic-mode = <1>;
@@ -516,9 +528,16 @@
 	headset-three-key-threshold-CDD = <0 121 192 600>;
 	/*0--MD_MAX--VOICE_MAX--UP_MAX--DW_MAX*/
 	headset-four-key-threshold = <0 58 121 192 400>;
+	headset-eint0-disable = <1>;
+	/* typec switch chip type */
+	typec_switch_type = <2>;
 	status = "okay";
 };
 /* accdet end */
+
+&mt6358codec {
+	mediatek,init_dis_micbias;
+};
 
 /* keypad start */
 &keypad {
@@ -619,18 +638,20 @@
 &odm {
 	sia81xx@L {
 		en_dynamic_id = <1>;
-		sia8102s,playback_owi_mode = <26>;
-		sia8102s,voice_owi_mode = <29>;
-		sia8001,playback_owi_mode = <10>;
-		sia8001,voice_owi_mode = <12>;
 	};
 };
 /* sia81xx add -End */
 
+&apuart0 {
+	rxpin = <95>;
+	txpin = <96>;
+};
+
 #include <oplus6769_24713/cust.dtsi>
 #include "mediatek/oplus6769_display_24713.dtsi"
-#include "mediatek/oplus6769_charger_24700.dtsi"
-#include "mediatek/cust_mt6769_sia8102.dtsi"
+#include "mediatek/oplus_chg/oplus6769_charger_24713_gdpr.dtsi"
+#include "mediatek/oplus_chg/oplus6769_pps_33w_gdpr.dtsi"
+#include "mediatek/cust_mt6769_oris-a_sia8001.dtsi"
 #include "mediatek/cust_mt6769_camera_24713.dtsi"
 #include "mediatek/cust_mt6769_touch_720x1604_24713.dtsi"
 #include "mediatek/oplus_uff_24713_24714_24715_24728.dtsi"

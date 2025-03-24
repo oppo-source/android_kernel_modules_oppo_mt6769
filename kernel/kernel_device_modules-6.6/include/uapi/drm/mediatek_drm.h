@@ -930,6 +930,7 @@ struct DRM_DISP_CCORR_COEF_T {
 	};
 	unsigned int coef[3][3];
 	unsigned int offset[3];
+	unsigned int offset_temp[3];
 	int FinalBacklight;
 	int silky_bright_flag;
 };

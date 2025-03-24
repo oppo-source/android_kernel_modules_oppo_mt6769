@@ -379,13 +379,17 @@ static int fhp_chip_get_irq_reason(void *priv, enum irq_reason *reason)
 	case FTS_RST_REASON_PWR:
 		*reason = IRQ_REASON_RESET_PWR;
 		break;
+	case FTS_GESTURE_DIFF:
+		*reason = IRQ_REASON_GESTURE_DIFF;
+		break;
 	default:
 		*reason = IRQ_REASON_NORMAL;
 		break;
 	}
 
-	hbp_info("hbp chip reset, reason 0x%x\n", *reason);
-
+	if (reset_reason != FTS_GESTURE_DIFF) {
+		hbp_info("hbp chip reset, reason 0x%x\n", *reason);
+	}
 	ret = fhp_chip_write_reg(fts, FTS_REG_RESET_REASON, 0x00);
 	if (ret < 0) {
 		hbp_err("failed to clear reset reason");

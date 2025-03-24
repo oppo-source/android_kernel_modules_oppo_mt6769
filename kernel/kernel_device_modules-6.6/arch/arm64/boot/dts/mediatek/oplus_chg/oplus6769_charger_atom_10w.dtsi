@@ -523,19 +523,15 @@
 	};
 };
 
-/*&rt1711_typec {
-	status = "disabled"; // SC6607 PD 
-};*/
-
 &u2port0 {
 		mediatek,eye-vrt = <7>; /* 0~7 */
 		mediatek,eye-term = <5>; /* 0~7 */
-		mediatek,eye-rev6 = <3>; /* 0~3 */
-		mediatek,eye-disc = <0xF>; /* 0~8 */
-		mediatek,host-eye-vrt = <7>; /* 0~7 */
-		mediatek,host-eye-term = <5>; /* 0~7 */
-		mediatek,host-eye-rev6 = <3>; /* 0~3 */
-		mediatek,host-eye-disc = <0xB>; /* 0~8 */
+		mediatek,rev6 = <3>; /* 0~3 */
+		mediatek,discth = <0xF>; /* 0~8 */
+		mediatek,eye-vrt-host = <7>; /* 0~7 */
+		mediatek,eye-term-host = <5>; /* 0~7 */
+		mediatek,rev6-host = <3>; /* 0~3 */
+		mediatek,disc-host = <0xB>; /* 0~8 */
 };
 
 &mtk_ctd {

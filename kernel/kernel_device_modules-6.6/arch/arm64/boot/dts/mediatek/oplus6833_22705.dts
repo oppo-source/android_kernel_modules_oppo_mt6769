@@ -862,6 +862,10 @@
 		status = "okay";
 		new-arch-supported = <1>;
 	};
+	back_tap_acc: back_tap_acc {
+		status = "okay";
+		back_tap_acc = <1>;
+	};
 	pick_up: pick_up {
 		status = "okay";
 		use-proximity = <1>;

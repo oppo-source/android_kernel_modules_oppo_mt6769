@@ -449,7 +449,7 @@ static struct mtk_panel_params ext_params_60Hz = {
 	.output_mode = MTK_PANEL_DSC_SINGLE_PORT,
 	.dsc_params = {
 		.enable = 1,
-		//.dsc_cfg_change = 1,
+		.dsc_cfg_change = 1,
         .ver = 17,
         .slice_mode = 1,
         .rgb_swap = 0,
@@ -495,6 +495,7 @@ static struct mtk_panel_params ext_params_60Hz = {
         .dyn_fps = {
                 .switch_en = 1, .vact_timing_fps = 60,
         },
+	.panel_bpp = 10,
 };
 
 static struct mtk_panel_params ext_params_90Hz = {
@@ -553,7 +554,7 @@ static struct mtk_panel_params ext_params_90Hz = {
 	.output_mode = MTK_PANEL_DSC_SINGLE_PORT,
 	.dsc_params = {
 		.enable = 1,
-		//.dsc_cfg_change = 1,
+		.dsc_cfg_change = 1,
         .ver = 17,
         .slice_mode = 1,
         .rgb_swap = 0,
@@ -598,6 +599,7 @@ static struct mtk_panel_params ext_params_90Hz = {
         .dyn_fps = {
                 .switch_en = 1, .vact_timing_fps = 90,
         },
+	.panel_bpp = 10,
 };
 
 static struct mtk_panel_params ext_params_120Hz = {
@@ -658,7 +660,7 @@ static struct mtk_panel_params ext_params_120Hz = {
 	.output_mode = MTK_PANEL_DSC_SINGLE_PORT,
 	.dsc_params = {
 		.enable = 1,
-        //.dsc_cfg_change = 1,
+        	.dsc_cfg_change = 1,
         .ver = 17,
         .slice_mode = 1,
         .rgb_swap = 0,
@@ -703,7 +705,7 @@ static struct mtk_panel_params ext_params_120Hz = {
 	.dyn_fps = {
                 .switch_en = 1, .vact_timing_fps = 120,
         },
-	
+	.panel_bpp = 10,
 };
 
 static int panel_ata_check(struct drm_panel *panel)

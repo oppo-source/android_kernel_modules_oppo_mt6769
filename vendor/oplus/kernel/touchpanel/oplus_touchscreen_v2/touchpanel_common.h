@@ -1030,6 +1030,7 @@ struct touchpanel_data {
 	struct work_struct lcd_trigger_load_tp_fw_work;
 	/*trigger laod tp fw by lcd driver after lcd reset*/
 	struct workqueue_struct *lcd_trigger_load_tp_fw_wq;
+	bool lpwg_fw_support;				    /*feature to support td4377 lpwg_fw_support*/
 
 	/******For auto test area********/
 	bool in_test_process;                     /*flag whether in test process*/

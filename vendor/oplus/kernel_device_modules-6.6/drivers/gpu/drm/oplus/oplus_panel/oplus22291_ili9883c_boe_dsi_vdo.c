@@ -25,6 +25,7 @@
 #include <video/of_videomode.h>
 #include <video/videomode.h>
 #include <linux/module.h>
+#include <linux/of_graph.h>
 #include <linux/of_platform.h>
 #include <linux/platform_device.h>
 #include <soc/oplus/device_info.h>
@@ -864,6 +865,24 @@ static int lcm_probe(struct mipi_dsi_device *dsi)
 	struct lcm *ctx;
 	struct device_node *backlight;
 	int ret;
+	struct device_node *dsi_node, *remote_node = NULL, *endpoint = NULL;
+	pr_info("lcm_probe 22291_ili9883c_boe Begin\n");
+	dsi_node = of_get_parent(dev->of_node);
+	if (dsi_node) {
+		endpoint = of_graph_get_next_endpoint(dsi_node, NULL);
+		if (endpoint) {
+			remote_node = of_graph_get_remote_port_parent(endpoint);
+			if (!remote_node) {
+				pr_err("No panel connected,skip probe lcm\n");
+				return -ENODEV;
+			}
+			pr_err("device node name:%s\n", remote_node->name);
+		}
+	}
+	if (remote_node != dev->of_node) {
+		pr_err("skip probe due to not current lcm\n");
+		return -ENODEV;
+	}
 
 	ctx = devm_kzalloc(dev, sizeof(struct lcm), GFP_KERNEL);
 	if (!ctx)
@@ -933,7 +952,7 @@ static int lcm_probe(struct mipi_dsi_device *dsi)
 
 
 	register_device_proc("lcd","ili9883c_boe","BOE");
-	pr_info("Successful\n");
+	pr_info("lcm_probe 22291_ili9883c_boe Successful\n");
 
 	return ret;
 }

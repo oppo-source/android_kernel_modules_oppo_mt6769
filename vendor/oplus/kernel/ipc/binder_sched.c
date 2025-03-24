@@ -188,6 +188,7 @@ void set_task_async_ux_enable(pid_t pid, int enable)
 {
 	struct task_struct *task = NULL;
 	struct oplus_task_struct *ots = NULL;
+	bool rcu_lock = false;
 
 	if (unlikely(!g_async_ux_enable)) {
 		return;
@@ -204,22 +205,29 @@ void set_task_async_ux_enable(pid_t pid, int enable)
 			trace_binder_set_get_ux(task, pid, enable, "set, pid error");
 			return;
 		}
+		rcu_read_lock();
+		rcu_lock = true;
 		task = find_task_by_vpid(pid);
 		if (IS_ERR_OR_NULL(task)) {
 			trace_binder_set_get_ux(NULL, pid, enable, "set, task null");
-			return;
+			goto end;
 		}
 	}
 	ots = get_oplus_task_struct(task);
 	if (IS_ERR_OR_NULL(ots)) {
 		trace_binder_set_get_ux(task, pid, enable, "set, ots null");
-		return;
+		goto end;
 	}
 	ots->binder_async_ux_enable = enable;
 
 	trace_binder_set_get_ux(task, pid, enable, "set enable end");
 	oplus_binder_debug(LOG_SET_ASYNC_UX, "(set_pid=%d task_pid=%d comm=%s) enable=%d ux_sts=%d set enable end\n",
 		pid, task->pid, task->comm, ots->binder_async_ux_enable, ots->binder_async_ux_sts);
+
+end:
+	if (rcu_lock) {
+		rcu_read_unlock();
+	}
 }
 
 bool get_task_async_ux_enable(pid_t pid)

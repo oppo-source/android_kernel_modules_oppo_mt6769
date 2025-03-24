@@ -14,6 +14,7 @@ CAM_CAL_OBJ := \
 	cam_cal_list.o \
 	eeprom_i2c_dev.o \
 	eeprom_i2c_gc05a2_driver.o \
+	otp_insensor_dev.o \
 
 ifeq ($(CONFIG_MTK_CAM_CAL_ISP4_T), m)
 obj-$(CONFIG_MTK_CAM_CAL_ISP4_T) += $(MTK_PLATFORM_KO).o

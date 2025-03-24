@@ -10,10 +10,10 @@
 # ################################################################
 
 GCOV_PROFILE := y
-obj-$(CONFIG_CRYPTO_ZSTDN) += crypto_zstdn.o
+obj-$(CONFIG_CRYPTO_ZSTDN) += oplus_bsp_zstdn.o
 
 ccflags-y  += -I$(srctree)/mm/oplus_mm/hybridswap_zram/zstd/include
-crypto_zstdn-y := \
+oplus_bsp_zstdn-y := \
 		crypto_zstd.o \
 		zstd_compress_module.o \
 		xxhash.o \

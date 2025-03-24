@@ -6631,8 +6631,13 @@ static void mt6358_codec_init_reg(struct mt6358_priv *priv)
 			   0x1 << RG_AUDLOLSCDISABLE_VAUDP15_SFT);
 
 	/* accdet s/w enable */
-	regmap_update_bits(priv->regmap, MT6358_ACCDET_CON13,
-			   0xFFFF, 0x700E);
+	if (priv->init_dis_micbias) {
+		regmap_update_bits(priv->regmap, MT6358_ACCDET_CON13,
+				   0xFFFF, 0x3006);
+	} else {
+		regmap_update_bits(priv->regmap, MT6358_ACCDET_CON13,
+				   0xFFFF, 0x700E);
+	}
 
 	/* Set HP_EINT trigger level to 2.0v */
 	regmap_update_bits(priv->regmap, MT6358_AUDENC_ANA_CON11,
@@ -7800,6 +7805,11 @@ static int mt6358_parse_dt(struct mt6358_priv *priv)
 		dev_info(dev,
 			"%s(), get pull_down_stay_enable fail, default 0\n",
 			__func__);
+	}
+
+	priv->init_dis_micbias = of_property_read_bool(dev->of_node, "mediatek,init_dis_micbias");
+	if (priv->init_dis_micbias) {
+		dev_info(dev, "%s() micbias init not always enable!\n", __func__);
 	}
 
 	return 0;

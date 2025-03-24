@@ -363,6 +363,7 @@ struct mtk_panel_dsc_params {
 	unsigned int rc_quant_incr_limit1;
 	unsigned int rc_tgt_offset_hi;
 	unsigned int rc_tgt_offset_lo;
+	unsigned int dsc_cfg_change;
 	struct mtk_panel_dsc_ext_pps_cfg ext_pps_cfg;
 };
 struct mtk_dsi_phy_timcon {
@@ -535,6 +536,7 @@ struct mtk_panel_params {
 	struct mtk_ddic_dsi_cmd send_cmd_to_ddic;
 	unsigned int cust_esd_check;
 	unsigned int esd_check_enable;
+	unsigned int oplus_mipi_switch_waite_frame;
 	unsigned int esd_two_para_compare;
 	struct esd_check_item lcm_esd_check_table[ESD_CHECK_NUM];
 	unsigned int ssc_enable;
@@ -682,6 +684,17 @@ struct mtk_panel_params {
 
 	/*global dre enable*/
 	unsigned int oplus_display_global_dre;
+#ifdef OPLUS_FEATURE_DISPLAY
+	/*ccorr support gamma*/
+	bool oplus_panel_ccorr_gamma;
+	/*esd check sleep time (ms)*/
+	bool oplus_esd_sleep_status;
+	unsigned int oplus_esd_sleep_ms;
+#endif /* OPLUS_FEATURE_DISPLAY */
+
+	/*exit aod backlight setting*/
+	unsigned int doze_disable_backlight_flag_enable;
+	unsigned int * doze_disable_backlight_flag;
 };
 
 struct mtk_panel_ext {

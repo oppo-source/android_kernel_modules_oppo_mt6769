@@ -257,6 +257,9 @@
 		vib_vol= <11>;
 	};
 /* sensor start */
+	sensor_fb: sensor_fb {
+		compatible = "oplus,sensor-feedback";
+	};
 	/*
 	enum {
 		LIS3DH,

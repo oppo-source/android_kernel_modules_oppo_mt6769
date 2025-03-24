@@ -88,6 +88,8 @@ void oplus_imgsensor_set_mclkcurrent(MUINT32 *mclk_current)
 {
     if (is_project(24713) || is_project(24714) || is_project(24715) || is_project(24728)) {
         *mclk_current = ISP_DRIVING_2MA;
+    } else if (is_project(23618) || is_project(23702) || is_project(23703) || is_project(23704)) {
+        *mclk_current = ISP_DRIVING_2MA;
     }
 }
 

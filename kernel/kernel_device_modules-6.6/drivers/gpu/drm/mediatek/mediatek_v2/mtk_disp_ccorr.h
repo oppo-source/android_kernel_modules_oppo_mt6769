@@ -50,6 +50,7 @@ struct mtk_disp_ccorr_primary {
 	int rgb_matrix[3][3];
 	struct DRM_DISP_CCORR_COEF_T multiply_matrix_coef;
 	int disp_ccorr_without_gamma;
+	int disp_ccorr_temp_linear;
 	wait_queue_head_t ccorr_get_irq_wq;
 	atomic_t ccorr_get_irq;
 	int old_pq_backlight;
@@ -70,6 +71,7 @@ struct mtk_disp_ccorr {
 	int path_order;
 	struct mtk_ddp_comp *companion;
 	enum drm_disp_ccorr_linear_t is_linear;// each comp property
+	bool g_prim_ccorr_force_linear;
 	struct mtk_disp_ccorr_primary *primary_data;
 	struct mtk_disp_ccorr_tile_overhead tile_overhead;
 	struct mtk_disp_ccorr_tile_overhead_v tile_overhead_v;

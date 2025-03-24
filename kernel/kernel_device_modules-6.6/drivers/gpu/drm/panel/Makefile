@@ -16,7 +16,8 @@ ccflags-y += -I$(DEVICE_MODULES_PATH)/drivers/misc/mediatek/mtk-interconnect \
 		-I$(DEVICE_MODULES_PATH)/drivers/gpu/drm/mediatek/dpc \
 		-I$(DEVICE_MODULES_PATH)/drivers/gpu/drm/mediatek/mediatek_v2 \
 		-I$(DEVICE_MODULES_PATH)/drivers/gpu/drm/oplus \
-		-I$(DEVICE_MODULES_PATH)/drivers/gpu/drm/oplus/oplus_panel
+		-I$(DEVICE_MODULES_PATH)/drivers/gpu/drm/oplus/oplus_panel \
+		-I$(DEVICE_MODULES_PATH)/drivers/gpu/drm/oplus/bias
 #build oplus display feature config
 ccflags-y += -DOPLUS_FEATURE_DISPLAY
 ccflags-y += -DOPLUS_FEATURE_DISPLAY_TEMP_COMPENSATION
@@ -141,6 +142,7 @@ obj-$(CONFIG_DRM_PANEL_SERDES) += panel-serdes-max96789.o bridge-serdes-max96789
 obj-$(CONFIG_DRM_PANEL_NT37707_C2V_ARP) += panel-nt37707-c2v-arp.o
 obj-$(CONFIG_DRM_PANEL_NT51021H_WUXGA_VDO_BOE) += panel-nt51021h-wuxga-vdo-boe.o
 obj-$(CONFIG_DRM_PANEL_N11A_42_02_0A_DSC_VDO) += panel-n11a-42-02-0a-dsc-vdo.o
+obj-$(CONFIG_OCP2130_I2C) += ../oplus/bias/ocp2130_drv.o
 mediatek-drm-gateic-y := mtk_drm_panel_i2c.o \
 		  mtk_drm_gateic_rt4801h.o \
 		  mtk_drm_gateic_rt4831a.o \

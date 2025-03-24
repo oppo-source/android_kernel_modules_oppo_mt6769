@@ -42,7 +42,6 @@
 extern unsigned int oplus_display_brightness;
 extern unsigned int oplus_max_normal_brightness;
 extern unsigned int cabc_mode;
-static unsigned char g_GammaFlag = 1;
 
 #if IS_ENABLED(CONFIG_OPLUS_MTK_DRM_GKI_NOTIFY)
 #include "../mediatek/mediatek_v2/mtk_panel_ext.h"
@@ -82,92 +81,6 @@ struct LCM_setting_table {
  	unsigned char para_list[128];
 };
 
-#if 0
-static int blmap_table[] = {
-                36, 8,
-                16, 11,
-                17, 12,
-                19, 13,
-                19, 15,
-                20, 14,
-                22, 14,
-                22, 14,
-                24, 10,
-                24, 8 ,
-                26, 4 ,
-                27, 0 ,
-                29, 9 ,
-                29, 9 ,
-                30, 14,
-                33, 25,
-                34, 30,
-                36, 44,
-                37, 49,
-                40, 65,
-                40, 69,
-                43, 88,
-                46, 109,
-                47, 112,
-                50, 135,
-                53, 161,
-                53, 163,
-                60, 220,
-                60, 223,
-                64, 257,
-                63, 255,
-                71, 334,
-                71, 331,
-                75, 375,
-                80, 422,
-                84, 473,
-                89, 529,
-                88, 518,
-                99, 653,
-                98, 640,
-                103, 707,
-                117, 878,
-                115, 862,
-                122, 947,
-                128, 1039,
-                135, 1138,
-                132, 1102,
-                149, 1355,
-                157, 1478,
-                166, 1611,
-                163, 1563,
-                183, 1900,
-                180, 1844,
-                203, 2232,
-                199, 2169,
-                209, 2344,
-                236, 2821,
-                232, 2742,
-                243, 2958,
-                255, 3188,
-                268, 3433,
-                282, 3705,
-                317, 4400,
-                176, 1555};
-#endif
-
-/*
-static struct LCM_setting_table set_dimming_off[] = {
-	{0xFF, 0x01, {0x10}},
-	{0xFB, 0x01, {0x01}},
-	{0x53, 0x01, {0x24}}
-};
-
-static struct LCM_setting_table init_setting_cmd[] = {
-	{ 0xFF, 0x03, {0x98, 0x07, 0x00} },
-};
-*/
-/*
-static struct LCM_setting_table bl_level[] = {
-	 { 0xFF, 0x03, {0x98, 0x81, 0x00} },
-	{0x51, 2, {0x00, 0xFF} },
-	{REGFLAG_END_OF_TABLE, 0x00, {} }
-};
-*/
 #define lcm_dcs_write_seq(ctx, seq...) \
 ({\
 	const u8 d[] = { seq };\
@@ -186,7 +99,6 @@ static inline struct lcm *panel_to_lcm(struct drm_panel *panel)
 	return container_of(panel, struct lcm, panel);
 }
 
-#if 1
 static void lcm_dcs_write(struct lcm *ctx, const void *data, size_t len)
 {
 	struct mipi_dsi_device *dsi = to_mipi_dsi_device(ctx->dev);
@@ -216,32 +128,7 @@ static void lcm_mdelay(unsigned int ms)
 	else
 		usleep_range(ms * 1000 - 100, ms * 1000);
 }
-#endif
 
-/*static void push_table(struct lcm *ctx, struct LCM_setting_table *table, unsigned int count)
-{
-	unsigned int i;
-	unsigned int cmd;
-
-	for (i = 0; i < count; i++) {
-		cmd = table[i].cmd;
-		switch (cmd) {
-		case REGFLAG_DELAY:
-			usleep_range(table[i].count*1000, table[i].count*1000 + 100);
-			break;
-		case REGFLAG_UDELAY:
-			usleep_range(table[i].count, table[i].count + 100);
-			break;
-		case REGFLAG_END_OF_TABLE:
-			break;
-		default:
-			lcm_dcs_write(ctx, table[i].para_list, table[i].count);
-			break;
-		}
-	}
-}*/
-
-#if 1
 static void lcm_panel_init(struct lcm *ctx)
 	{
 
@@ -288,7 +175,7 @@ static void lcm_panel_init(struct lcm *ctx)
 	lcm_mdelay(20);
 
 }
-#endif
+
 static int lcm_disable(struct drm_panel *panel)
 {
 	struct lcm *ctx = panel_to_lcm(panel);
@@ -475,40 +362,9 @@ static int lcm_panel_poweroff(struct drm_panel *panel)
 
 static struct LCM_setting_table bl_level[] = {
 	{0x51, 2, {0x00, 0xFF} },
-/*	{REGFLAG_CMD,3, {0x51, 0xi900, 0xFF} },*/
 	{REGFLAG_END_OF_TABLE, 0x00, {} }
 };
 
-static void lcm_gamma_enter (void *dsi, dcs_write_gce cb, void *handle)
-{
-#if 0
-	char bl_tb0[] = {0x29, 0xFF, 0x98, 0x83, 0x08};
-	char bl_tb1[] = {0x29, 0xE0, 0x55, 0x95, 0x97, 0x9D, 0xA5, 0x55, 0xB3, 0xC2, 0xCF, 0xE2, 0xA9, 0xF5, 0x18, 0x39, 0x5A, 0xAA, 0x7D, 0xA5, 0xD6, 0xF5, 0xFF, 0x1A, 0x39, 0x61, 0x8F, 0x3F, 0xB3, 0xC6, 0xDA};
-	char bl_tb2[] = {0x29, 0xE1, 0x55, 0x95, 0x97, 0x9D, 0xA5, 0x55, 0xB3, 0xC2, 0xCF, 0xE2, 0xA9, 0xF5, 0x18, 0x39, 0x5A, 0xAA, 0x7D, 0xA5, 0xD6, 0xF5, 0xFF, 0x1A, 0x39, 0x61, 0x8F, 0x3F, 0xB3, 0xC6, 0xDA};
-	char bl_tb3[] = {0x29, 0xFF, 0x98, 0x83, 0x00};
-
-	cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
-	cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
-	cb(dsi, handle, bl_tb2, ARRAY_SIZE(bl_tb2));
-	cb(dsi, handle, bl_tb3, ARRAY_SIZE(bl_tb3));
-
-#endif
-}
-
-static void lcm_gamma_exit (void *dsi, dcs_write_gce cb, void *handle)
-{
-#if 0
-	char bl_tb0[] = {0x29, 0xFF, 0x98, 0x83, 0x08};
-	char bl_tb1[] = {0x29, 0xE0, 0x00, 0x00, 0x16, 0x4B, 0x80, 0x50, 0xC2, 0xFA, 0x25, 0x58, 0x95, 0x81, 0xC3, 0xF6, 0x25, 0xAA, 0x50, 0x7C, 0xB8, 0xDA, 0xFF, 0x01, 0x23, 0x4A, 0x7C, 0x3F, 0xA6, 0xC6, 0xDA};
-	char bl_tb2[] = {0x29, 0xE1, 0x00, 0x00, 0x16, 0x4B, 0x80, 0x50, 0xC2, 0xFA, 0x25, 0x58, 0x95, 0x81, 0xC3, 0xF6, 0x25, 0xAA, 0x50, 0x7C, 0xB8, 0xDA, 0xFF, 0x01, 0x23, 0x4A, 0x7C, 0x3F, 0xA6, 0xC6, 0xDA};
-	char bl_tb3[] = {0x29, 0xFF, 0x98, 0x83, 0x00};
-
-	cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
-	cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
-	cb(dsi, handle, bl_tb2, ARRAY_SIZE(bl_tb2));
-	cb(dsi, handle, bl_tb3, ARRAY_SIZE(bl_tb3));
-#endif
-}
 
 static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb,
 	void *handle, unsigned int level)
@@ -537,23 +393,9 @@ static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb,
 		pr_info("enter aod!!!\n");
 		return 0;
 	}
-	
-    if(level == 13 && g_GammaFlag == 1){
-        g_GammaFlag = 0;
-        pr_info(" backlight < 14 enter gamma!\n");
-        lcm_gamma_enter(dsi, cb, handle);
-    }else if(level > 13 && g_GammaFlag == 0){
-        g_GammaFlag = 1;
-        pr_info(" backlight > 13 exit gamma!\n");
-        lcm_gamma_exit(dsi, cb, handle);
-	}
-	
 	bl_tb0[1] = level >> 8;
 	bl_tb0[2] = level & 0xFF;
 	mapped_level = level;
-	if (mapped_level > 1) {
-		//lcdinfo_notify(LCM_BRIGHTNESS_TYPE, &mapped_level);
-	}
 	cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
 
 	oplus_display_brightness = level;
@@ -565,28 +407,26 @@ static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb,
 static void lcm_cabc_mode_switch(void *dsi, dcs_write_gce cb,
 		void *handle, unsigned int mode)
 {
-	//struct mtk_dsi *dsi_ptr = (struct mtk_dsi *)dsi;
-	//struct lcm *ctx = panel_to_lcm(dsi_ptr->panel);
 
 	pr_err("%s cabc = %d\n", __func__, mode);
 	if (mode == 3) {
 		mode = 2;
 		pr_info("[lcm] cabc set level_2 %d\n", mode);
 	}
-	
+
 	char bl_tb0[] = {0xFF, 0x78, 0x07, 0x00};
 
 	if (mode == 0) {
 		char bl_tb1[] = {0x55, 0x00};
-		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb0));
+		cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
 		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
 	} else if (mode == 1) {
 		char bl_tb1[] = {0x55, 0x01};
-		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb0));
+		cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
 		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
 	} else if (mode == 2) {
 		char bl_tb1[] = {0x55, 0x02};
-		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb0));
+		cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
 		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
 	} else {
 		pr_info("[lcm]  cabc_mode %d is not support\n", mode);
@@ -836,8 +676,6 @@ static int lcm_probe(struct mipi_dsi_device *dsi)
   	}
  	devm_gpiod_put(dev, ctx->bias_neg);
 
-	//ctx->prepared = true;
-	//ctx->enabled = true;
 
 	ctx->panel.dev = dev;
 	ctx->panel.funcs = &lcm_drm_funcs;

@@ -965,6 +965,23 @@ static char aw_rtp_name_162Hz[][AW_RTP_NAME_MAX] = {
 	{"aw8697_Rainsplash_RTP_409_162Hz.bin"},
 	{"aw8697_Raindrop_RTP_410_162Hz.bin"},
 	/* Add for OS14 End */
+	{"aw8697_custom_vibration_RTP_411_162Hz.bin"},
+	{"aw8697_custom_vibration_RTP_412_162Hz.bin"},
+	{"aw8697_custom_vibration_RTP_413_162Hz.bin"},
+	{"aw8697_custom_vibration_RTP_414_162Hz.bin"},
+	{"aw8697_custom_vibration_RTP_415_162Hz.bin"},
+	{"aw8697_custom_vibration_RTP_416_162Hz.bin"},
+	{"aw8697_custom_vibration_RTP_417_162Hz.bin"},
+	{"aw8697_custom_vibration_RTP_418_162Hz.bin"},
+	{"aw8697_custom_vibration_RTP_419_162Hz.bin"},
+	{"aw8697_custom_vibration_RTP_420_162Hz.bin"},
+	{"aw8697_custom_vibration_RTP_421_162Hz.bin"},
+	{"aw8697_custom_vibration_RTP_422_162Hz.bin"},
+	{"aw8697_custom_vibration_RTP_423_162Hz.bin"},
+	{"aw8697_custom_vibration_RTP_424_162Hz.bin"},
+	{"aw8697_custom_vibration_RTP_425_162Hz.bin"},
+	{"aw8697_custom_vibration_RTP_426_162Hz.bin"},
+	{"aw8697_custom_vibration_RTP_427_162Hz.bin"},
 };
 
 static char aw_rtp_name_166Hz[][AW_RTP_NAME_MAX] = {
@@ -1398,6 +1415,23 @@ static char aw_rtp_name_166Hz[][AW_RTP_NAME_MAX] = {
 	{"aw8697_Rainsplash_RTP_409_166Hz.bin"},
 	{"aw8697_Raindrop_RTP_410_166Hz.bin"},
 	/* Add for OS14 End */
+	{"aw8697_custom_vibration_RTP_411_166Hz.bin"},
+	{"aw8697_custom_vibration_RTP_412_166Hz.bin"},
+	{"aw8697_custom_vibration_RTP_413_166Hz.bin"},
+	{"aw8697_custom_vibration_RTP_414_166Hz.bin"},
+	{"aw8697_custom_vibration_RTP_415_166Hz.bin"},
+	{"aw8697_custom_vibration_RTP_416_166Hz.bin"},
+	{"aw8697_custom_vibration_RTP_417_166Hz.bin"},
+	{"aw8697_custom_vibration_RTP_418_166Hz.bin"},
+	{"aw8697_custom_vibration_RTP_419_166Hz.bin"},
+	{"aw8697_custom_vibration_RTP_420_166Hz.bin"},
+	{"aw8697_custom_vibration_RTP_421_166Hz.bin"},
+	{"aw8697_custom_vibration_RTP_422_166Hz.bin"},
+	{"aw8697_custom_vibration_RTP_423_166Hz.bin"},
+	{"aw8697_custom_vibration_RTP_424_166Hz.bin"},
+	{"aw8697_custom_vibration_RTP_425_166Hz.bin"},
+	{"aw8697_custom_vibration_RTP_426_166Hz.bin"},
+	{"aw8697_custom_vibration_RTP_427_166Hz.bin"},
 };
 
 static char aw_rtp_name_174Hz[][AW_RTP_NAME_MAX] = {
@@ -1829,6 +1863,23 @@ static char aw_rtp_name_174Hz[][AW_RTP_NAME_MAX] = {
 	{"aw8697_Rainsplash_RTP_409_174Hz.bin"},
 	{"aw8697_Raindrop_RTP_410_174Hz.bin"},
 	/* Add for OS14 End */
+	{"aw8697_custom_vibration_RTP_411_174Hz.bin"},
+	{"aw8697_custom_vibration_RTP_412_174Hz.bin"},
+	{"aw8697_custom_vibration_RTP_413_174Hz.bin"},
+	{"aw8697_custom_vibration_RTP_414_174Hz.bin"},
+	{"aw8697_custom_vibration_RTP_415_174Hz.bin"},
+	{"aw8697_custom_vibration_RTP_416_174Hz.bin"},
+	{"aw8697_custom_vibration_RTP_417_174Hz.bin"},
+	{"aw8697_custom_vibration_RTP_418_174Hz.bin"},
+	{"aw8697_custom_vibration_RTP_419_174Hz.bin"},
+	{"aw8697_custom_vibration_RTP_420_174Hz.bin"},
+	{"aw8697_custom_vibration_RTP_421_174Hz.bin"},
+	{"aw8697_custom_vibration_RTP_422_174Hz.bin"},
+	{"aw8697_custom_vibration_RTP_423_174Hz.bin"},
+	{"aw8697_custom_vibration_RTP_424_174Hz.bin"},
+	{"aw8697_custom_vibration_RTP_425_174Hz.bin"},
+	{"aw8697_custom_vibration_RTP_426_174Hz.bin"},
+	{"aw8697_custom_vibration_RTP_427_174Hz.bin"},
 };
 
 static char aw_rtp_name_178Hz[][AW_RTP_NAME_MAX] = {
@@ -2262,6 +2313,23 @@ static char aw_rtp_name_178Hz[][AW_RTP_NAME_MAX] = {
 	{"aw8697_Rainsplash_RTP_409_178Hz.bin"},
 	{"aw8697_Raindrop_RTP_410_178Hz.bin"},
 	/* Add for OS14 End */
+	{"aw8697_custom_vibration_RTP_411_178Hz.bin"},
+	{"aw8697_custom_vibration_RTP_412_178Hz.bin"},
+	{"aw8697_custom_vibration_RTP_413_178Hz.bin"},
+	{"aw8697_custom_vibration_RTP_414_178Hz.bin"},
+	{"aw8697_custom_vibration_RTP_415_178Hz.bin"},
+	{"aw8697_custom_vibration_RTP_416_178Hz.bin"},
+	{"aw8697_custom_vibration_RTP_417_178Hz.bin"},
+	{"aw8697_custom_vibration_RTP_418_178Hz.bin"},
+	{"aw8697_custom_vibration_RTP_419_178Hz.bin"},
+	{"aw8697_custom_vibration_RTP_420_178Hz.bin"},
+	{"aw8697_custom_vibration_RTP_421_178Hz.bin"},
+	{"aw8697_custom_vibration_RTP_422_178Hz.bin"},
+	{"aw8697_custom_vibration_RTP_423_178Hz.bin"},
+	{"aw8697_custom_vibration_RTP_424_178Hz.bin"},
+	{"aw8697_custom_vibration_RTP_425_178Hz.bin"},
+	{"aw8697_custom_vibration_RTP_426_178Hz.bin"},
+	{"aw8697_custom_vibration_RTP_427_178Hz.bin"},
 };
 #endif /* OPLUS_FEATURE_CHG_BASIC */
 
@@ -2696,6 +2764,23 @@ static char aw_rtp_name[][AW_RTP_NAME_MAX] = {
 	{"aw8697_Rainsplash_RTP_409.bin"},
 	{"aw8697_Raindrop_RTP_410.bin"},
 	/* Add for OS14 End */
+	{"aw8697_custom_vibration_RTP_411.bin"},
+	{"aw8697_custom_vibration_RTP_412.bin"},
+	{"aw8697_custom_vibration_RTP_413.bin"},
+	{"aw8697_custom_vibration_RTP_414.bin"},
+	{"aw8697_custom_vibration_RTP_415.bin"},
+	{"aw8697_custom_vibration_RTP_416.bin"},
+	{"aw8697_custom_vibration_RTP_417.bin"},
+	{"aw8697_custom_vibration_RTP_418.bin"},
+	{"aw8697_custom_vibration_RTP_419.bin"},
+	{"aw8697_custom_vibration_RTP_420.bin"},
+	{"aw8697_custom_vibration_RTP_421.bin"},
+	{"aw8697_custom_vibration_RTP_422.bin"},
+	{"aw8697_custom_vibration_RTP_423.bin"},
+	{"aw8697_custom_vibration_RTP_424.bin"},
+	{"aw8697_custom_vibration_RTP_425.bin"},
+	{"aw8697_custom_vibration_RTP_426.bin"},
+	{"aw8697_custom_vibration_RTP_427.bin"},
 };
 
 
@@ -5159,6 +5244,13 @@ static void rtp_work_routine(struct work_struct *work)
 	aw_haptic->func->set_rtp_aei(aw_haptic, false);
 	aw_haptic->func->irq_clear(aw_haptic);
 	aw_haptic->func->play_stop(aw_haptic);
+	if (aw_haptic->rtp_file_num == AW_WAVEFORM_INDEX_ZERO) {
+		aw_haptic->rtp_init = false;
+		op_clean_status(aw_haptic);
+		aw_dev_info("%s: vibrator stopped \n", __func__);
+		mutex_unlock(&aw_haptic->lock);
+		return;
+	}
 	/* gain */
 	ram_vbat_comp(aw_haptic, false);
 	/* boost voltage */

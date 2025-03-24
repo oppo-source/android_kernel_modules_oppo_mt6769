@@ -1414,6 +1414,12 @@
 #define MIAMI_SP2507_SENSOR_ID                   0x002B
 #define SENSOR_DRVNAME_MIAMI_SP2507             "miami_sp2507"
 
+/*Ark_23618*/
+#define HI5022Q_SENSOR_ID23618                 0x5023
+#define SENSOR_DRVNAME_HI5022Q_MIPI_RAW23618   "hi5022q_mipi_raw23618"
+#define SC820CS_SENSOR_ID23618                 0xD154
+#define SENSOR_DRVNAME_SC820CS_MIPI_RAW23618   "sc820cs_mipi_raw23618"
+
 #define ATHENSD_S5KGW3_SENSOR_ID                        0x730A
 #define ATHENSD_S5KGW3P1_SENSOR_ID                      0x730C
 #define ATHENSD_IMX471_SENSOR_ID                        0x473

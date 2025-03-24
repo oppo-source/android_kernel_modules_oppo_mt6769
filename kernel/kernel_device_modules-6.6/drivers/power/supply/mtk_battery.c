@@ -580,7 +580,6 @@ int fgauge_get_profile_id(struct mtk_battery *gm)
 	if (is_fuelgauge_apply() == true) {
 		 battery_type_check();
 		 return gm->battery_id;
-
 	} else {
 		return gm->battery_id;
 	}
@@ -2980,7 +2979,6 @@ void fg_custom_init_from_dts(struct platform_device *dev,
 						UNIT_TRANS_100);
 			}
 		}
-
 		bm_err(gm, "battery%d_g_FG_charge_PSEUDO100 g_FG_charge_PSEUDO100_row:%d g_FG_charge_PSEUDO100_col:%d\n",
 			bat_id, r_pseudo100_raw, r_pseudo100_col);
 	} else {
@@ -2993,8 +2991,6 @@ void fg_custom_init_from_dts(struct platform_device *dev,
 						UNIT_TRANS_100);
 			}
 		}
-
-
 		bm_err(gm, "g_FG_charge_PSEUDO100_row:%d g_FG_charge_PSEUDO100_col:%d\n",
 			r_pseudo100_raw, r_pseudo100_col);
 	}

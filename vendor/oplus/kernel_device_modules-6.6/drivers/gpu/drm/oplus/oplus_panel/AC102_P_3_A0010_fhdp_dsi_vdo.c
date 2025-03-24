@@ -16,6 +16,7 @@
 #include <video/videomode.h>
 
 #include <linux/module.h>
+#include <linux/of_graph.h>
 #include <linux/of_platform.h>
 #include <linux/platform_device.h>
 #include <linux/gpio/consumer.h>
@@ -196,6 +197,16 @@ static void lcm_panel_init(struct lcm *ctx)
 
 	usleep_range(10 * 1000, 10 * 1000);
 	/* Add for loading tp fw when screen ON*/
+#if IS_ENABLED(CONFIG_OPLUS_MTK_DRM_GKI_NOTIFY)
+            int blank;
+            blank = LCD_CTL_CS_ON;
+            mtk_disp_notifier_call_chain(MTK_DISP_EVENT_FOR_TOUCH, &blank);
+            pr_err("[TP]TP CS will chang to spi mode and high\n");
+            usleep_range(5000, 5100);
+            blank = LCD_CTL_TP_LOAD_FW;
+            mtk_disp_notifier_call_chain(MTK_DISP_EVENT_FOR_TOUCH, &blank);
+            pr_info("[TP] start to load fw!\n");
+#endif
 	lcd_queue_load_tp_fw();
 
 	lcm_dcs_write_seq_static(ctx, 0xFF, 0x78, 0x07, 0x06);
@@ -453,16 +464,6 @@ static int lcm_prepare(struct drm_panel *panel)
 		pr_debug("_20015_lcm_i2c_write_bytes 0x03 return value = %d\n", ret);
 	}
 
-#if IS_ENABLED(CONFIG_OPLUS_MTK_DRM_GKI_NOTIFY)
-            int blank;
-            blank = LCD_CTL_CS_ON;
-            mtk_disp_notifier_call_chain(MTK_DISP_EVENT_FOR_TOUCH, &blank);
-            pr_err("[TP]TP CS will chang to spi mode and high\n");
-            usleep_range(5000, 5100);
-            blank = LCD_CTL_TP_LOAD_FW;
-            mtk_disp_notifier_call_chain(MTK_DISP_EVENT_FOR_TOUCH, &blank);
-            pr_info("[TP] start to load fw!\n");
-#endif
 	udelay(2000);
 	tp_control_reset_gpio(true);
 
@@ -984,7 +985,7 @@ static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb,
 
     if (level > 4095)
         level = 4095;
-    pr_debug(" backlight1 =  %d\n", level);
+    pr_info("ac102_p3 backlight1 =  %d\n", level);
 
     if(level < 14 && level > 0 && g_GammaFlag == 0){
         g_GammaFlag = 1;
@@ -1002,7 +1003,7 @@ static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb,
     bl_tb0[2] = level & 0xff;
     if (!cb)
         return -1;
-    pr_debug(" backlight2 =%d,bl0=0x%x,bl1=0x%x\n", level,bl_tb0[1],bl_tb0[2]);
+    pr_info("ac102_p3 backlight2 =%d,bl0=0x%x,bl1=0x%x\n", level,bl_tb0[1],bl_tb0[2]);
     cb(dsi, handle, bl_tb2, ARRAY_SIZE(bl_tb2));
     cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
     cb(dsi, handle, APbl_tb1, ARRAY_SIZE(APbl_tb1));
@@ -1053,6 +1054,7 @@ static int mtk_panel_ext_param_set(struct drm_panel *panel,
 	}
 	if (!ret) {
 		current_fps = drm_mode_vrefresh(m);
+		pr_info("current_fps = %d \n",current_fps);
 	}
 
 	return ret;
@@ -1271,8 +1273,26 @@ static int lcm_probe(struct mipi_dsi_device *dsi)
 	struct device *dev = &dsi->dev;
 	struct lcm *ctx;
 	struct device_node *backlight;
+	struct device_node *dsi_node, *remote_node = NULL, *endpoint = NULL;
 	int ret;
-	pr_info("begin!\n");
+	pr_info("ac102 p3 probe begin!\n");
+
+	dsi_node = of_get_parent(dev->of_node);
+	if (dsi_node) {
+		endpoint = of_graph_get_next_endpoint(dsi_node, NULL);
+		if (endpoint) {
+			remote_node = of_graph_get_remote_port_parent(endpoint);
+			if (!remote_node) {
+				pr_err("No panel connected,skip probe lcm\n");
+				return -ENODEV;
+			}
+			pr_err("device node name:%s\n", remote_node->name);
+		}
+	}
+	if (remote_node != dev->of_node) {
+		pr_err("skip probe due to not current lcm\n");
+		return -ENODEV;
+	}
 
 	ctx = devm_kzalloc(dev, sizeof(struct lcm), GFP_KERNEL);
 	if (!ctx)
@@ -1349,7 +1369,7 @@ static int lcm_probe(struct mipi_dsi_device *dsi)
 #endif
 	register_device_proc("lcd", "AC102", "P_3");
 	oplus_max_normal_brightness = MAX_NORMAL_BRIGHTNESS;
-	pr_info("Successful\n");
+	pr_info("ac102 p3 probe Successful\n");
 	return ret;
 }
 

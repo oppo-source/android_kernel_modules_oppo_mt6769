@@ -303,6 +303,14 @@ static void setup_stune_data(struct ofb_stune_data *stune_data, int grp_id)
 			fbg_set_stune_boost(stune_data->ed_task_boost_max_util, grp_id, BOOST_ED_TASK_MAX_UTIL);
 		if (stune_data->ed_task_boost_timeout_duration >= 0)
 			fbg_set_stune_boost(stune_data->ed_task_boost_timeout_duration, grp_id, BOOST_ED_TASK_TIME_OUT_DURATION);
+		if ((stune_data->boost_sf_freq_nongpu >= 0) && (stune_data->boost_sf_freq_nongpu <= 100))
+			fbg_set_stune_boost(stune_data->boost_sf_freq_nongpu, grp_id, BOOST_SF_FREQ_NONGPU);
+		if ((stune_data->boost_sf_migr_nongpu >= 0) && (stune_data->boost_sf_migr_nongpu <= 100))
+			fbg_set_stune_boost(stune_data->boost_sf_migr_nongpu, grp_id, BOOST_SF_MIGR_NONGPU);
+		if ((stune_data->boost_sf_freq_gpu >= 0) && (stune_data->boost_sf_freq_gpu <= 100))
+			fbg_set_stune_boost(stune_data->boost_sf_freq_gpu, grp_id, BOOST_SF_FREQ_GPU);
+		if ((stune_data->boost_sf_migr_gpu >= 0) && (stune_data->boost_sf_migr_gpu <= 100))
+			fbg_set_stune_boost(stune_data->boost_sf_migr_gpu, grp_id, BOOST_SF_MIGR_GPU);
 	} else if (grp_id == SF_FRAME_GROUP_ID) {
 		if ((stune_data->boost_sf_freq_nongpu >= 0) && (stune_data->boost_sf_freq_nongpu <= 100))
 			fbg_set_stune_boost(stune_data->boost_sf_freq_nongpu, grp_id, BOOST_SF_FREQ_NONGPU);

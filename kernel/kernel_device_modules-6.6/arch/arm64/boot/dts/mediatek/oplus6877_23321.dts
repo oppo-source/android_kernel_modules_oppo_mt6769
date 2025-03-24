@@ -404,6 +404,14 @@
 	sensor_fb: sensor_fb {
 		compatible = "oplus,sensor-feedback";
 	};
+
+	ssc_interactive: ssc_interactive {
+		report_brightness = <1>;
+		support_pwm_turbo = <0>;
+		support_bri_to_scp = <0>;
+		need_to_sync_lcd_rate = <0>;
+	};
+
 	consumer_ir_core: consumer_ir_core {
 		compatible = "oplus,kookong_ir_core";
 		status = "okay";

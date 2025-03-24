@@ -197,6 +197,8 @@ source "$(KCONFIG_EXT_PREFIX)drivers/misc/mediatek/sensor/2.0/oplus_virtual_sens
 source "$(KCONFIG_EXT_PREFIX)drivers/misc/mediatek/sensor/2.0/oplus_virtual_sensor/sensors/pedo_minutehub/Kconfig"
 source "$(KCONFIG_EXT_PREFIX)drivers/misc/mediatek/aw37004/Kconfig"
 
+source "$(KCONFIG_EXT_PREFIX)drivers/misc/mediatek/sensor/2.0/oplus_virtual_sensor/sensors/back_tap_detecthub/Kconfig"
+
 source "$(KCONFIG_EXT_PREFIX)drivers/misc/mediatek/sensor/2.0/oplus_virtual_sensor/sensors/phone_proxhub/Kconfig"
 
 source "$(KCONFIG_EXT_PREFIX)drivers/misc/mediatek/sensor/2.0/oplus_virtual_sensor/sensors/gesture_proxhub/Kconfig"
@@ -226,5 +228,13 @@ source "$(KCONFIG_EXT_PREFIX)drivers/misc/mediatek/sensor/1.0/oplus_virtual_sens
 source "$(KCONFIG_EXT_PREFIX)drivers/misc/mediatek/sensor/1.0/oplus_virtual_sensor/sensors/fp_displayhub/Kconfig"
 
 source "$(KCONFIG_EXT_PREFIX)drivers/misc/mediatek/sensor/1.0/oplus_virtual_sensor/sensors/pickup_detecthub/Kconfig"
+
+source "$(KCONFIG_EXT_PREFIX)drivers/misc/mediatek/sensor/1.0/oplus_virtual_sensor/sensors/palm_detecthub/Kconfig"
+
+source "$(KCONFIG_EXT_PREFIX)drivers/misc/mediatek/sensor/1.0/oplus_virtual_sensor/sensors/back_tap_detecthub/Kconfig"
+
+source "$(KCONFIG_EXT_PREFIX)drivers/misc/mediatek/sensor/2.0/oplus_virtual_sensor/sensors/back_tap_detecthub/Kconfig"
+
+source "$(KCONFIG_EXT_PREFIX)drivers/misc/mediatek/sensor/2.0/oplus_virtual_sensor/sensors/rotation_detecthub/Kconfig"
 
 source "$(KCONFIG_EXT_PREFIX)drivers/misc/mediatek/sensor/1.0/oplus_virtual_sensor/sensors/pedo_minutehub/Kconfig"

@@ -16,6 +16,7 @@
 #include <video/videomode.h>
 
 #include <linux/module.h>
+#include <linux/of_graph.h>
 #include <linux/of_platform.h>
 #include <linux/platform_device.h>
 #include <linux/gpio/consumer.h>
@@ -198,6 +199,16 @@ static void tianma_panel_init(struct tianma *ctx)
 
 	usleep_range(10 * 1000, 10 * 1000);
 	/* Add for loading tp fw when screen ON*/
+#if IS_ENABLED(CONFIG_OPLUS_MTK_DRM_GKI_NOTIFY)
+            int blank;
+            blank = LCD_CTL_CS_ON;
+            mtk_disp_notifier_call_chain(MTK_DISP_EVENT_FOR_TOUCH, &blank);
+            pr_err("[TP]TP CS will chang to spi mode and high\n");
+            usleep_range(5000, 5100);
+            blank = LCD_CTL_TP_LOAD_FW;
+            mtk_disp_notifier_call_chain(MTK_DISP_EVENT_FOR_TOUCH, &blank);
+            pr_info("[TP] start to load fw!\n");
+#endif
 	lcd_queue_load_tp_fw();
 
 	//CABC
@@ -436,16 +447,6 @@ static int tianma_prepare(struct drm_panel *panel)
 	gpiod_set_value(ctx->bias_pos, 1);
 	devm_gpiod_put(ctx->dev, ctx->bias_pos);
 
-#if IS_ENABLED(CONFIG_OPLUS_MTK_DRM_GKI_NOTIFY)
-            int blank;
-            blank = LCD_CTL_CS_ON;
-            mtk_disp_notifier_call_chain(MTK_DISP_EVENT_FOR_TOUCH, &blank);
-            pr_err("[TP]TP CS will chang to spi mode and high\n");
-            usleep_range(5000, 5100);
-            blank = LCD_CTL_TP_LOAD_FW;
-            mtk_disp_notifier_call_chain(MTK_DISP_EVENT_FOR_TOUCH, &blank);
-            pr_info("[TP] start to load fw!\n");
-#endif
 	//if (tp_boot_mode_normal()) {
 		tp_gpio_current_leakage_handler(true);
 	//}
@@ -1070,16 +1071,16 @@ static int tianma_setbacklight_cmdq(void *dsi, dcs_write_gce cb,
 
 	if (level > 4095)
 		level = 4095;
-	pr_info("set backlight level = %d\n", level);
+	pr_info("ac102_p7 set backlight level = %d\n", level);
 	bl_tb0[1] = (level & 0xff00) >> 8;
 	bl_tb0[2] = level & 0xff;
 	if (!cb)
 		return -1;
 
-	if (level > 0 && level < 14 && bl_gamma == 0) {
+	if (level > 0 && level < 13 && bl_gamma == 0) {
 		tianma_gamma_enter(dsi, cb, handle);
 		bl_gamma = 1;
-	} else if (level > 13 && bl_gamma == 1) {
+	} else if (level > 12 && bl_gamma == 1) {
 		tianma_gamma_exit(dsi, cb, handle);
 		bl_gamma = 0;
 	} else if (level == 0) {
@@ -1193,6 +1194,7 @@ static int mtk_panel_ext_param_set(struct drm_panel *panel,
 	}
 	if (!ret) {
 		current_fps = drm_mode_vrefresh(m);
+		pr_info("current_fps = %d \n",current_fps);
 	}
 
 	return ret;
@@ -1406,7 +1408,26 @@ static int tianma_probe(struct mipi_dsi_device *dsi)
 	struct device *dev = &dsi->dev;
 	struct tianma *ctx;
 	struct device_node *backlight;
+	struct device_node *dsi_node, *remote_node = NULL, *endpoint = NULL;
 	int ret;
+	pr_info("%s Begin\n", __func__);
+	dsi_node = of_get_parent(dev->of_node);
+	if (dsi_node) {
+                endpoint = of_graph_get_next_endpoint(dsi_node, NULL);
+                if (endpoint) {
+                        remote_node = of_graph_get_remote_port_parent(endpoint);
+                        if (!remote_node) {
+                                pr_err("No panel connected,skip probe lcm\n");
+                                return -ENODEV;
+                        }
+                        pr_err("device node name:%s\n", remote_node->name);
+                }
+        }
+        if (remote_node != dev->of_node) {
+                pr_err("skip probe due to not current lcm\n");
+                return -ENODEV;
+        }
+
 	ctx = devm_kzalloc(dev, sizeof(struct tianma), GFP_KERNEL);
 	if (!ctx)
 		return -ENOMEM;
@@ -1483,7 +1504,7 @@ static int tianma_probe(struct mipi_dsi_device *dsi)
 #endif
 	register_device_proc("lcd", "AC102", "P_7");
 	oplus_max_normal_brightness = MAX_NORMAL_BRIGHTNESS;
-	pr_info("%s+\n", __func__);
+	pr_info("%s Successfull\n", __func__);
 
 	return ret;
 }

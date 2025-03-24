@@ -235,6 +235,10 @@ int oplus_pwm_turbo_probe(struct device_node *node)
 			OPLUS_PWM_INFO("pwm_params dbv = %d\n", pwm_params->pwm_bl_threshold);
 		}
 
+		pwm_params->pwm_aid_switch_enable =
+			of_property_read_bool(node, "oplus,pwm-aid-switch-enable");
+		OPLUS_PWM_INFO("pwm_params pwm_aid_switch_enable = %d\n", pwm_params->pwm_aid_switch_enable);
+
 		rc = of_property_read_u32(node, "oplus,pwm-turbo-wait-te", &config);
 		if (rc == 0) {
 			pwm_params->pwm_wait_te = config;
@@ -259,7 +263,7 @@ int oplus_pwm_turbo_probe(struct device_node *node)
 			OPLUS_PWM_INFO("pwm_onepulse_enable = %d\n", pwm_params->pwm_onepulse_enabled);
 		} else {
 			pwm_params->pwm_onepulse_enabled = false;
-			OPLUS_PWM_INFO("pwm_onepulse_support config = %d\n", pwm_params->pwm_onepulse_enabled);
+			OPLUS_PWM_INFO("pwm_onepulse_enable config = %d\n", pwm_params->pwm_onepulse_enabled);
 		}
 
 		pwm_params->pwm_power_on = true;
@@ -347,6 +351,8 @@ int oplus_display_panel_set_pwm_turbo_switch_onepulse(struct drm_crtc *crtc, uns
 	mtk_drm_send_lcm_cmd_prepare(crtc, &cmdq_handle);
 
 	if (oplus_display_brightness > plus_bl) {
+		OPLUS_PWM_INFO("set hpwm switch en=%d, backlight[%d] is more than threshold[%d]\n",
+				en, oplus_display_brightness, plus_bl);
 		if (en) {
 			pulse_flg = true;
 			pwm_params->pwm_pul_cmd_id = PWM_SWITCH_3TO1;
@@ -360,8 +366,25 @@ int oplus_display_panel_set_pwm_turbo_switch_onepulse(struct drm_crtc *crtc, uns
 			comp->funcs->io_cmd(comp, cmdq_handle, DSI_SET_HPWM_PULSE, &en);
 		}
 	} else {
-		OPLUS_PWM_WARN("skip set hpwm onepulse en=%d, backlight[%d] is less than threshold[%d]\n",
+		if (pwm_params->pwm_aid_switch_enable) {
+			OPLUS_PWM_INFO("set hpwm switch en=%d, backlight[%d] is less than threshold[%d]\n",
+					en, oplus_display_brightness, plus_bl);
+			if (en) {
+				pulse_flg = true;
+				pwm_params->pwm_pul_cmd_id = PWM_SWITCH_18TO1;
+				set_pwm_turbo_switch_state(PWM_SWITCH_ONEPULSE_STATE);
+			} else {
+				pulse_flg = true;
+				pwm_params->pwm_pul_cmd_id = PWM_SWITCH_1TO18;
+				set_pwm_turbo_switch_state(PWM_SWITCH_DC_STATE);
+			}
+			if (comp->funcs && comp->funcs->io_cmd) {
+				comp->funcs->io_cmd(comp, cmdq_handle, DSI_SET_HPWM_PULSE, &en);
+			}
+		} else {
+			OPLUS_PWM_WARN("skip set hpwm onepulse en=%d, backlight[%d] is less than threshold[%d]\n",
 				en, oplus_display_brightness, plus_bl);
+		}
 	}
 
 	mtk_drm_send_lcm_cmd_flush(crtc, &cmdq_handle, 0);

@@ -16,8 +16,8 @@
 #define FRAME_WIDTH                 1080
 #define FRAME_HEIGHT                2400
 
-#define PHYSICAL_WIDTH              70081
-#define PHYSICAL_HEIGHT             155736
+#define PHYSICAL_WIDTH              70000
+#define PHYSICAL_HEIGHT             156000
 #define MTK_DISP_EVENT_FOR_TOUCH    0x10
 #define MIPI_CLK                    374
 #define DATA_RATE                   770

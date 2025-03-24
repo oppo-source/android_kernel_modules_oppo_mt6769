@@ -258,11 +258,6 @@ int __attribute__((weak)) get_bat_con_ntc_volt(void)
 	return 0;
 }
 
-void __attribute__((weak)) oplus_chg_pullup_dp_set(bool is_on)
-{
-	return;
-}
-
 bool __attribute__((weak)) mtk_pdc_init(struct mtk_charger *info)
 {
 	return true;

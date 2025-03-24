@@ -885,7 +885,7 @@ int oplus_display_panel_get_mipi_err_check(void *data)
 	int rc = 0;
 	u32 *check_result = data;
 
-	if (oplus_display0_params->mipi_err_config.config & OPLUS_REGS_CHECK_ENABLE) {
+	if (oplus_display0_params && (oplus_display0_params->mipi_err_config.config & OPLUS_REGS_CHECK_ENABLE)) {
 		OPLUS_DSI_INFO("mipi err check is enable\n");
 		*check_result = 1;
 	} else {
@@ -1013,7 +1013,7 @@ int oplus_display_panel_get_crc_check(void *data)
 	int rc = 0;
 	u32 *check_result = data;
 
-	if (oplus_display0_params->crc_config.config & OPLUS_REGS_CHECK_ENABLE) {
+	if (oplus_display0_params && (oplus_display0_params->crc_config.config & OPLUS_REGS_CHECK_ENABLE)) {
 		OPLUS_DSI_INFO("crc check is enable\n");
 		*check_result = 1;
 	} else {

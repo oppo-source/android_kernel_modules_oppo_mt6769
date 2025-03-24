@@ -41,6 +41,9 @@
 #define MEDIATEK_6360_DID_V2	0x3492
 #define MEDIATEK_6360_DID_V3	0x3493
 
+#ifdef OPLUS_FEATURE_CHG_BASIC
+static u8 g_stat = 0;
+#endif
 
 struct mt6360_chip {
 	struct i2c_client *client;
@@ -55,6 +58,10 @@ struct mt6360_chip {
 	int irq_gpio;
 	int irq;
 	int chip_id;
+
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	bool usbid_as_wd0;
+#endif
 
 #if IS_ENABLED(CONFIG_MTK_TYPEC_WATER_DETECT_BY_PCB)
 	int pcb_gpio;
@@ -540,6 +547,9 @@ static inline int mt6360_command(struct tcpc_device *tcpc, uint8_t cmd)
 
 static inline int mt6360_init_vend_mask(struct tcpc_device *tcpc)
 {
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	struct mt6360_chip *chip = tcpc_get_dev_data(tcpc);
+#endif
 	u8 mask[MT6360_VEND_INT_MAX] = {0};
 
 	mask[MT6360_VEND_INT1] |= MT6360_M_WAKEUP |
@@ -552,8 +562,15 @@ static inline int mt6360_init_vend_mask(struct tcpc_device *tcpc)
 				  MT6360_M_VCONN_INVALID;
 
 #if CONFIG_WATER_DETECTION
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	if (chip->usbid_as_wd0 == false) {
+		if (tcpc->tcpc_flags & TCPC_FLAGS_WATER_DETECTION)
+			mask[MT6360_VEND_INT2] |= MT6360_M_WD_EVT;
+	}
+#else
 	if (tcpc->tcpc_flags & TCPC_FLAGS_WATER_DETECTION)
 		mask[MT6360_VEND_INT2] |= MT6360_M_WD_EVT;
+#endif /* OPLUS_FEATURE_CHG_BASIC */
 #endif /* CONFIG_WATER_DETECTION */
 
 #if CONFIG_CABLE_TYPE_DETECTION
@@ -649,30 +666,82 @@ static int mt6360_enable_usbid_polling(struct mt6360_chip *chip, bool en)
 {
 	int ret;
 
-	if (en == chip->wd_polling)
+	if (en == chip->wd_polling && chip->usbid_as_wd0 == false)
 		return 0;
 	if (en) {
+#ifdef OPLUS_FEATURE_CHG_BASIC
+		if (chip->usbid_as_wd0 == true) {
+			/* set usbid signal rising width IS_TDET 400us */
+			ret = charger_dev_set_usbid_src_ton(chip->chgdev, 400);
+		} else {
+			/* set usbid signal rising width IS_TDET 100ms */
+			ret = charger_dev_set_usbid_src_ton(chip->chgdev, 100000);
+		}
+#else
 		ret = charger_dev_set_usbid_src_ton(chip->chgdev, 100000);
+#endif
 		if (ret < 0) {
 			dev_err(chip->dev, "%s usbid src on 100ms fail\n",
 					__func__);
 			return ret;
 		}
-
+#ifdef OPLUS_FEATURE_CHG_BASIC
+		if (chip->usbid_as_wd0 == true)
+			/* set usbid pull up register 5K */
+			ret = charger_dev_set_usbid_rup(chip->chgdev, 5000);
+		else
+			/* set usbid pull up register 75K */
+			ret = charger_dev_set_usbid_rup(chip->chgdev, 75000);
+#else
 		ret = charger_dev_set_usbid_rup(chip->chgdev, 75000);
+#endif
 		if (ret < 0) {
 			dev_err(chip->dev, "%s usbid rup75k fail\n", __func__);
 			return ret;
 		}
+
+#ifdef OPLUS_FEATURE_CHG_BASIC
+		if (chip->usbid_as_wd0 == true) {
+			/* set usbid waveform period 100 : 100 * IS_TDET */
+			ret = charger_dev_set_usbid_period(chip->chgdev, 100);// 4:4x, 100:100x, 200:200x, 1600:1600x
+			if (ret < 0) {
+				dev_err(chip->dev, "%s usbid 4x fail\n", __func__);
+				return ret;
+			}
+		}
+#endif
 	}
 
 	ret = charger_dev_enable_usbid(chip->chgdev, en);
 	if (ret < 0)
 		return ret;
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	if (chip->usbid_as_wd0 == false)
+		chip->wd_polling = en;
+#else
 	chip->wd_polling = en;
+#endif
 	mt6360_enable_irq(chip, "usbid_evt", en);
 	return 0;
 }
+
+#ifdef OPLUS_FEATURE_CHG_BASIC
+void mt6360_pmu_usbid_as_wd0 (struct work_struct *work){
+	struct delayed_work *dwork = to_delayed_work(work);
+	struct mt6360_chip *chip = container_of(dwork,
+						struct mt6360_chip,
+						usbid_evt_dwork);
+
+	tcpci_notify_wd0_state(chip->tcpc, g_stat);
+	MT6360_INFO("%s g_stat = %d\n", __func__, g_stat);
+	if (g_stat == 0) {		/*0 < vth_id plugout*/
+		mt6360_enable_usbid_polling(chip, true);
+		tcpm_typec_change_role(chip->tcpc, TYPEC_ROLE_SNK);
+	} else {				/*1>vth_id plugin*/
+		tcpm_typec_change_role(chip->tcpc,TYPEC_ROLE_TRY_SNK);
+	}
+}
+#endif
 
 static void mt6360_pmu_usbid_evt_dwork_handler(struct work_struct *work)
 {
@@ -705,11 +774,17 @@ static irqreturn_t mt6360_pmu_usbid_evt_handler(int irq, void *data)
 {
 	struct mt6360_chip *chip = data;
 
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	if (chip->usbid_as_wd0 == true)
+		charger_dev_get_usbid_stat(chip->chgdev, &g_stat);
+
+	queue_delayed_work(system_freezable_wq, &chip->usbid_evt_dwork, msecs_to_jiffies(0));
+#else
 	tcpci_lock_typec(chip->tcpc);
 	mt6360_enable_irq(chip, "usbid_evt", false);
 	tcpci_unlock_typec(chip->tcpc);
-	queue_delayed_work(system_freezable_wq, &chip->usbid_evt_dwork,
-			   msecs_to_jiffies(900));
+	queue_delayed_work(system_freezable_wq, &chip->usbid_evt_dwork, msecs_to_jiffies(900));
+#endif
 	return IRQ_HANDLED;
 }
 #endif /* CONFIG_WATER_DETECTION */
@@ -1179,6 +1254,7 @@ static int mt6360_set_low_power_mode(struct tcpc_device *tcpc, bool en,
 {
 	int ret = 0;
 	u8 data = 0;
+#ifndef OPLUS_FEATURE_CHG_BASIC
 #if CONFIG_WATER_DETECTION
 	struct mt6360_chip *chip = tcpc_get_dev_data(tcpc);
 
@@ -1193,6 +1269,7 @@ static int mt6360_set_low_power_mode(struct tcpc_device *tcpc, bool en,
 			return ret;
 	}
 #endif /* CONFIG_WATER_DETECTION */
+#endif /* OPLUS_FEATURE_CHG_BASIC */
 	ret = (en ? mt6360_i2c_clr_bit : mt6360_i2c_set_bit)
 		(tcpc, MT6360_REG_MODE_CTRL2, MT6360_AUTOIDLE_EN);
 	if (ret < 0)
@@ -1771,10 +1848,22 @@ static int mt6360_tcpc_init(struct tcpc_device *tcpc, bool sw_reset)
 	mdelay(1);
 
 #if CONFIG_WATER_DETECTION
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	if (chip->usbid_as_wd0 == true) {
+		chip->tcpc->tcpc_flags |= TCPC_FLAGS_WATER_DETECTION;
+		mt6360_enable_usbid_polling(chip, true);
+	} else {
+		if (tcpc->tcpc_flags & TCPC_FLAGS_WATER_DETECTION) {
+			mt6360_init_water_detection(tcpc);
+			mt6360_enable_usbid_polling(chip, true);
+		}
+	}
+#else
 	if (tcpc->tcpc_flags & TCPC_FLAGS_WATER_DETECTION) {
 		mt6360_init_water_detection(tcpc);
 		mt6360_enable_usbid_polling(chip, true);
 	}
+#endif /* OPLUS_FEATURE_CHG_BASIC */
 #endif /* CONFIG_WATER_DETECTION */
 
 	return 0;
@@ -2015,7 +2104,10 @@ static int mt6360_parse_dt(struct mt6360_chip *chip, struct device *dev,
 		return ret;
 	}
 #endif /* CONFIG_MTK_TYPEC_WATER_DETECT_BY_PCB */
-
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	chip->usbid_as_wd0 = of_property_read_bool(np, "suport_usbid_as_wd0");
+	dev_info(dev, "%s usbid_as_wd0 = %d\n", __func__, chip->usbid_as_wd0);
+#endif
 	while (of_irq_parse_one(np, res_cnt, &irq) == 0)
 		res_cnt++;
 	if (!res_cnt) {
@@ -2120,6 +2212,11 @@ static int mt6360_tcpcdev_init(struct mt6360_chip *chip, struct device *dev)
 #endif /* CONFIG_WATER_DETECTION */
 	tcpc->tcpc_flags |= TCPC_FLAGS_CABLE_TYPE_DETECTION;
 
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	if (chip->usbid_as_wd0 == true) {
+		tcpc->bootmode = 0;
+	}
+#endif /* OPLUS_FEATURE_CHG_BASIC */
 	return 0;
 }
 
@@ -2207,10 +2304,24 @@ static int mt6360_i2c_probe(struct i2c_client *client)
 	chip->irq_while_suspended = false;
 
 #if CONFIG_WATER_DETECTION
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	if (chip->usbid_as_wd0 == false) {
+		atomic_set(&chip->wd_protect_rty, CONFIG_WD_PROTECT_RETRY_COUNT);
+		chip->usbid_calib = CONFIG_WD_SBU_CALIB_INIT;
+		INIT_DELAYED_WORK(&chip->usbid_evt_dwork,
+			  mt6360_pmu_usbid_evt_dwork_handler);
+	} else {
+		atomic_set(&chip->wd_protect_rty, CONFIG_WD_PROTECT_RETRY_COUNT);
+		chip->usbid_calib = CONFIG_WD_SBU_CALIB_INIT;
+		INIT_DELAYED_WORK(&chip->usbid_evt_dwork,
+			  mt6360_pmu_usbid_as_wd0);
+	}
+#else
 	atomic_set(&chip->wd_protect_rty, CONFIG_WD_PROTECT_RETRY_COUNT);
 	chip->usbid_calib = CONFIG_WD_SBU_CALIB_INIT;
 	INIT_DELAYED_WORK(&chip->usbid_evt_dwork,
 			  mt6360_pmu_usbid_evt_dwork_handler);
+#endif /* OPLUS_FEATURE_CHG_BASIC */
 #endif /* CONFIG_WATER_DETECTION */
 
 	dev_info(chip->dev, "%s chipID = 0x%0X\n", __func__, chip->chip_id);

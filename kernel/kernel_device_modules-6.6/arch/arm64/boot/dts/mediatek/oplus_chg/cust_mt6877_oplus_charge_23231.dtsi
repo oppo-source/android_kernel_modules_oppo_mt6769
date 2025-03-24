@@ -54,6 +54,11 @@
 	status = "okay";
 };
 
+&regulator_vibrator{
+	min-volt = <3000000>;
+	max-volt = <3000000>;
+};
+
 &subpmic_mtk {
 	mt6360,intr-gpio_num = <4>; /* direct defined GPIO num */
 	mt6360,intr-gpio = <&pio 4 0x0>;
@@ -100,6 +105,8 @@
 
 &lk_charger{
 	support_3_6_standard;
+	support_hot_enter_kpoc;
+	over_high_temp_thr = <60>;
 	for_mtk_battery_temp_support;
 	sub_board_temp_support;
 	sub_board_temp_ts_adc_support;
@@ -456,6 +463,12 @@
 	oplus,subboard_ntc_abnormal_current = <4400>;
 	oplus,subboard_ntc_abnormal_high_temp = <1000>;
 	oplus,subboard_abnormal_method_support;
+/* Feature avoid battery swelling caused by high temp */
+	oplus,support_hot_enter_kpoc;
+	oplus,poweroff_high_batt_temp = <720>;
+	oplus,poweroff_emergency_batt_temp = <770>;
+	oplus,usbtemp_batt_temp_over_hot = <60>;
+	oplus,usbtemp_temp_gap_with_batt_temp_in_over_hot = <15>;
 };
 
 &pio {

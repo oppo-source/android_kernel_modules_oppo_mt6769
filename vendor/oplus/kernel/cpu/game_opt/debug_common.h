@@ -8,9 +8,9 @@
 #define DT_PROTO(args...) args
 #define DT_DATA(args...) args
 #ifndef DECLARE_DEBUG_TRACE
-#define DECLARE_DEBUG_TRACE(name, proto, data)		\
-	void __maybe_unused debug_##name(proto) {		\
-		name(data);									\
+#define DECLARE_DEBUG_TRACE(name, proto, data)			\
+	static void __maybe_unused debug_##name(proto) {	\
+		name(data);										\
 	}
 #define UNDEFINE_DECLARE_DEBUG_TRACE
 #endif /* DECLARE_DEBUG_TRACE */
@@ -21,7 +21,7 @@ static noinline int tracing_mark_write(const char *buf)
 	return 0;
 }
 
-void trace_pr_val_uint(unsigned long long msg, unsigned long long val)
+static void trace_pr_val_uint(unsigned long long msg, unsigned long long val)
 {
 	char buf[DEFAULT_BUFFER_SIZE] = {0};
 
@@ -30,7 +30,7 @@ void trace_pr_val_uint(unsigned long long msg, unsigned long long val)
 }
 DECLARE_DEBUG_TRACE(trace_pr_val_uint, DT_PROTO(unsigned long long msg, unsigned long long val), DT_DATA(msg, val));
 
-void trace_pr_val_str(const char *msg, unsigned long long val)
+static void trace_pr_val_str(const char *msg, unsigned long long val)
 {
 	char buf[DEFAULT_BUFFER_SIZE] = {0};
 
@@ -39,7 +39,7 @@ void trace_pr_val_str(const char *msg, unsigned long long val)
 }
 DECLARE_DEBUG_TRACE(trace_pr_val_str, DT_PROTO(const char *msg, unsigned long long val), DT_DATA(msg, val));
 
-void trace_pr_val_com(const char *msg1, unsigned long long msg2, unsigned long long val)
+static void trace_pr_val_com(const char *msg1, unsigned long long msg2, unsigned long long val)
 {
 	char buf[DEFAULT_BUFFER_SIZE] = {0};
 
@@ -48,7 +48,7 @@ void trace_pr_val_com(const char *msg1, unsigned long long msg2, unsigned long l
 }
 DECLARE_DEBUG_TRACE(trace_pr_val_com, DT_PROTO(const char *msg1, unsigned long long msg2, unsigned long long val), DT_DATA(msg1, msg2, val));
 
-void trace_begin(const char *msg)
+static void trace_begin(const char *msg)
 {
 	char buf[DEFAULT_BUFFER_SIZE] = {0};
 
@@ -57,7 +57,7 @@ void trace_begin(const char *msg)
 }
 DECLARE_DEBUG_TRACE(trace_begin, DT_PROTO(const char *msg), DT_DATA(msg));
 
-void trace_end(void)
+static void trace_end(void)
 {
 	char buf[DEFAULT_BUFFER_SIZE] = {0};
 

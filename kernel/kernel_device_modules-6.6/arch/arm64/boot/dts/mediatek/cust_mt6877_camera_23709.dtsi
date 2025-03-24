@@ -324,3 +324,8 @@
 	};
 };
 /* CAMERA AW37004DNR END*/
+
+&rt5133 {
+	status = "disabled";
+};
+

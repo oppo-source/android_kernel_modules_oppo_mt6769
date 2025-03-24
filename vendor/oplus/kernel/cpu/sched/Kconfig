@@ -170,3 +170,10 @@ config OPLUS_SCHED_GROUP_OPT
 	bool "Oplus sched group optimization"
 	depends on FAIR_GROUP_SCHED
 	default FAIR_GROUP_SCHED
+
+config OPLUS_SCHED_HALT_MASK_PRT
+	tristate "print cpu halt_mask partial_halt_mask and parse_client"
+	default n
+	depends on OPLUS_SYSTEM_KERNEL_QCOM
+	help
+	  cpu halt_mask partial_halt_mask and parse_client

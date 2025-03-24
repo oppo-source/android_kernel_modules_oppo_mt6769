@@ -69,6 +69,19 @@ static inline bool is_rwsem_reader_owned(struct rw_semaphore *sem)
 	return rwsem_test_oflags(sem, RWSEM_READER_OWNED);
 }
 
+/*
+ * Return the real task structure pointer of the owner and the embedded
+ * flags in the owner. pflags must be non-NULL.
+ */
+static inline struct task_struct *
+rwsem_owner_flags(struct rw_semaphore *sem, unsigned long *pflags)
+{
+	unsigned long owner = atomic_long_read(&sem->owner);
+
+	*pflags = owner & RWSEM_OWNER_FLAGS_MASK;
+	return (struct task_struct *)(owner & ~RWSEM_OWNER_FLAGS_MASK);
+}
+
 static bool rwsem_list_add_ux(struct list_head *entry, struct list_head *head)
 {
 	struct list_head *pos = NULL;
@@ -105,10 +118,15 @@ static void rwsem_set_inherit_ux(struct rw_semaphore *sem)
 	bool is_ux = test_set_inherit_ux(current);
 	bool is_rt = rt_prio(current->prio);
 	int inherit_type;
-	struct task_struct *owner = rwsem_owner(sem);
+	unsigned long flags = 0;
+	struct task_struct *owner = NULL;
+
+	if (is_rwsem_reader_owned(sem))
+		return;
+	owner = rwsem_owner_flags(sem, &flags);
 
 	/* set writer as ux task */
-	if ((is_ux || is_rt) && !is_rwsem_reader_owned(sem) && !test_inherit_ux(owner, INHERIT_UX_RWSEM)) {
+	if ((is_ux || is_rt) && !test_inherit_ux(owner, INHERIT_UX_RWSEM)) {
 		int type = get_ux_state_type(owner);
 
 		if ((type == UX_STATE_NONE) || (type == UX_STATE_INHERIT)) {

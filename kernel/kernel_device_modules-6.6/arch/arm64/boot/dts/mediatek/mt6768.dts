@@ -418,7 +418,7 @@ aliases {
 			ccorr-bit = <12>;
 			ccorr-num-per-pipe = <1>;
 			ccorr-linear-per-pipe = <0x01>;
-			ccorr-prim-force-linear = <0x0>;
+			ccorr-prim-force-linear = <0x1>;
 			ccorr-linear = <1>;
 			doze-bypass = <0x10001>;
 		};
@@ -520,7 +520,6 @@ aliases {
 		bootargs = "console=tty0 root=/dev/ram \
 		vmalloc=400M swiotlb=noforce \
 		8250.nr_uarts=2 \
-		log_buf_len=4m \
 		cgroup.memory=nosocket,nokmem \
 		firmware_class.path=/vendor/firmware \
 		loop.max_part=7 \
@@ -3143,7 +3142,7 @@ aliases {
 		clocks = <&infracfg_ao CLK_IFR_I2C_AP>,
 			<&infracfg_ao CLK_IFR_AP_DMA>;
 		clock-names = "main", "dma";
-		clock-div = <1>;
+		clock-div = <5>;
 		mediatek,control-irq-sel;
 		mediatek,control-rs-stop;
 	};
@@ -3169,7 +3168,7 @@ aliases {
 		clocks = <&infracfg_ao CLK_IFR_I2C_AP>,
 			<&infracfg_ao CLK_IFR_AP_DMA>;
 		clock-names = "main", "dma";
-		clock-div = <1>;
+		clock-div = <5>;
 		mediatek,control-irq-sel;
 		mediatek,control-rs-stop;
 	};
@@ -4853,6 +4852,15 @@ audio_extend: audio_extend {
 		};
 	};
 
+        flashlights_ark: flashlights_ark {
+                compatible = "mediatek,flashlights_ark";
+                decouple = <1>;
+                channel@1 {
+                        type = <0>;
+                        ct = <0>;
+                        part = <0>;
+                };
+        };
 	flashlights_aladdin: flashlights_aladdin {
 		compatible = "mediatek,flashlights_aladdin";
 		decouple = <1>;
@@ -4882,6 +4890,17 @@ audio_extend: audio_extend {
 					part = <0>;
 			};
 	};
+
+	flashlights_miami: flashlights_miami {
+                compatible = "mediatek,flashlights_miami";
+                decouple = <1>;
+                channel@1 {
+                        type = <0>;
+                        ct = <0>;
+                        part = <0>;
+                };
+	};
+
 	camera_af_hw_node: camera_af_hw_node {
 		compatible = "mediatek,camera_af_lens";
 	};
@@ -5728,6 +5747,7 @@ audio_extend: audio_extend {
 	status = "okay";
 };
 
+/delete-node/ &mt_pmic_vpa_buck_reg;
 &mt6370_backlight {
 	compatible = "mediatek,mt6372-backlight";
 	default-brightness = <4096>;

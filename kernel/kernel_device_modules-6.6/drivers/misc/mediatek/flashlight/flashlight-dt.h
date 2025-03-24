@@ -27,6 +27,8 @@
 #define ATOM_DTNAME       "mediatek,flashlights_atom"
 #define ALADDIN_DTNAME_I2C "mediatek,strobe_main"
 #define ATOM_DTNAME_I2C    "mediatek,strobe_main"
+#define ARK_DTNAME        "mediatek,flashlights_ark"
+#define ARK_DTNAME_I2C    "mediatek,strobe_main"
 #endif //OPLUS_FEATURE_CAMERA_COMMON
 
 #define ORISA_DTNAME      "mediatek,flashlights_orisa"

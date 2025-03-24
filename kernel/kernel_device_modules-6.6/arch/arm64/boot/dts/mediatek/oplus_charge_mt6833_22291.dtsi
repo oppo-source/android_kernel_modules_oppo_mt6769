@@ -133,11 +133,16 @@
 	};
 
 	dpm-caps {
+		attempt-enter-dp-mode;
+		attempt-discover-cable;
+		attempt-discover-id;
 		attempt-discover-svids;
 	};
 };
 
 &lk_charger{
+	support_hot_enter_kpoc;
+	over_high_temp_thr = <60>;
 	support_tuv_authentication;
 	support_sdp_screenoff;
 	max_charger_voltage = <10000000>;
@@ -386,9 +391,18 @@
 	qcom,dischg-gpio = <&pio 134 0x00>;
 	qcom,ntcctrl-gpio = <&pio 46 0x00>;
 
+	oplus,otg_current_limit = <1100000>;
+
 	qcom,vooc-max-input-volt-support = <10000>;     //10V
 	qcom,vooc-max-input-current-support = <3000>;   //3A
 	qcom,disable-ship-mode;
+
+/* Feature avoid battery swelling caused by high temp */
+	oplus,support_hot_enter_kpoc;
+	oplus,poweroff_high_batt_temp = <720>;
+	oplus,poweroff_emergency_batt_temp = <770>;
+	oplus,usbtemp_batt_temp_over_hot = <60>;
+	oplus,usbtemp_temp_gap_with_batt_temp_in_over_hot = <15>;
 };
 
 &pio {
@@ -776,6 +790,17 @@
 	};
 };
 
+&u2port0 {
+		mediatek,eye-vrt = <6>; /* 0~7 */
+		mediatek,eye-term = <7>; /* 0~7 */
+		mediatek,rev6 = <3>; /* 0~3 */
+		mediatek,discth = <0xF>; /* 0~8 */
+		mediatek,eye-vrt-host = <7>; /* 0~7 */
+		mediatek,eye-term-host = <5>; /* 0~7 */
+		mediatek,rev6-host = <3>; /* 0~3 */
+		mediatek,disc-host = <0xB>; /* 0~8 */
+};
+
 &odm {
 	mediatek_phy_tuning: mediatek_phy_tuning {
 		phy_tuning {
@@ -796,5 +821,9 @@
 		track,wired_max_power = <33000>;
 		track,wired_fast_chg_scheme = <4>;
 	};
+};
+
+&extcon_usb {
+	vbus-current = <1100000>;
 };
 //#endif /*OPLUS_FEATURE_CHG_BASIC*/

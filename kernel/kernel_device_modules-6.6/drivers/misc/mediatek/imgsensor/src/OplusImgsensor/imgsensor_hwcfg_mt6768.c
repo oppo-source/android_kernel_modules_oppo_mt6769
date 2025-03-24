@@ -79,6 +79,23 @@ struct IMGSENSOR_INIT_FUNC_LIST gimgsensor_sensor_list_24713[] = {
 	{0, {0}, NULL}, /* end of list */
 };
 
+struct IMGSENSOR_INIT_FUNC_LIST gimgsensor_sensor_list_23618[] = {
+/*ark*/
+#if defined(HI5022Q_MIPI_RAW23618)
+  	{HI5022Q_SENSOR_ID23618,
+  	SENSOR_DRVNAME_HI5022Q_MIPI_RAW23618,
+  	HI5022Q_MIPI_RAW23618_SensorInit},
+#endif
+#if defined(SC820CS_MIPI_RAW23618)
+  	{SC820CS_SENSOR_ID23618,
+  	SENSOR_DRVNAME_SC820CS_MIPI_RAW23618,
+  	SC820CS_MIPI_RAW23618_SensorInit},
+#endif
+
+	/*  ADD sensor driver before this line */
+	{0, {0}, NULL}, /* end of list */
+};
+
 struct IMGSENSOR_HW_CFG imgsensor_custom_config_oris[] = {
     {
         IMGSENSOR_SENSOR_IDX_MAIN,
@@ -378,6 +395,36 @@ struct IMGSENSOR_HW_CFG imgsensor_custom_config_226AF[] = {
             {IMGSENSOR_HW_ID_MCLK, IMGSENSOR_HW_PIN_MCLK},
             {IMGSENSOR_HW_ID_REGULATOR, IMGSENSOR_HW_PIN_AVDD},
             {IMGSENSOR_HW_ID_REGULATOR, IMGSENSOR_HW_PIN_DOVDD},
+            {IMGSENSOR_HW_ID_GPIO, IMGSENSOR_HW_PIN_RST},
+            {IMGSENSOR_HW_ID_NONE, IMGSENSOR_HW_PIN_NONE},
+        },
+    },
+    {IMGSENSOR_SENSOR_IDX_NONE}
+};
+
+struct IMGSENSOR_HW_CFG imgsensor_custom_config_23618[] = {
+    {
+        IMGSENSOR_SENSOR_IDX_MAIN,
+        IMGSENSOR_I2C_DEV_0,
+        {
+            {IMGSENSOR_HW_ID_MCLK, IMGSENSOR_HW_PIN_MCLK},
+            {IMGSENSOR_HW_ID_REGULATOR, IMGSENSOR_HW_PIN_AVDD},
+            {IMGSENSOR_HW_ID_REGULATOR, IMGSENSOR_HW_PIN_DOVDD},
+            //{IMGSENSOR_HW_ID_REGULATOR, IMGSENSOR_HW_PIN_DVDD},
+            {IMGSENSOR_HW_ID_GPIO, IMGSENSOR_HW_PIN_DVDD},
+            {IMGSENSOR_HW_ID_REGULATOR, IMGSENSOR_HW_PIN_AFVDD},
+            {IMGSENSOR_HW_ID_GPIO, IMGSENSOR_HW_PIN_RST},
+            {IMGSENSOR_HW_ID_NONE, IMGSENSOR_HW_PIN_NONE},
+        },
+    },
+    {
+        IMGSENSOR_SENSOR_IDX_SUB,
+        IMGSENSOR_I2C_DEV_1,
+        {
+            {IMGSENSOR_HW_ID_MCLK, IMGSENSOR_HW_PIN_MCLK},
+            {IMGSENSOR_HW_ID_REGULATOR, IMGSENSOR_HW_PIN_AVDD},
+            {IMGSENSOR_HW_ID_REGULATOR, IMGSENSOR_HW_PIN_DOVDD},
+            {IMGSENSOR_HW_ID_REGULATOR, IMGSENSOR_HW_PIN_DVDD},
             {IMGSENSOR_HW_ID_GPIO, IMGSENSOR_HW_PIN_RST},
             {IMGSENSOR_HW_ID_NONE, IMGSENSOR_HW_PIN_NONE},
         },
@@ -895,6 +942,38 @@ struct IMGSENSOR_HW_POWER_SEQ sensor_power_sequence_226AF[] = {
             {SensorMCLK, Vol_High, 0},
             {AVDD, Vol_2800, 9},
             {RST, Vol_High, 9},
+        },
+    },
+#endif
+    /* add new sensor before this line */
+    {NULL,},
+};
+
+struct IMGSENSOR_HW_POWER_SEQ sensor_power_sequence_23618[] = {
+/*ARK*/
+#if defined(HI5022Q_MIPI_RAW23618)
+    {
+        SENSOR_DRVNAME_HI5022Q_MIPI_RAW23618,
+        {
+            {RST, Vol_Low, 1},
+			{DOVDD, Vol_1800, 1},
+            {AVDD, Vol_2800, 1},
+            {DVDD, Vol_1100, 2},
+            {SensorMCLK, Vol_High, 1},
+            {RST, Vol_High, 5},
+        },
+    },
+#endif
+#if defined(SC820CS_MIPI_RAW23618)
+    {
+        SENSOR_DRVNAME_SC820CS_MIPI_RAW23618,
+        {
+            {RST, Vol_Low, 1},
+            {DOVDD, Vol_1800, 1},
+            {DVDD, Vol_1200, 1},
+            {AVDD, Vol_2800, 1},
+            {SensorMCLK, Vol_High, 1},
+            {RST, Vol_High, 5},
         },
     },
 #endif
@@ -1664,6 +1743,11 @@ void oplus_imgsensor_hwcfg(void)
         oplus_imgsensor_custom_config = imgsensor_custom_config_atom;
         oplus_sensor_power_sequence = sensor_power_sequence_atom;
         gImgEepromInfo = gImgEepromInfo_atom_22365;
+    } else if (is_project(23618) || is_project(23702) || is_project(23703) || is_project(23704)){
+        oplus_imgsensor_sensor_list = gimgsensor_sensor_list_23618;
+        oplus_imgsensor_custom_config = imgsensor_custom_config_23618;
+        oplus_sensor_power_sequence = sensor_power_sequence_23618;
+        // gImgEepromInfo = gImgEepromInfo_23618;
     } else {
         oplus_imgsensor_sensor_list = gimgsensor_sensor_list_226AF;
         oplus_imgsensor_custom_config = imgsensor_custom_config_226AF;

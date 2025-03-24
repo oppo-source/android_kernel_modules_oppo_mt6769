@@ -630,6 +630,7 @@
 	qcom,pmic_chgfunc = <&pio 142 0x00>;
    //USB temperature
 	qcom,g_rap_pull_up_r0 = <390000>;
+	oplus,otg_current_limit = <1100000>;
 };
 
 &lk_charger{
@@ -821,3 +822,6 @@
 	};
 };
 
+&extcon_usb {
+	vbus-current = <1100000>;
+};

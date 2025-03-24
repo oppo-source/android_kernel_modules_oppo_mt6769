@@ -12481,6 +12481,14 @@ skip_change_mipi:
 
 				/* set frame done */
 				mtk_dsi_poll_for_idle(dsi, cmdq_handle);
+				if (mtk_crtc->panel_ext->params->oplus_mipi_switch_waite_frame) {
+							DDPPR_ERR("%s: wait 1 te_first\n", __func__);
+							cmdq_pkt_clear_event(cmdq_handle,
+											mtk_crtc->gce_obj.event[EVENT_TE]);
+							if (mtk_drm_lcm_is_connect(mtk_crtc))
+									cmdq_pkt_wfe(cmdq_handle,
+											mtk_crtc->gce_obj.event[EVENT_TE]);
+				}
 				cmdq_pkt_set_event(cmdq_handle,
 					mtk_crtc->gce_obj.event[EVENT_CABC_EOF]);
 				cmdq_pkt_set_event(cmdq_handle,
@@ -12508,6 +12516,14 @@ skip_change_mipi:
 		mtk_crtc_pkt_create(&cmdq_handle2, &mtk_crtc->base,
 			mtk_crtc->gce_obj.client[CLIENT_CFG]);
 		mtk_dsi_poll_for_idle(dsi, cmdq_handle2);
+		if (mtk_crtc->panel_ext->params->oplus_mipi_switch_waite_frame) {
+					DDPPR_ERR("%s: wait 1 te_second\n", __func__);
+					cmdq_pkt_clear_event(cmdq_handle2,
+									mtk_crtc->gce_obj.event[EVENT_TE]);
+					if (mtk_drm_lcm_is_connect(mtk_crtc))
+							cmdq_pkt_wfe(cmdq_handle2,
+									mtk_crtc->gce_obj.event[EVENT_TE]);
+		}
 		cmdq_pkt_set_event(cmdq_handle2,
 			mtk_crtc->gce_obj.event[EVENT_CABC_EOF]);
 		cmdq_pkt_set_event(cmdq_handle2,
@@ -13678,6 +13694,10 @@ static int mtk_dsi_io_cmd(struct mtk_ddp_comp *comp, struct cmdq_pkt *handle,
 			panel_ext = mtk_dsi_get_panel_ext(comp);
 			if(!crtc) {
 				DDPINFO("Invalid drm crtc param\n");
+			}
+			if (panel_ext->params->doze_disable_backlight_flag_enable) {
+				DDPINFO("set  AOD backlight level doze_disable_backlight_flag %d\n",oplus_display_brightness);
+				*(panel_ext->params->doze_disable_backlight_flag) =  oplus_display_brightness;
 			}
 			if (oplus_ofp_is_supported()) {
 				need_fliter_backlight = oplus_ofp_backlight_filter(crtc, handle, *(int *)params);

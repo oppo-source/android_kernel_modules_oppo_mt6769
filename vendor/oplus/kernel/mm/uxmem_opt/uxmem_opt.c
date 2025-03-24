@@ -50,8 +50,8 @@
 #define MAX_UXMEM_POOL_ALLOC_RETRIES (5)
 
 static const unsigned int orders[] = {0, 1};
-/* 32M for order 0, 8M  for order1 by default */
-static const unsigned int page_pool_nr_pages[] = {(SZ_32M >> PAGE_SHIFT), (SZ_8M >> PAGE_SHIFT)};
+/* 96M for order 0, 8M  for order1 by default */
+static const unsigned int page_pool_nr_pages[] = {((SZ_64M + SZ_32M) >> PAGE_SHIFT), (SZ_8M >> PAGE_SHIFT)};
 #define NUM_ORDERS ARRAY_SIZE(orders)
 static struct page_pool *pools[NUM_ORDERS];
 static struct task_struct *ux_page_pool_tsk = NULL;
@@ -211,7 +211,7 @@ struct page_pool *ux_page_pool_create(gfp_t gfp_mask, unsigned int order, unsign
 	for (i = 0; i < POOL_MIGRATETYPE_TYPES_SIZE; i++) {
 		pool->count[i] = 0;
 		/* MIGRATETYPE: UNMOVABLE & MOVABLE */
-		pool->high[i] = nr_pages/POOL_MIGRATETYPE_TYPES_SIZE;
+		pool->high[i] = (nr_pages / POOL_MIGRATETYPE_TYPES_SIZE) >> order;
 		/* wakeup kthread on count < low*/
 		pool->low[i]  = pool->high[i]/2;
 		INIT_LIST_HEAD(&pool->items[i]);
@@ -241,6 +241,12 @@ static struct page *page_pool_remove(struct page_pool *pool, int migratetype)
 
 	spin_lock_irqsave(&pool->lock, flags);
 	page = list_first_entry_or_null(&pool->items[migratetype], struct page, lru);
+	/* FIXME: migratetype is not needed for uxmem pool and needs to be removed. */
+	if (!page) {
+		/* fallback to the other migratetype */
+		migratetype = (migratetype + 1) % POOL_MIGRATETYPE_TYPES_SIZE;
+		page = list_first_entry_or_null(&pool->items[migratetype], struct page, lru);
+	}
 	if (page) {
 		pool->count[migratetype]--;
 		list_del(&page->lru);
@@ -567,16 +573,31 @@ inline int task_is_fg(struct task_struct *tsk)
 }
 */
 
+inline bool is_top_task(struct task_struct *tsk)
+{
+	struct cgroup_subsys_state *css = NULL;
+	bool is_top;
+
+	if (tsk == NULL)
+		return false;
+
+	rcu_read_lock();
+	css = task_css(tsk, cpu_cgrp_id);
+	is_top = (css && css->id == SA_CGROUP_TOP_APP);
+	rcu_read_unlock();
+
+	return is_top;
+}
+
 static inline bool current_is_key_task(void)
 {
 	unsigned long im_flag = oplus_get_im_flag(current);
 
 	return test_task_ux(current) || rt_task(current)
 		|| test_bit(IM_FLAG_SURFACEFLINGER, &im_flag)
-		|| test_bit(IM_FLAG_SYSTEMSERVER_PID, &im_flag);
-		/*
-		|| task_is_fg(current);
-		*/
+		|| test_bit(IM_FLAG_SYSTEMSERVER_PID, &im_flag)
+		|| is_top_task(current)
+		|| (current->flags & PF_WQ_WORKER);
 }
 
 static void __nocfi get_page_from_uxmempool(void *data, gfp_t gfp_mask, int order, int alloc_flags,
@@ -679,6 +700,27 @@ static void fill_pcplist_from_uxmempool(void *data, unsigned int order,
 	}
 }
 
+static void meminfo_adjust(void *data, unsigned long *totalram, unsigned long *freeram)
+{
+	unsigned long pool_pages = 0;
+	int i, j;
+	struct page_pool *pool;
+
+	if (unlikely(!ux_page_pool_enabled))
+		return;
+
+	/* make sure totalram is a kernel address */
+	if ((unsigned long)totalram > PAGE_SIZE) {
+		for (i = 0; i < NUM_ORDERS; i++) {
+			pool = pools[i];
+			for (j = 0; j < POOL_MIGRATETYPE_TYPES_SIZE; j++) {
+				pool_pages += pool->count[j] << orders[i];
+			}
+		}
+		*freeram += pool_pages;
+	}
+}
+
 static int register_uxmem_opt_vendor_hooks(void)
 {
 	int ret = 0;
@@ -722,12 +764,20 @@ static int register_uxmem_opt_vendor_hooks(void)
 		pr_err("register_trace_android_vh_rmqueue_bulk_bypass failed! ret=%d\n", ret);
 		goto out;
 	}
+
+	ret = register_trace_android_vh_si_meminfo_adjust(meminfo_adjust, NULL);
+	if (ret != 0) {
+		pr_err("register_trace_android_vh_si_meminfo_adjust failed! ret=%d\n", ret);
+		goto out;
+	}
 out:
 	return ret;
 }
 
 static void unregister_uxmem_opt_vendor_hooks(void)
 {
+	unregister_trace_android_vh_si_meminfo_adjust(meminfo_adjust, NULL);
+
 	unregister_trace_android_vh_rmqueue_bulk_bypass(fill_pcplist_from_uxmempool, NULL);
 
 	unregister_trace_android_vh_unreserve_highatomic_bypass(unreserve_highatomic_bypass, NULL);

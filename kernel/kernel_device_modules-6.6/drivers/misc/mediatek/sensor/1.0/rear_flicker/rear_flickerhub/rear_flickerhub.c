@@ -62,7 +62,7 @@ long rear_flickerhub_read_flicker(u16 *flicker)
 		return -1;
 	}
 	*flicker = data_t.data[0];//flicker raw data;
-	pr_err("rear_flickerhub_read_flicker:flicker_raw data = %d\n",*flicker);
+	pr_debug("rear_flickerhub_read_flicker:flicker_raw data = %d\n",*flicker);
 	return 0;
 }
 
@@ -449,7 +449,7 @@ static int rear_flickerhub_probe(struct platform_device *pdev)
 	struct rear_flicker_control_path flicker_ctl = { 0 };
 	struct rear_flicker_data_path flicker_data = { 0 };
 
-	pr_err("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	obj = kzalloc(sizeof(*obj), GFP_KERNEL);
 	if (!obj) {
 		err = -ENOMEM;

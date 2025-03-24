@@ -943,7 +943,6 @@ static void send_key_event(u32 keycode, u32 flag)
 static void send_status_event(u32 cable_type, u32 status)
 {
 	int report = 0;
-
 	switch (cable_type) {
 	case HEADSET_NO_MIC:
 #if IS_ENABLED(CONFIG_SND_SOC_FSA)
@@ -2150,45 +2149,6 @@ static void accdet_work_callback(struct work_struct *work)
 	__pm_relax(accdet->wake_lock);
 }
 
-#if IS_ENABLED(CONFIG_SND_SOC_OPLUS_DISCRETE_TYPEC_SWITCH)
-static bool check_cable_type_headphone(void)
-{
-	u32 cur_AB;
-	cur_AB = accdet_read(ACCDET_MEM_IN_ADDR) >> ACCDET_STATE_MEM_IN_OFFSET;
-	cur_AB = cur_AB & ACCDET_STATE_AB_MASK;
-	pr_err("accdet %s(), cur_status:%s current AB = %d\n", __func__,
-		     accdet_status_str[accdet->accdet_status], cur_AB);
-	if ((accdet->cable_type == HEADSET_NO_MIC) || (cur_AB == ACCDET_STATE_AB_00)) {
-		pr_err("%s() true done",__func__);
-		return true;
-	}
-	pr_err("%s() false done",__func__);
-	return false;
-}
-
-static void headphone_work_callback(struct work_struct *work)
-{
-	bool is_headphone = false;
-	pr_err("%s()",__func__);
-	if (g_accdet_interrupt) {
-		g_accdet_interrupt = false;
-		pr_err("%s() g_accdet_interrupt = %d",__func__, g_accdet_interrupt);
-		return;
-	}
-	__pm_stay_awake(accdet->wake_lock);
-	is_headphone = check_cable_type_headphone();
-	mutex_lock(&accdet->res_lock);
-	if (accdet->eint_sync_flag && is_headphone) {
-			send_status_event(accdet->cable_type, 1);
-	} else {
-		pr_info("%s() Headset has been plugout or 4-pole microphone\n",
-			__func__);
-	}
-	mutex_unlock(&accdet->res_lock);
-	pr_err("%s() report cable_type %d done\n", __func__,accdet->cable_type);
-	__pm_relax(accdet->wake_lock);
-}
-#endif
 static void accdet_queue_work(void)
 {
 	int ret;
@@ -2213,8 +2173,10 @@ static int pmic_eint_queue_work(int eintID)
 		pr_info("%s water in no delayed work scheduled when plugging out\n", __func__);
 		cancel_delayed_work_sync(&hp_detect_work);
 		schedule_delayed_work(&hp_detect_work, 0);
-#endif
+#else
 		ret = queue_work(accdet->eint_workqueue, &accdet->eint_work);
+#endif
+
 		return 0;
 	}
 	if (HAS_CAP(accdet->data->caps, ACCDET_PMIC_EINT0)) {
@@ -2227,18 +2189,36 @@ static int pmic_eint_queue_work(int eintID)
 				if (accdet->eint_id != M_PLUG_OUT) {
 					accdet->cur_eint_state = EINT_PLUG_IN;
 					mode = accdet_dts.moisture_detect_mode;
+#if IS_ENABLED(CONFIG_SND_SOC_FSA)
+					pr_info("%s delay work to disable micbias after 6s\n", __func__);
+					mod_timer(&micbias_timer,
+					jiffies + MICBIAS_DISABLE_TIMER);
+#else
 					if (mode != 0x5) {
 						mod_timer(&micbias_timer,
 						jiffies+MICBIAS_DISABLE_TIMER);
 					}
+#endif
 				}
 			}
+#ifdef OPLUS_BUG_COMPATIBILITY
+		if (accdet->cur_eint_state == EINT_PLUG_IN) {
 #if IS_ENABLED(CONFIG_SND_SOC_FSA)
 			pr_info("%s delayed work 50ms scheduled when plugging in\n", __func__);
 			schedule_delayed_work(&hp_detect_work, msecs_to_jiffies(50));
+#else
+			pr_info("%s delayed work 500ms scheduled when plugging in\n", __func__);
+			schedule_delayed_work(&hp_detect_work, msecs_to_jiffies(500));
 #endif
+		} else {
+			pr_info("%s no delayed work scheduled when plugging out\n", __func__);
+			cancel_delayed_work_sync(&hp_detect_work);
+			schedule_delayed_work(&hp_detect_work, 0);
+		}
+#else /* OPLUS_BUG_COMPATIBILITY */
 			ret = queue_work(accdet->eint_workqueue,
 					&accdet->eint_work);
+#endif /* OPLUS_BUG_COMPATIBILITY */
 		} else
 			pr_notice("%s invalid EINT ID!\n", __func__);
 	} else if (HAS_CAP(accdet->data->caps, ACCDET_PMIC_EINT1)) {
@@ -2472,7 +2452,6 @@ static irqreturn_t ex_eint_handler(int irq, void *data)
 		else
 			irq_set_irq_type(accdet->gpioirq, IRQ_TYPE_LEVEL_LOW);
 		gpiod_set_debounce(gpio_to_desc(accdet->gpiopin), accdet->gpio_hp_deb);
-
 		accdet->cur_eint_state = EINT_PLUG_OUT;
 	} else {
 		/* To trigger EINT when the headset was plugged out
@@ -3597,14 +3576,6 @@ static int accdet_probe(struct platform_device *pdev)
 		ret = -1;
 		goto err_create_workqueue;
 	}
-#if IS_ENABLED(CONFIG_SND_SOC_OPLUS_DISCRETE_TYPEC_SWITCH)
-	if (accdet_dts.hs_det_discrete == 1) {
-		INIT_DELAYED_WORK(&headphone_event_work, headphone_work_callback);
-	}
-#endif
-#if IS_ENABLED(CONFIG_SND_SOC_FSA)
-	INIT_DELAYED_WORK(&hp_detect_work, eint_work_callback);
-#endif
 	if (HAS_CAP(accdet->data->caps, ACCDET_AP_GPIO_EINT)) {
 		accdet->accdet_eint_type = IRQ_TYPE_LEVEL_LOW;
 		ret = ext_eint_setup(pdev);

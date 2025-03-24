@@ -73,8 +73,10 @@ extern const struct flashlight_device_id flashlight_id_dual[];
 extern const struct flashlight_device_id flashlight_id_single[];
 extern const struct flashlight_device_id flashlight_id_aladdin[];
 extern const struct flashlight_device_id flashlight_id_atom[];
+extern const struct flashlight_device_id flashlight_id_ark[];
 extern const struct flashlight_device_id flashlight_id_sy6560[];
 extern const struct flashlight_device_id flashlight_id_orisa[];
+extern const struct flashlight_device_id flashlight_id_miami[];
 const struct flashlight_device_id *flashlight_id;
 int flashlight_device_num = 0;
 #endif
@@ -397,9 +399,14 @@ int flashlight_dev_register(
 		flashlight_device_num = 2;
 	}
 
-	if (is_project(24713) || is_project(24715) || is_project(24714) || is_project(24628)) {
+	if (is_project(24713) || is_project(24715) || is_project(24714) || is_project(24728)) {
 		pr_info("set flashlight id orisa\n");
 		flashlight_id = flashlight_id_orisa;
+		flashlight_device_num = 1;
+	}
+	if (is_project(0x226AD) || is_project(0x226AE) || is_project(0x226AF)){
+		pr_err("miami set flashlightid\n");
+		flashlight_id = flashlight_id_miami;
 		flashlight_device_num = 1;
 	}
 
@@ -417,6 +424,10 @@ int flashlight_dev_register(
 	}
 	else if (is_project(22365) || is_project(22366) || is_project(22367)) {
 		flashlight_id = flashlight_id_atom;
+		flashlight_device_num = 1;
+	}
+	else if (is_project(23702) || is_project(23703) || is_project(23704) || is_project(23618)) {
+		flashlight_id = flashlight_id_ark;
 		flashlight_device_num = 1;
 	}
 	#endif /*OPLUS_FEATURE_CAMERA_COMMON*/

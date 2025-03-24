@@ -345,6 +345,13 @@ vendor_boot_modules_all_update() {
             cp ${current} ${VENDOR_BOOT_TMP_IMAGE}/dist/
             ${STRIP} -S ${VENDOR_BOOT_TMP_IMAGE}/dist/${ko} -o ${VENDOR_BOOT_TMP_IMAGE}/tmp/${ko}
             cp ${VENDOR_BOOT_TMP_IMAGE}/tmp/${ko} ${VENDOR_BOOT_TMP_IMAGE}/ramdisk00/lib/modules/
+        else
+            current=`find ${VENDOR_OUTTREE_MODULES_DIR} -name ${ko} | head -n 1`
+            if [ -n "${current}" ]; then
+                cp ${current} ${VENDOR_BOOT_TMP_IMAGE}/dist/
+                ${STRIP} -S ${VENDOR_BOOT_TMP_IMAGE}/dist/${ko} -o ${VENDOR_BOOT_TMP_IMAGE}/tmp/${ko}
+                cp ${VENDOR_BOOT_TMP_IMAGE}/tmp/${ko} ${VENDOR_BOOT_TMP_IMAGE}/ramdisk00/lib/modules/
+            fi
         fi
     done
 }
