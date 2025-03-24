@@ -394,6 +394,8 @@
 	sgm41512_chg:sgm41512-charger@6b {
                 status = "okay";
                 compatible = "ti,sgm41512-charger";
+		io-channels = <&pmic_auxadc AUXADC_VCDT>;
+		io-channel-names = "pmic_vbus_voltage";
                 reg = <0x6b>;
                 charger_name = "SGM41512";
                 interrupt-parent = <&pio>;
