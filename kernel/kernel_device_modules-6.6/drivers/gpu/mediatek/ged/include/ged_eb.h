@@ -637,6 +637,15 @@ enum action_map {
 	NR_ACTION_MAP
 };
 
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_POWERMODEL)
+enum gpudvfs_oppidx_cmd {
+	OPLUSCMD_DISABLE_OPPIDX_EVENT = 0,
+	OPLUSCMD_ENABLE_OPPIDX_EVENT = 2,
+
+	NR_OPLUSCMD
+};
+#endif
+
 /**************************************************
  * GPU FAST DVFS IPI CMD
  **************************************************/
@@ -767,6 +776,9 @@ void mtk_gpueb_set_power_state(enum ged_gpu_power_state power_state);
 u64 mtk_gpueb_read_soc_timer(void);
 void mtk_gpueb_record_soc_timer(u64 soc_timer);
 
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_POWERMODEL)
+int oplus_gpueb_dvfs_notify_oppidx(int enable);
+#endif
 
 extern int fastdvfs_proc_init(void);
 extern void fastdvfs_proc_exit(void);

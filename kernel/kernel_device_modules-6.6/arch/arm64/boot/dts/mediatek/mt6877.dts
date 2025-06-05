@@ -37,7 +37,7 @@
 			vmalloc=400M swiotlb=noforce \
 			transparent_hugepage=never \
 			initcall_debug=1 pelt=8 \
-			8250.nr_uarts=2 \
+			8250.nr_uarts=2 restrict_cma_redirect \
 			firmware_class.path=/vendor/firmware \
 			log_buf_len=4m \
 			loop.max_part=7";
@@ -4052,8 +4052,8 @@
 	regulator_vibrator: regulator-vibrator {
 		compatible = "regulator-vibrator";
 		label = "vibrator";
-		min-volt = <2300000>;
-		max-volt = <3200000>;
+		min-volt = <2800000>;
+		max-volt = <3500000>;
 		min-limit = <15>;
 		max-limit = <15000>;
 		vib-supply = <&mt6359p_vibr_reg>;
@@ -4578,8 +4578,8 @@
 		mediatek,gce = <&gce_mbox>;
 		mmsys_config = <&mmsys_config_clk>;
 		mediatek,gce-subsys = <99>, <SUBSYS_1400XXXX>;
-		mboxes = <&gce_mbox 23 0 CMDQ_THR_PRIO_1>,
-			 <&gce_mbox 22 CMDQ_NO_TIMEOUT CMDQ_THR_PRIO_1>;
+		//mboxes = <&gce_mbox 23 0 CMDQ_THR_PRIO_1>,
+			 //<&gce_mbox 22 CMDQ_NO_TIMEOUT CMDQ_THR_PRIO_1>;
 			 // <&gce_mbox_sec 11 0 CMDQ_THR_PRIO_1>;
 		token_user0 = /bits/ 16 <CMDQ_SYNC_TOKEN_USER_0>;
 		token_gpr_set4 = /bits/ 16 <CMDQ_SYNC_TOKEN_GPR_SET_4>;
@@ -5657,6 +5657,7 @@
 			"disp_wdma0_eof0",
 			"disp_token_stream_block0",
 			"disp_token_cabc_eof0",
+			"disp_token_vdo_cabc_eof0",
 			"disp_wdma0_eof2",
 			"disp_dsi0_sof0";
 
@@ -5671,6 +5672,7 @@
 			<&gce_mbox CMDQ_EVENT_DISP_WDMA0_FRAME_DONE>,
 			<&gce_mbox CMDQ_SYNC_TOKEN_STREAM_BLOCK>,
 			<&gce_mbox CMDQ_SYNC_TOKEN_CABC_EOF>,
+			<&gce_mbox CMDQ_SYNC_TOKEN_VDO_MODE_CABC_EOF>,
 			<&gce_mbox CMDQ_EVENT_DISP_WDMA0_FRAME_DONE>,
 			<&gce_mbox CMDQ_EVENT_DSI0_SOF>;
 
@@ -7424,7 +7426,7 @@
 		2d_fr-size = <0 0>;
 		tui-size = <0 0x4000000>;
 		wfd-region-based-size = <0 0x4000000>;
-		prot-region-based-size = <0 0x8000000>;
+		prot-region-based-size = <0 0x0000000>;
 		ta-elf-size = <0 0x1000000>;
 		ta-stack-heap-size = <0 0x6000000>;
 		sdsp-tee-sharedmem-size = <0 0x1000000>;
@@ -7931,6 +7933,7 @@
 		clock-names = "main", "dma";
 		clock-div = <1>;
 		mediatek,control-rs-stop;
+		mediatek,dynamic-speed;
 	};
 
 	i2c3: i2c@11cb0000 {
@@ -7955,6 +7958,7 @@
 		clock-names = "main", "dma";
 		clock-div = <1>;
 		mediatek,control-rs-stop;
+		mediatek,dynamic-speed;
 	};
 
 	i2c5: i2c@11d00000 {

@@ -1712,6 +1712,7 @@ static void fsm_routine_wdt(struct ccci_fsm_ctl *ctl,
 	if (reset_md) {
 		fsm_monitor_send_message(CCCI_MD_MSG_RESET_REQUEST, 0);
 	//#ifdef OPLUS_FEATURE_MDRST
+	//#zengjunyong@NETWORK.ARCH.6198634 2023/09/12, add for MDRST
 		inject_md_status_event(MD_STA_EV_RESET_REQUEST, "WDT_RESET");
 	//#endif
 	}

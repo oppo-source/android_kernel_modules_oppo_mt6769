@@ -8310,6 +8310,7 @@ UINT8 *feature_para, UINT32 *feature_para_len)
         }
         break;
 //#ifdef OPLUS_FEATURE_CAMERA_COMMON
+//lizhihui@vanyol.com,2022/05/31, add featurecontrol
     case SENSOR_FEATURE_GET_MODULE_INFO:
         break;
     case SENSOR_FEATURE_GET_MODULE_SN:

@@ -44,7 +44,7 @@ lcm_util.dsi_mt6382_send_cmd(cmdq, cmd, count, para_list, force_update)
 extern int (*tp_gesture_enable_notifier)(unsigned int tp_index);
 #define LCD_CTL_TP_LOAD_FW 0x10
 unsigned long esd_flag = 0;
-unsigned int g_shutdown_flag = 0;
+extern int shutdown_flag;
 extern unsigned int oplus_display_brightness;
 extern unsigned long oplus_max_normal_brightness;
 unsigned int oplus_lcm_display_on;
@@ -74,7 +74,9 @@ struct lcm {
 
 static int current_fps = 60;
 //static int bl_gamma = 0;
-static short cabc_status = 3;
+static int cabc_status = 1;
+static int first_set_dimming;
+static int first_set_bl;
 static int esd_brightness;
 //static bool dimming_is_on = false;
 //static short frame_count = 0;
@@ -184,6 +186,7 @@ static void lcm_init_set_cabc(struct lcm *ctx) {
 static void lcm_panel_init(struct lcm *ctx)
 {
 	int blank = 0;
+	first_set_bl = 1;
 	ctx->reset_gpio = devm_gpiod_get(ctx->dev, "reset", GPIOD_OUT_HIGH);
 	if (IS_ERR(ctx->reset_gpio)) {
 		pr_info("[error]%s: cannot get reset_gpio %ld\n",
@@ -343,8 +346,8 @@ lcm_dcs_write_seq_static(ctx, 0xFF, 0x78, 0x07, 0x06);
 	lcm_dcs_write_seq_static(ctx, 0x35, 0x00);
 	lcm_dcs_write_seq_static(ctx, 0x68, 0x03, 0x00);
 	lcm_dcs_write_seq_static(ctx, 0x68, 0x03, 0x00);
-	lcm_dcs_write_seq_static(ctx, 0x51, 0x01, 0xFF);
-	lcm_dcs_write_seq_static(ctx, 0x53, 0x2C);
+	lcm_dcs_write_seq_static(ctx, 0x51, 0x00, 0x00);
+	lcm_dcs_write_seq_static(ctx, 0x53, 0x24);
 	lcm_dcs_write_seq_static(ctx, 0x55, 0x00);
 	lcm_dcs_write_seq_static(ctx, 0x11, 0x00);
 	usleep_range(60 * 1000,60*1010);
@@ -372,7 +375,6 @@ static int lcm_disable(struct drm_panel *panel)
 static int lcm_unprepare(struct drm_panel *panel)
 {
 	struct lcm *ctx = panel_to_lcm(panel);
-	int flag_poweroff = 1;
 	if (!ctx->prepared)
 		return 0;
 
@@ -383,62 +385,42 @@ static int lcm_unprepare(struct drm_panel *panel)
 	usleep_range(20 * 1000, 20 * 1010);
 	lcm_dcs_write_seq_static(ctx, 0x10);
 	//usleep_range(10 * 1000, 10 * 1010);
-
-	pr_info("[TP] tp_gesture_enable_notifier = %p, tp_gesture_enable_notifier(0) = %d \n", tp_gesture_enable_notifier, tp_gesture_enable_notifier(0));
-	if (tp_gesture_enable_notifier && tp_gesture_enable_notifier(0)) {
-                if (g_shutdown_flag == 1) {
-                        flag_poweroff = 1;
-                } else {
-                        flag_poweroff = 0;
-                        pr_err("[TP] tp gesture  is enable,Display not to poweroff\n");
-                }
-	} else {
-		flag_poweroff = 1;
+        pr_info("[TP] tp_gesture_enable_notifier(0) = %d \n", tp_gesture_enable_notifier(0));
+	if (1 == shutdown_flag) {
+		ctx->reset_gpio =
+		devm_gpiod_get(ctx->dev, "reset", GPIOD_OUT_HIGH);
+		if (IS_ERR(ctx->reset_gpio)) {
+			pr_info("[error]%s: cannot get reset_gpio %ld\n",
+				__func__, PTR_ERR(ctx->reset_gpio));
+			return PTR_ERR(ctx->reset_gpio);
+		}
+		gpiod_set_value(ctx->reset_gpio, 0);
+		devm_gpiod_put(ctx->dev, ctx->reset_gpio);
+		usleep_range(2 * 1000,2*1010);
 	}
 
-	pr_info("[TP] tp_gesture_enable_flag = %d, g_shutdown_flag = %d, esd_flag = %lu \n", tp_gesture_enable_flag(), g_shutdown_flag, esd_flag);
-	if (1 == flag_poweroff) {
-		ctx->reset_gpio =
-                        devm_gpiod_get(ctx->dev, "reset", GPIOD_OUT_HIGH);
-                if (IS_ERR(ctx->reset_gpio)) {
-                        pr_info("[error]%s: cannot get reset_gpio %ld\n",
-                                __func__, PTR_ERR(ctx->reset_gpio));
-                        return PTR_ERR(ctx->reset_gpio);
-                }
-                gpiod_set_value(ctx->reset_gpio, 0);
-                devm_gpiod_put(ctx->dev, ctx->reset_gpio);
-
-
-		if (0 == tp_gesture_enable_flag() || (esd_flag == 1)) {
-			ctx->reset_gpio =
-                        	devm_gpiod_get(ctx->dev, "reset", GPIOD_OUT_HIGH);
-                	gpiod_set_value(ctx->reset_gpio, 0);
-        	devm_gpiod_put(ctx->dev, ctx->reset_gpio);
-
-			usleep_range(2 * 1000,2*1010);
-
-			ctx->bias_pos = devm_gpiod_get_index(ctx->dev,
-				"bias", 1, GPIOD_OUT_HIGH);
-			if (IS_ERR(ctx->bias_pos)) {
-				pr_info("[error]%s: cannot get bias_pos %ld\n",
-					__func__, PTR_ERR(ctx->bias_pos));
-				return PTR_ERR(ctx->bias_pos);
-			}
-			gpiod_set_value(ctx->bias_pos, 0);
-			devm_gpiod_put(ctx->dev, ctx->bias_pos);
-
-			usleep_range(3 * 1000,3*1010);
-
-			ctx->bias_neg = devm_gpiod_get_index(ctx->dev,
-				"bias", 0, GPIOD_OUT_HIGH);
-			if (IS_ERR(ctx->bias_neg)) {
-				pr_info("[error]%s: cannot get bias_neg %ld\n",
-					__func__, PTR_ERR(ctx->bias_neg));
-				return PTR_ERR(ctx->bias_neg);
-			}
-			gpiod_set_value(ctx->bias_neg, 0);
-			devm_gpiod_put(ctx->dev, ctx->bias_neg);
+	if (0 == tp_gesture_enable_notifier(0) || (esd_flag == 1) || (1 == shutdown_flag)) {
+		ctx->bias_pos = devm_gpiod_get_index(ctx->dev,
+			"bias", 1, GPIOD_OUT_HIGH);
+		if (IS_ERR(ctx->bias_pos)) {
+			pr_info("[error]%s: cannot get bias_pos %ld\n",
+				__func__, PTR_ERR(ctx->bias_pos));
+			return PTR_ERR(ctx->bias_pos);
 		}
+		gpiod_set_value(ctx->bias_pos, 0);
+		devm_gpiod_put(ctx->dev, ctx->bias_pos);
+
+		usleep_range(3 * 1000,3*1010);
+
+		ctx->bias_neg = devm_gpiod_get_index(ctx->dev,
+			"bias", 0, GPIOD_OUT_HIGH);
+		if (IS_ERR(ctx->bias_neg)) {
+			pr_info("[error]%s: cannot get bias_neg %ld\n",
+				__func__, PTR_ERR(ctx->bias_neg));
+			return PTR_ERR(ctx->bias_neg);
+		}
+		gpiod_set_value(ctx->bias_neg, 0);
+		devm_gpiod_put(ctx->dev, ctx->bias_neg);
 	}
 	oplus_lcm_display_on = 0;
 	ctx->error = 0;
@@ -1116,6 +1098,7 @@ static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb,
 	void *handle, unsigned int level)
 {
 	bl_old_level = level;
+	char bl_tb2[] = {0x53, 0x2C};
 	/*bl_old_level = oplus_private_set_backlight(bl_old_level);*/
 #if 0
 //#ifdef CONFIG_MTK_MT6382_BDG
@@ -1137,6 +1120,7 @@ static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb,
 	}
 //#endif
 #endif
+	/*Jiantao.Liu@ODM_WT.MM.Display.Lcd, 2020/07/06, Add dimming off for power off sequence with tBLOFF*/
 	if (0 == bl_old_level) {
 		/* push_table(handle, lcm_dimming_off_setting, sizeof(lcm_dimming_off_setting) / sizeof(struct LCM_setting_table), 1); */
 		bl_level_mt6382[1] = 0;
@@ -1148,6 +1132,15 @@ static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb,
 	} else {
 		bl_level_mt6382[1] = 0x000F&(bl_old_level >> 8);
 		bl_level_mt6382[2] = 0x00FF&(bl_old_level >> 0);
+		if (first_set_bl) {
+			msleep(12);
+			first_set_bl = 0;
+			first_set_dimming = 1;
+		}
+		if (first_set_dimming) {
+			cb(dsi, handle, bl_tb2, ARRAY_SIZE(bl_tb2));
+			first_set_dimming = 0;
+		}
 		pr_err("[ HW check mt6382_ backlight ili7807s]level = %d para_list[0] = %x, \
 		para_list[1]=%x\n", bl_old_level, bl_level_mt6382[1], bl_level_mt6382[2]);
 		cb(dsi, handle, bl_level_mt6382, ARRAY_SIZE(bl_level_mt6382));
@@ -1163,10 +1156,20 @@ static int oplus_esd_backlight_recovery(void *dsi, dcs_write_gce cb,
 		void *handle)
 {
 	char bl_tb0[] = {0x51, 0x03, 0xff};
+	char bl_tb2[] = {0x53, 0x2C};
 	bl_tb0[1] = esd_brightness >> 8;
 	bl_tb0[2] = esd_brightness & 0xFF;
+	if (first_set_bl) {
+		msleep(12);
+		first_set_bl = 0;
+		first_set_dimming = 1;
+	}
 	if (!cb)
 		return -1;
+	if (first_set_dimming) {
+		cb(dsi, handle, bl_tb2, ARRAY_SIZE(bl_tb2));
+		first_set_dimming = 0;
+	}
 	cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
 
 	return 1;
@@ -1299,7 +1302,7 @@ static int panel_ata_check(struct drm_panel *panel)
 static void lcm_cabc_mode_switch(void *dsi, dcs_write_gce cb,
 		void *handle, unsigned int cabc_mode)
 {
-	 char bl_tb1[] = {0x55, 0x03}; /* no cabc ui pictures videoes*/
+	 char bl_tb1[] = {0x55, 0x01}; /* no cabc ui pictures videoes*/
 
 	pr_err("%s cabc = %d\n", __func__, cabc_mode);
 	
@@ -1316,7 +1319,7 @@ static void lcm_cabc_mode_switch(void *dsi, dcs_write_gce cb,
 		bl_tb1[1] = 0x00; /* cabc off */
 		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
 	}else {
-		bl_tb1[1] = 0x03; /* default */
+		bl_tb1[1] = 0x01; /* default */
 		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
 	}
 	cabc_status = cabc_mode;

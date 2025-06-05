@@ -72,10 +72,11 @@ struct i2c_client *g_pstI2Cclients[3]; /* I2C_DEV_IDX_MAX */
 
 #define OTP_DATA_GOOD_FLAG 0x88
 char g_otp_buf[3][MAX_EEPROM_BYTE] = {{0}, {0}, {0}};
+char g_otp_hi846_buf[MAX_EEPROM_BYTE] = {0};
 
 #define MAX_NAME_LENGTH 20
 #define MAX_GROUP_NUM 8
-#define MAX_GROUP_ADDR_NUM 2
+#define MAX_GROUP_ADDR_NUM 3
 #define MAX_PAGE_NUMBER 5
 
 typedef struct
@@ -148,6 +149,47 @@ OTP_MAP sc820cs_otp_map_arka = {
 						},
 			},
 };
+
+/* sonic Hi846 map */
+int hi846_read_data(u16 addr, u8 *data);
+
+OTP_MAP hi846_otp_map_oris = {
+		.module_name = "HI846_ORIS",
+		.group_num = 4,
+		.group_addr_info_num = 3,
+		.readFunc = hi846_read_data,
+		.group_info = {
+						{"info",
+							{ /* start   end     flag   checksum */
+								{0x0202, 0X0210, 0x0211, 0x0212},
+								{0x0993, 0x09A1, 0x09A2, 0x09A3},
+								{0x1124, 0x1132, 0x1133, 0x1134},
+							},
+						},
+						{"awb",
+							{
+								{0x0213, 0x0222, 0x0223, 0x0224},
+								{0x09A4, 0x09B3, 0x09B4, 0x09B5},
+								{0x1135, 0x1144, 0x1145, 0x1146},
+							 },
+						},
+						{"lsc",
+							{
+								{0x0245, 0x0990, 0x0991, 0x0992},
+								{0x09D6, 0x1121, 0x1122, 0x1123},
+								{0x1167, 0x18B2, 0x18B3, 0x18B4},
+							},
+						},
+						{"sn",
+							{
+								{0x022B, 0x0242, 0x0243, 0x0244},
+								{0x09BC, 0x09D3, 0x09D4, 0x09D5},
+								{0x114D, 0x1164, 0x1165, 0x1166},
+							},
+						},
+			},
+};
+
 
 static int read_reg16_data8(u16 addr, u8 *data)
 {
@@ -244,11 +286,104 @@ bool sc820cs_sensor_otp_init(kal_uint16 threshold, int pagenumber)
 	return true;
 }
 
+/* hi846 */
+int hi846_read_data(u16 addr, u8 *data)
+{
+	static u16 last_addr = 0;
+	if (addr != last_addr+ 1) {
+		write_reg16_data8(0x070a, (addr >> 8) & 0xff);
+		write_reg16_data8(0x070b, addr & 0xff);
+		write_reg16_data8(0x0702, 0x01);
+	}
+
+	last_addr = addr;
+	return read_reg16_data8(0x708, data);
+}
+
+void hi846_otp_read_enable(void)
+{
+	write_reg16_data8(0x0A02, 0x01);
+	write_reg16_data8(0x0A00, 0x00);
+	mdelay(10);
+	write_reg16_data8(0x0F02, 0x00);
+	write_reg16_data8(0x071A, 0x01);
+	write_reg16_data8(0x071B, 0x09);
+	write_reg16_data8(0x0D04, 0x01);
+	write_reg16_data8(0x0D00, 0x07);
+	write_reg16_data8(0x003E, 0x10);
+	write_reg16_data8(0x0A00, 0x01);
+}
+
 int sc820cs_read_data(u16 addr, u8 *data)
 {
 	static u16 last_addr = 0;
 	last_addr = addr;
 	return read_reg16_data8(addr, data);
+}
+
+static int parse_otp_map_data(OTP_MAP * map, char * data)
+{
+	int i = 0, j = 0;
+	int addr = 0, size = 0, curr_addr = 0;
+	int  ret = 0;
+	char readbyte = 0;
+	char group_flag = 0;
+	int checksum = -1;
+
+	LOG_INFO("module: %s ......", map->module_name);
+
+	addr = 0x0201;
+	ret = map->readFunc(addr, &group_flag);
+
+	if (ret < 0) {
+		LOG_ERR("read group flag error addr 0x%04x", addr);
+		return -ERROR_I2C;
+	}
+	if (group_flag == 0x01) {
+		j = 0;
+	} else if (group_flag == 0x13) {
+		j = 1;
+	} else if (group_flag == 0x37) {
+		j = 2;
+	} else {
+		LOG_INFO("invalid block module flag 0x%x", j);
+		return -ERROR_READ_FLAG;
+	}
+
+	for (i = 0; i < map->group_num; i++) {
+		checksum = 0;
+		size = 0;
+
+		LOG_INFO("groupinfo: %s, start_addr 0x%04x(%04d)", map->group_info[i].group_name, curr_addr, curr_addr);
+
+		for (addr = map->group_info[i].group_addr_info[j].group_start_addr;
+				addr <= map->group_info[i].group_addr_info[j].group_end_addr;
+				addr++) {
+			ret = map->readFunc(addr, data);
+			if (ret < 0) {
+				LOG_ERR(" read data error");
+			}
+			LOG_DEBUG(" group: %s, addr: 0x%04x, viraddr: 0x%04x(%04d), data: 0x%04x(%04d) ",
+						map->group_info[i].group_name, addr, curr_addr, curr_addr, *data, *data);
+
+			checksum += *data;
+			curr_addr++;
+			size++;
+			data++;
+		}
+
+		checksum = checksum % 0xFF;
+		ret = map->readFunc(map->group_info[i].group_addr_info[j].group_checksum_addr, &readbyte);
+		if (checksum == readbyte) {
+			LOG_INFO("groupinfo: %s, checksum OK c(%04d) r(%04d)", map->group_info[i].group_name, checksum, readbyte);
+		} else {
+			LOG_ERR("groupinfo: %s, checksum ERROR ret=%d, checksum=%04d readbyte=%04d", map->group_info[i].group_name, ret, checksum, readbyte);
+			ret = -ERROR_CHECKSUM;
+		}
+		LOG_INFO("groupinfo: %s, end_addr 0x%04x(%04d) size 0x%04x(%04d)",
+						map->group_info[i].group_name, curr_addr-1, curr_addr-1, size, size);
+	}
+	return ret;
 }
 
 static int parse_otp_map_data_sc820cs(OTP_MAP * map, char * data, int temp)
@@ -409,6 +544,41 @@ unsigned int sc820cs_read_region(struct i2c_client *client, unsigned int addr, u
 
 	if (NULL != data) {
 		memcpy((void *)data, &g_otp_buf[IMGSENSOR_SENSOR_IDX_SUB][addr], size);
+	}
+	return ret;
+}
+
+void hi846_otp_read_disable(void)
+{
+	write_reg16_data8(0x0a00, 0x00);
+	mdelay(10);
+	write_reg16_data8(0x003e, 0x00);
+	write_reg16_data8(0x004a, 0x01);
+}
+unsigned int Hi846_oris_read_region(struct i2c_client *client, unsigned int addr, unsigned char *data, unsigned int size)
+{
+	int ret = 0;
+
+	if (g_otp_hi846_buf[READ_FLAG_ADDR]) {
+		LOG_INFO("read otp data from g_otp_hi846_buf: addr 0x%x, size %d", addr, size);
+		memcpy((void *)data, &g_otp_hi846_buf[addr], size);
+		return size;
+	}
+	if (client != NULL) {
+		g_pstI2CclientG = client;
+	} else if (g_pstI2Cclients[0] != NULL) {
+		g_pstI2CclientG = g_pstI2Cclients[0];
+		g_pstI2CclientG->addr =  0x40 >> 1;
+	}
+	hi846_otp_read_enable();
+	ret = parse_otp_map_data(&hi846_otp_map_oris, &g_otp_hi846_buf[0]);
+	if (!ret) {
+		g_otp_hi846_buf[CHECKSUM_FLAG_ADDR] = OTP_DATA_GOOD_FLAG;
+		g_otp_hi846_buf[READ_FLAG_ADDR] = 1;
+	}
+	hi846_otp_read_disable();
+	if (NULL != data) {
+		memcpy((void *)data, &g_otp_hi846_buf[addr], size);
 	}
 	return ret;
 }

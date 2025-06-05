@@ -62,6 +62,7 @@
 	pr_debug(PFX "[%s] " format, __func__, ##args)
 
 static DEFINE_SPINLOCK(imgsensor_drv_lock);
+/*xuefei.wan@Camera.DRV add for register device info 20220817*/
 extern void register_imgsensor_deviceinfo(char *name, char *version, u8 module_id);
 #define DEVICE_VERSION_22633_SC202CS    "sc202cs"
 static kal_uint8 deviceInfo_register_value = 0x00;
@@ -846,6 +847,7 @@ static kal_uint32 get_imgsensor_id(UINT32 *sensor_id)
         //pr_err("cwd return_sensor_id:0x%x\n",*sensor_id);
              if (*sensor_id == imgsensor_info.sensor_id) {
                 LOG_INF("i2c write id: 0x%x, sensor id: 0x%x\n", imgsensor.i2c_write_id,*sensor_id);
+                /*xuefei.wan@Camera.DRV add for register device info 20220817*/
                 imgsensor_info.module_id = 0x00;
              if (deviceInfo_register_value == 0x00) {
                     register_imgsensor_deviceinfo("Cam_r1", DEVICE_VERSION_22633_SC202CS, imgsensor_info.module_id);

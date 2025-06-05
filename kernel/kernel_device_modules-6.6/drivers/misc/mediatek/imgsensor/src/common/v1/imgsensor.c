@@ -514,6 +514,7 @@ int imgsensor_set_driver(struct IMGSENSOR_SENSOR *psensor)
 	imgsensor_mutex_init(psensor_inst);
 
 	#ifndef OPLUS_FEATURE_CAMERA_COMMON
+	/*wuyingchao@CAMERA.DRV modify for zhaoyun decouple*/
 	imgsensor_i2c_init(&psensor_inst->i2c_cfg,
 	imgsensor_custom_config[
 	(unsigned int)psensor_inst->sensor_idx].i2c_dev);
@@ -3163,6 +3164,7 @@ static int imgsensor_probe(struct platform_device *pdev)
 	// imgsensor_clk_init(&pgimgsensor->clk);
 #endif
 	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	/*wuyingchao@CAMERA.DRV add for zhaoyun decouple*/
 	oplus_imgsensor_hwcfg();
 	#endif //OPLUS_FEATURE_CAMERA_COMMON
 

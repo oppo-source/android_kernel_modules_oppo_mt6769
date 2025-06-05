@@ -51,6 +51,7 @@ extern enum IMGSENSOR_RETURN Eeprom_DataInit(
 
 extern struct CAMERA_DEVICE_INFO gImgEepromInfo;
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*Caohua.Lin@Camera.Driver add for 18011/18311  board 20180723*/
 #define DEVICE_VERSION_S5k3P9SP     "s5k3p9sp"
 //extern void register_imgsensor_deviceinfo(char *name, char *version, u8 module_id);
 static kal_uint8 deviceInfo_register_value = 0x00;
@@ -69,6 +70,7 @@ static DEFINE_SPINLOCK(imgsensor_drv_lock);
 static struct imgsensor_info_struct imgsensor_info = {
 		.sensor_id = S5K3P9SP_SENSOR_ID22633,
 		#ifdef OPLUS_FEATURE_CAMERA_COMMON
+		/*Caohua.Lin@Camera.Driver add for 18011/18311  board 20180723*/
 		.module_id = 0x04,	//0x01 Sunny,0x05 QTEK
 		#endif
 		.checksum_value = 0xffb1ec31,
@@ -248,6 +250,7 @@ MUINT32  sn_inf_sub_S5K3P9SP[13];
 /****hope add end****/
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*Caohua.Lin@Camera.Driver add for 18011/18311  board 20180723*/
 static kal_uint16 read_module_id(void)
 {
 	kal_uint16 get_byte=0;
@@ -259,6 +262,7 @@ static kal_uint16 read_module_id(void)
 	return get_byte;
 
 }
+/*Henry.Chang@Camera.Driver add for 18531 ModuleSN*/
 static kal_uint8 gS5k3p9sp_SN[CAMERA_MODULE_SN_LENGTH];
 static void read_eeprom_SN(void)
 {
@@ -273,6 +277,7 @@ static void read_eeprom_SN(void)
 
 #define  CAMERA_MODULE_INFO_LENGTH  (8)
 static kal_uint8 gS5k3p9sp_CamInfo[CAMERA_MODULE_INFO_LENGTH];
+/*Henry.Chang@Camera.Driver add for google ARCode Feature verify 20190531*/
 static void read_eeprom_CamInfo(void)
 {
 	kal_uint16 idx = 0;
@@ -293,6 +298,7 @@ static void read_eeprom_CamInfo(void)
 	gS5k3p9sp_CamInfo[7] = get_byte[11];
 }
 
+/*Henry.Chang@camera.driver 20181129, add for sensor Module SET*/
 #define   WRITE_DATA_MAX_LENGTH     (16)
 static kal_int32 table_write_eeprom_30Bytes(kal_uint16 addr, kal_uint8 *para, kal_uint32 len)
 {
@@ -332,6 +338,7 @@ static kal_int32 write_eeprom_protect(kal_uint16 enable)
 	return ret;
 }
 
+/*Henry.Chang@camera.driver 20181129, add for sensor Module SET*/
 static kal_int32 write_Module_data(ACDK_SENSOR_ENGMODE_STEREO_STRUCT * pStereodata)
 {
 	kal_int32  ret = IMGSENSOR_RETURN_SUCCESS;
@@ -428,6 +435,7 @@ static kal_int32 write_Module_data(ACDK_SENSOR_ENGMODE_STEREO_STRUCT * pStereoda
 	return ret;
 }
 
+/*Wenjun.Wu@Camera.Driver 20200219 add for s5k3p9sp crosstalk*/
 #define S5K3P9SP_XTALK_START_ADDR  0x1400
 #define S5K3P9SP_XTALK_DATA_SIZE   2050
 static kal_uint8  s5k3p9sp_data_xtalk[S5K3P9SP_XTALK_DATA_SIZE];
@@ -4556,7 +4564,9 @@ static kal_uint32 get_imgsensor_id(UINT32 *sensor_id)
 				*sensor_id = imgsensor_info.sensor_id;
 				LOG_INF("i2c write id: 0x%x, sensor id: 0x%x\n", imgsensor.i2c_write_id, *sensor_id);
 				#ifdef OPLUS_FEATURE_CAMERA_COMMON
+				/*Caohua.Lin@Camera.Driver add for 18011/18311  board 20180723*/
 				imgsensor_info.module_id = read_module_id();
+                                /*Henry.Chang@Camera.Driver add for ModuleSN  20181216*/
 				read_eeprom_SN();
 				read_eeprom_CamInfo();
 				LOG_INF("s5k3p9sp_module_id=%d\n",imgsensor_info.module_id);
@@ -5488,6 +5498,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 			break;
 
 	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	/*Henry.Chang@Camera.Driver add for google ARCode Feature verify 20190531*/
 	case SENSOR_FEATURE_GET_MODULE_INFO:
 		LOG_INF("S5K3P9SP GET_MODULE_CamInfo:%d %d\n", *feature_para_len, *feature_data_32);
 		*(feature_data_32 + 1) = (gS5k3p9sp_CamInfo[1] << 24)
@@ -5499,6 +5510,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 					| (gS5k3p9sp_CamInfo[7] << 8)
 					| (gS5k3p9sp_CamInfo[6] & 0xFF);
 		break;
+        /*Henry.Chang@Camera.Driver add for 18531 ModuleSN*/
 	case SENSOR_FEATURE_GET_MODULE_SN:
 		LOG_INF("s5k3p9 GET_MODULE_SN:%d %d\n", *feature_para_len, *feature_data_32);
 		if (*feature_data_32 < CAMERA_MODULE_SN_LENGTH/4) {
@@ -5508,6 +5520,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 						| (gS5k3p9sp_SN[4*(*feature_data_32)] & 0xFF);
 		}
 		break;
+		/*Henry.Chang@camera.driver 20181129, add for sensor Module SET*/
 	case SENSOR_FEATURE_SET_SENSOR_OTP:
 	{
 		kal_int32 ret = IMGSENSOR_RETURN_SUCCESS;
@@ -5518,8 +5531,9 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 		else
 			return ERROR_MSDK_IS_ACTIVATED;
 	}
+	/*victor.yan@Camera.Driver , 20200306, add for ITS--sensor_fusion*/
 	case SENSOR_FEATURE_GET_OFFSET_TO_START_OF_EXPOSURE:
-		*(MUINT32 *)(uintptr_t)(*(feature_data + 1)) = -869000;
+		*(MUINT32 *)(uintptr_t)(*(feature_data + 1)) = -2548000;
 		break;
 	#endif
     case SENSOR_FEATURE_GET_PERIOD_BY_SCENARIO:
@@ -5776,6 +5790,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 			*(MUINT32 *)(uintptr_t)(*(feature_data + 1)) = rate;
 		}
 		break;
+	/* Wenjun.Wu@Camera.Drv, 20200225, add for sensor different size sensitivity ratio*/
 	case SENSOR_FEATURE_GET_BINNING_TYPE:
 		switch (*(feature_data + 1)) {
 			case MSDK_SCENARIO_ID_CUSTOM3:
@@ -5795,6 +5810,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 			*feature_para_len = 4;
 		break;
 	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	/*Wenjun.Wu@Camera.Driver 20200220 add for s5k3p9sp crosstalk*/
 	case SENSOR_FEATURE_GET_4CELL_DATA:
 		{
 			int type = (kal_uint16)(*feature_data);

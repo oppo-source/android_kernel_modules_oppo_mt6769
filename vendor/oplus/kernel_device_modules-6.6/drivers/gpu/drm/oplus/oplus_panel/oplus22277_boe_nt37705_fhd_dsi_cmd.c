@@ -249,6 +249,10 @@ static void lcm_panel_init(struct lcm *ctx)
 	lcm_dcs_write_seq_static(ctx,0xF0,0x55,0xAA,0x52,0x08,0x0A);
 	lcm_dcs_write_seq_static(ctx,0x6F,0x6B);
 	lcm_dcs_write_seq_static(ctx,0xB0,0x00);
+	/*AOD no black*/
+	lcm_dcs_write_seq_static(ctx,0xF0,0x55,0xAA,0x52,0x08,0x01);
+	lcm_dcs_write_seq_static(ctx,0x6F,0x01);
+	lcm_dcs_write_seq_static(ctx,0xD2,0x00);
 	/* Sleep Out */
 	lcm_dcs_write_seq_static(ctx,0x11);
 	/* Wait>60ms,Actual 80ms */
@@ -894,7 +898,8 @@ static struct LCM_setting_table lcm_aod_to_normal[] = {
 	{REGFLAG_CMD,2,{0x6F,0x0E}},
 	{REGFLAG_CMD,2,{0xB5,0x4F}},
 	/* AOD Mode OFF,DIC */
-	{REGFLAG_CMD,2,{0x65,0x00}},
+	//{REGFLAG_CMD,2,{0x65,0x00}},
+	{REGFLAG_CMD, 2, {0xC0,0x44}},
 	{REGFLAG_CMD,1,{0x38}},
 	{REGFLAG_END_OF_TABLE, 0x00, {}}
 };
@@ -987,7 +992,7 @@ static struct LCM_setting_table lcm_normal_to_aod[] = {
 	 /* Wait 20ms,Actual 30ms */
 	 {REGFLAG_DELAY,30,{}},
 	 /* AOD Mode ON,DIC */
-	 {REGFLAG_CMD, 2, {0x65,0x01}},
+	 //{REGFLAG_CMD, 2, {0x65,0x01}},
 	 {REGFLAG_END_OF_TABLE, 0x00, {}}
 };
 

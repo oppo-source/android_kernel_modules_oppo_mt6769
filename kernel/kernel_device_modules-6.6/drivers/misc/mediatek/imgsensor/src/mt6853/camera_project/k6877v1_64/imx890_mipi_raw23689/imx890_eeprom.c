@@ -31,6 +31,8 @@
 #include "imx890mipiraw_Sensor.h"
 #include "imx890_eeprom.h"
 
+static kal_uint8 tmp_QSC_setting[QSC_SIZE];
+
 static struct EEPROM_PDAF_INFO eeprom_pdaf_info[] = {
     {
         .SPC_addr = OTP_SPC_OFFSET,
@@ -117,7 +119,6 @@ unsigned int read_IMX890_23689_SPC(kal_uint16 *data)
 unsigned int read_IMX890_23689_QSC(kal_uint16 * data)
 {
     kal_uint16 idx = 0, sensor_qsc_address = 0xC800;
-    kal_uint8 tmp_QSC_setting[QSC_SIZE];
     kal_uint8 qsc_ver = 0;
 
     read_imx890_eeprom(OTP_QSC_OFFSET, tmp_QSC_setting, QSC_SIZE);

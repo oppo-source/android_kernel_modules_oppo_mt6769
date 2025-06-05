@@ -89,6 +89,7 @@ struct mtk_pmic_regs {
 };
 
 //#ifdef OPLUS_BUG_STABILITY
+//Peng.Yao@BSP.Kernel.Stability 2021/10/18 add for vol +/- enter dump
 extern int aee_kpd_enable;
 extern void kpd_aee_handler(u32 keycode, u16 pressed);
 //#endif /*OPLUS_BUG_STABILITY*/
@@ -370,6 +371,7 @@ static irqreturn_t mtk_pmic_keys_irq_handler_thread(int irq, void *data)
 		 pressed ? "pressed" : "released", info->keycode);
 
 	//#ifdef OPLUS_BUG_STABILITY
+	//Peng.Yao@BSP.Kernel.Stability 2021/10/18 add for vol +/- enter dump
 	if (aee_kpd_enable && info->keycode == KEY_VOLUMEUP) {
 		pr_err("pmic volup key triggered, pressed is %u\n", pressed);
 		kpd_aee_handler(KEY_VOLUMEUP, pressed);

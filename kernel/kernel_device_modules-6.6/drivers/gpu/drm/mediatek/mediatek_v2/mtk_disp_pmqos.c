@@ -818,20 +818,20 @@ void mtk_disp_hrt_mmclk_request_mt6768(struct mtk_drm_crtc *mtk_crtc, unsigned i
 		ret = regulator_set_voltage(mm_freq_request, req_level[0].volt, INT_MAX);
 		if (ret)
 			DDPPR_ERR("%s:regulator_set_voltage fail\n", __func__);
-		DDPMSG("%s layer_num = %d, volt = %d\n", __func__, layer_num, req_level[0].volt);
+		DDPINFO("%s layer_num = %d, volt = %d\n", __func__, layer_num, req_level[0].volt);
 	} else if ((layer_num > req_level[0].layer_num || bw > hrt_level_bw_mt6768[0])
 			&& layer_num <= req_level[1].layer_num && bw <= hrt_level_bw_mt6768[1]) {
 		icc_set_bw(priv->hrt_bw_request, 0, disp_perfs[HRT_LEVEL_LEVEL1]);
 		ret = regulator_set_voltage(mm_freq_request, req_level[1].volt, INT_MAX);
 		if (ret)
 			DDPPR_ERR("%s:regulator_set_voltage fail\n", __func__);
-		DDPMSG("%s layer_num = %d, volt = %d\n", __func__, layer_num, req_level[1].volt);
+		DDPINFO("%s layer_num = %d, volt = %d\n", __func__, layer_num, req_level[1].volt);
 	} else if (layer_num > req_level[1].layer_num || bw > hrt_level_bw_mt6768[1]) {
 		icc_set_bw(priv->hrt_bw_request, 0, disp_perfs[HRT_LEVEL_LEVEL0]);
 		ret = regulator_set_voltage(mm_freq_request, req_level[2].volt, INT_MAX);
 		if (ret)
 			DDPPR_ERR("%s:regulator_set_voltage fail\n", __func__);
-		DDPMSG("%s layer_num = %d, volt = %d\n", __func__, layer_num, req_level[2].volt);
+		DDPINFO("%s layer_num = %d, volt = %d\n", __func__, layer_num, req_level[2].volt);
 	}
 }
 
@@ -1038,7 +1038,7 @@ int mtk_disp_set_hrt_bw(struct mtk_drm_crtc *mtk_crtc, unsigned int bw)
 	if (priv->data->mmsys_id == MMSYS_MT6768 ||
 		priv->data->mmsys_id == MMSYS_MT6761 ||
 		priv->data->mmsys_id == MMSYS_MT6765) {
-		DDPMSG("%s: no need to set module hrt bw for legacy!\n", __func__);
+		DDPINFO("%s: no need to set module hrt bw for legacy!\n", __func__);
 	} else if (!priv->data->respective_ostdl)
 		mtk_disp_set_module_hrt(mtk_crtc, bw, NULL, PMQOS_SET_HRT_BW);
 

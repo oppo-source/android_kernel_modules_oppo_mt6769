@@ -59,6 +59,7 @@
 #include "ova0b4mipiraw22633_Setting.h"
 
 static DEFINE_SPINLOCK(imgsensor_drv_lock);
+/*xuefei.wan@Camera.DRV add for register device info 20220817*/
 extern void register_imgsensor_deviceinfo(char *name, char *version, u8 module_id);
 #define DEVICE_VERSION_22633_OVA0B40Q    "ova0b4"
 static kal_uint8 deviceInfo_register_value = 0x00;
@@ -869,6 +870,7 @@ static kal_uint32 get_imgsensor_id(UINT32 *sensor_id)
             if (*sensor_id == 0xa042) {
                 *sensor_id = imgsensor_info.sensor_id;
                 pr_debug("i2c write id: 0x%x, sensor id: 0x%x\n", imgsensor.i2c_write_id, *sensor_id);
+                /*xuefei.wan@Camera.DRV add for register device info 20220817*/
                 imgsensor_info.module_id = 0x05;
                 if (deviceInfo_register_value == 0x00) {
                     Eeprom_DataInit(0, OVA0B4_SENSOR_ID22633);
@@ -2424,6 +2426,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
         break;
     case SENSOR_FEATURE_SET_LSC_TBL:
         break;
+//jixinji@vanyol.com,2022/08/24, add featurecontrol
 	case SENSOR_FEATURE_GET_MODULE_INFO:
 		break;
 	case SENSOR_FEATURE_GET_MODULE_SN:

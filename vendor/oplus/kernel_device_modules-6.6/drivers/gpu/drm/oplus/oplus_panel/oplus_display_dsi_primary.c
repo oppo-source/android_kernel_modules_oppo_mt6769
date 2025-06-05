@@ -61,6 +61,7 @@ extern unsigned int last_backlight;
 extern unsigned int oplus_display_brightness;
 extern unsigned int oplus_max_normal_brightness;
 extern unsigned int oplus_max_brightness;
+extern unsigned int oplus_enhance_mipi_strength;
 extern atomic_t oplus_pcp_handle_lock;
 extern atomic_t oplus_pcp_num;
 extern int g_last_mode_idx;
@@ -145,7 +146,7 @@ static int get_mode_enum(struct drm_display_mode *m)
 
 	m_vrefresh = drm_mode_vrefresh(m);
 
-	if (m_vrefresh == 60 && m->hskew == STANDARD_MFR) {
+	if (m_vrefresh == 60 && (m->hskew == STANDARD_MFR || m->hskew == STANDARD_ADFR)) {
 		ret = FHD_SDC60;
 	} else if (m_vrefresh == 90 && m->hskew == STANDARD_ADFR) {
 		ret = FHD_SDC90;
@@ -451,6 +452,7 @@ static int oplus_panel_set_backlight_cmdq(void *dsi, dcs_write_gce_pack cb, void
 	u32 panel_info = 0;
 	bool normal_backlight_compensate1 = false;
 	bool normal_backlight_compensate2 = false;
+	static int normal_backlight_change_cnt = 0;
 	struct oplus_pwm_turbo_params *pwm_params = oplus_pwm_turbo_get_params();
 
 	if (!dsi) {
@@ -506,14 +508,40 @@ static int oplus_panel_set_backlight_cmdq(void *dsi, dcs_write_gce_pack cb, void
 	}
 
 	if ((pwm_params != NULL) && pwm_params->pwm_aid_switch_enable && (level > 1) && !oplus_panel_pwm_onepulse_is_enabled()) {
-		normal_backlight_compensate1 = (last_backlight <= get_pwm_turbo_pulse_bl()) && (level > get_pwm_turbo_pulse_bl());
-		normal_backlight_compensate2 = (last_backlight > get_pwm_turbo_pulse_bl()) && (level <= get_pwm_turbo_pulse_bl());
-		if (normal_backlight_compensate1) {
-			OPLUS_DSI_INFO("last_backlight=%d, level=%d, Normal mode send PWM_SWITCH_18TO3PUL cmd\n", last_backlight, level);
-			oplus_dsi_panel_send_cmd(dsi, DSI_CMD_PWM_SWITCH_18TO3PUL, handle, cmd_state);
-		} else if (normal_backlight_compensate2) {
-			OPLUS_DSI_INFO("last_backlight=%d, level=%d, Normal mode send PWM_SWITCH_3TO18PUL cmd\n", last_backlight, level);
-			oplus_dsi_panel_send_cmd(dsi, DSI_CMD_PWM_SWITCH_3TO18PUL, handle, cmd_state);
+		if ((last_backlight == 0) && (level == oplus_display0_params->backlight_info.oplus_brightness_default)) {
+			normal_backlight_change_cnt = 0;
+			OPLUS_DSI_INFO("change_cnt=0, last_backlight=%d, level=%d, led_disp_probe config default brightness\n",
+					last_backlight, level);
+		} else {
+			if (normal_backlight_change_cnt <= 1)
+				normal_backlight_change_cnt++;
+		}
+
+		if (normal_backlight_change_cnt == 1) {
+			if (level > get_pwm_turbo_pulse_bl()) {
+				OPLUS_DSI_INFO("change_cnt=1, last_backlight=%d, level=%d, Normal mode send DSI_CMD_PWM_SWITCH_18TO3PUL_WAKE cmd\n",
+					last_backlight, level);
+				oplus_dsi_panel_send_cmd(dsi, DSI_CMD_PWM_SWITCH_18TO3PUL_WAKE, handle, cmd_state);
+			} else {
+				OPLUS_DSI_INFO("change_cnt=1, last_backlight=%d, level=%d, CMD ON init code include PWM SWITCH 3TO18PUL cmd\n",
+					last_backlight, level);
+			}
+		} else if (normal_backlight_change_cnt > 1) {
+			normal_backlight_compensate1 = (last_backlight <= get_pwm_turbo_pulse_bl()) && (level > get_pwm_turbo_pulse_bl());
+			normal_backlight_compensate2 = (last_backlight > get_pwm_turbo_pulse_bl()) && (level <= get_pwm_turbo_pulse_bl());
+			if (normal_backlight_compensate1) {
+				if (last_backlight > 10) {
+					OPLUS_DSI_INFO("last_backlight=%d, level=%d, Normal mode send PWM_SWITCH_18TO3PUL cmd\n", last_backlight, level);
+					oplus_dsi_panel_send_cmd(dsi, DSI_CMD_PWM_SWITCH_18TO3PUL, handle, cmd_state);
+				} else {
+					/* aod set backlight DBV 1 -> 10 when aod on */
+					OPLUS_DSI_INFO("last_backlight=%d, level=%d, Normal mode send DSI_CMD_PWM_SWITCH_18TO3PUL_WAKE cmd\n", last_backlight, level);
+					oplus_dsi_panel_send_cmd(dsi, DSI_CMD_PWM_SWITCH_18TO3PUL_WAKE, handle, cmd_state);
+				}
+			} else if (normal_backlight_compensate2) {
+				OPLUS_DSI_INFO("last_backlight=%d, level=%d, Normal mode send PWM_SWITCH_3TO18PUL cmd\n", last_backlight, level);
+				oplus_dsi_panel_send_cmd(dsi, DSI_CMD_PWM_SWITCH_3TO18PUL, handle, cmd_state);
+			}
 		}
 	}
 	oplus_display_brightness = level;
@@ -839,6 +867,13 @@ static int panel_doze_disable(struct drm_panel *panel, void *dsi, dcs_write_gce_
 		} else {
 			oplus_dsi_panel_send_cmd(dsi, DSI_CMD_AOD_OFF_COMPENSATION, handle, DSI_CMD_FUNC_GCE2);
 		}
+	} else if (oplus_ofp_get_aod_unlocking()) {
+		if (handle) {
+			oplus_dsi_panel_send_cmd(dsi, DSI_CMD_AOD_OFF_INSERT_BLACK, handle, DSI_CMD_FUNC_DEFAULT);
+		} else {
+			oplus_dsi_panel_send_cmd(dsi, DSI_CMD_AOD_OFF_INSERT_BLACK, handle, DSI_CMD_FUNC_GCE2);
+		}
+		OFP_INFO("send aod off cmd whith insert back frame\n");
 	} else {
 		if (handle) {
 			oplus_dsi_panel_send_cmd(dsi, DSI_CMD_SET_NOLP, handle, DSI_CMD_FUNC_DEFAULT);
@@ -1028,10 +1063,9 @@ static int mtk_panel_ext_param_get(struct drm_panel *panel,
 
 	m_vrefresh = drm_mode_vrefresh(m);
 
-	if (m_vrefresh == 60 && m->hskew == STANDARD_MFR) {
+	if (m_vrefresh == 60 && (m->hskew == STANDARD_MFR || m->hskew == STANDARD_ADFR)) {
 		*ext_param = &(ctx->ext_params_all)[1];
-	}
-	else if (m_vrefresh == 120 && m->hskew == STANDARD_ADFR) {
+	} else if (m_vrefresh == 120 && m->hskew == STANDARD_ADFR) {
 		*ext_param = &(ctx->ext_params_all[0]);
 	} else if (m_vrefresh == 90 && m->hskew == STANDARD_ADFR) {
 		*ext_param = &(ctx->ext_params_all[2]);
@@ -1072,7 +1106,7 @@ static int mtk_panel_ext_param_set(struct drm_panel *panel,
 	m_vrefresh = drm_mode_vrefresh(m);
 	OPLUS_DSI_INFO("mode=%d, vrefresh=%d, hskew=%d\n", mode, drm_mode_vrefresh(m), m->hskew);
 
-	if (m_vrefresh == 60 && m->hskew == STANDARD_MFR) {
+	if (m_vrefresh == 60 && (m->hskew == STANDARD_MFR || m->hskew == STANDARD_ADFR)) {
 		ext->params = &(ctx->ext_params_all[1]);
 	} else if (m_vrefresh == 120 && m->hskew == STANDARD_ADFR) {
 		ext->params = &(ctx->ext_params_all[0]);
@@ -1642,6 +1676,9 @@ static int lcm_probe(struct mipi_dsi_device *dsi)
 	}
 	if (oplus_display0_params->partial_update_enable) {
 		ext_funcs.lcm_update_roi_cmdq = lcm_update_roi_cmdq;
+	}
+	if (oplus_display0_params->enhance_mipi_strength) {
+		oplus_enhance_mipi_strength = oplus_display0_params->enhance_mipi_strength;
 	}
 	ret = mtk_panel_ext_create(dev, ctx->ext_params_all, &ext_funcs, &ctx->panel);
 	if (ret < 0)

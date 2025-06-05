@@ -16,6 +16,22 @@
 #include <soc/oplus/system/oplus_project.h>
 #define DUMP_EEPROM 0
 
+struct CAMERA_DEVICE_INFO gImgEepromInfoOrisC = {
+    .i4SensorNum = 2,
+    .pCamModuleInfo = {
+        {OV50D40_SENSOR_ID_ORIS,  0xA0, {0x00, 0x06}, 0x50, 1, {0x44, 0x44, 0x46, 0x46}, "Cam_r0", "ov50d40_mipi_raw_oris"},
+        {HI846_SENSOR_ID_ORIS, 0x40, {0x00, 0x06}, 0x22B, 0, {0xFF,0xFF,0xFF,0xFF}, "Cam_f",  "hi846_mipi_raw_oris"},
+    },
+    .i4MWDataIdx = 0xFF,
+    .i4MTDataIdx = 0xFF,
+    .i4FrontDataIdx = 0xFF,
+    .i4NormDataLen = 40,
+    .i4MWDataLen = 3102,
+    .i4MWStereoAddr = {0xFFFF, 0xFFFF},
+    .i4MTStereoAddr = {0xFFFF, 0xFFFF},
+    .i4FrontStereoAddr = {0xFFFF, 0xFFFF},
+};
+
 kal_uint16 Eeprom_1ByteDataRead(kal_uint16 addr, kal_uint16 slaveaddr)
 {
     kal_uint16 get_byte=0;
@@ -33,6 +49,7 @@ void Eeprom_DataRead(kal_uint8 *uData, kal_uint16 dataAddr,
     }
 }
 
+/*Henry.Chang@camera.driver 20181129, add for sensor Module SET*/
 static enum IMGSENSOR_RETURN Eeprom_TableWrite(kal_uint16 addr, kal_uint8 *para,
                                     kal_uint32 len, kal_uint16 i4SlaveAddr)
 {
@@ -213,7 +230,12 @@ enum IMGSENSOR_RETURN Eeprom_SensorInfoValid(
             enum IMGSENSOR_SENSOR_IDX sensor_idx,
             kal_uint32 sensorID)
 {
+
     struct CAMERA_DEVICE_INFO *pCamDeviceObj = &gImgEepromInfo;
+    if (is_project(24700) || is_project(24701) || is_project(24702)
+        || is_project(24709) || is_project(24713) || is_project(24714)){
+        pCamDeviceObj = &gImgEepromInfoOrisC;
+    }
     if (sensor_idx > pCamDeviceObj->i4SensorNum - 1) {
         pr_info("[%s] sensor_idx:%d > i4SensorNum: %d", __func__, sensor_idx, pCamDeviceObj->i4SensorNum);
         return IMGSENSOR_RETURN_ERROR;
@@ -328,6 +350,11 @@ void Eeprom_CamSNDataRead(enum IMGSENSOR_SENSOR_IDX sensor_idx, kal_uint16 slave
     kal_uint16 dataAddr = 0xFFFF, i = 0;
     struct CAMERA_DEVICE_INFO *pCamDeviceObj = &gImgEepromInfo;
 
+    if (is_project(24700) || is_project(24701) || is_project(24702)
+        || is_project(24709) || is_project(24713) || is_project(24714)){
+        pCamDeviceObj = &gImgEepromInfoOrisC;
+    }
+
     /*Read camera SN-23bytes*/
     dataAddr = pCamDeviceObj->pCamModuleInfo[sensor_idx].i4CamSNAddr;
     for (i = 0; i < OPLUS_CAMERASN_LENS; i++) {
@@ -341,6 +368,11 @@ void Eeprom_CamAFCodeDataRead(enum IMGSENSOR_SENSOR_IDX sensor_idx, kal_uint16 s
     kal_uint16 dataAddr = 0xFFFF, dataCnt = 0;
     kal_uint16 i = 0;
     struct CAMERA_DEVICE_INFO *pCamDeviceObj = &gImgEepromInfo;
+
+    if (is_project(24700) || is_project(24701) || is_project(24702)
+        || is_project(24709) || is_project(24713) || is_project(24714)){
+        pCamDeviceObj = &gImgEepromInfoOrisC;
+    }
 
     /*Read AF MAC+50+100+Inf+StereoDac*/
     if (pCamDeviceObj->pCamModuleInfo[sensor_idx].i4AfSupport) {
@@ -369,6 +401,11 @@ void Eeprom_StereoDataRead(enum IMGSENSOR_SENSOR_IDX sensor_idx, kal_uint16 slav
     kal_uint16 dataLens = CALI_DATA_MASTER_LENGTH, dataAddr = 0xFFFF, dataCnt = 0;
     kal_uint16 i = 0;
     struct CAMERA_DEVICE_INFO *pCamDeviceObj = &gImgEepromInfo;
+
+    if (is_project(24700) || is_project(24701) || is_project(24702)
+        || is_project(24709) || is_project(24713) || is_project(24714)){
+        pCamDeviceObj = &gImgEepromInfoOrisC;
+    }
 
     /*Read Single StereoParamsData and joint stereoData*/
     if (pCamDeviceObj->i4MWDataIdx == IMGSENSOR_SENSOR_IDX_MAIN2) {
@@ -418,6 +455,11 @@ void Eeprom_DistortionParamsRead(enum IMGSENSOR_SENSOR_IDX sensor_idx, kal_uint1
     kal_uint16 dataAddr = 0xFFFF, dataLens = CAMERA_DISTORTIONPARAMS_LENGTH;
     kal_uint16 i = 0;
     struct CAMERA_DEVICE_INFO *pCamDeviceObj = &gImgEepromInfo;
+
+    if (is_project(24700) || is_project(24701) || is_project(24702)
+        || is_project(24709) || is_project(24713) || is_project(24714)){
+        pCamDeviceObj = &gImgEepromInfoOrisC;
+    }
 
     if (sensor_idx == IMGSENSOR_SENSOR_IDX_MAIN2 && pCamDeviceObj->i4DistortionAddr) {
         dataAddr = pCamDeviceObj->i4DistortionAddr;
@@ -481,6 +523,11 @@ enum CUSTOM_CAMERA_ERROR_CODE_ENUM Eeprom_Control(
 
     i4Sensor_idx = pCamDeviceObj->i4CurSensorIdx;
     i4SensorID = pCamDeviceObj->i4CurSensorId;
+
+    if (is_project(24700) || is_project(24701) || is_project(24702)
+        || is_project(24709) || is_project(24713) || is_project(24714)){
+        pCamDeviceObj = &gImgEepromInfoOrisC;
+    }
 
     switch (feature_id) {
         case SENSOR_FEATURE_GET_EEPROM_COMDATA:

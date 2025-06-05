@@ -8,9 +8,13 @@
 #include "kd_imgsensor_api.h"
 #include <linux/ratelimit.h>
 #include <linux/thermal.h>
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+#include "dynamic_i2c.h"
+#endif
 
 struct IMGSENSOR_I2C gi2c;
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+//weiriqin@Cam.drv 2020/06/18, Modify for async power-on-off, ALPS04924900
 struct mutex i2c_resource_mutex;
 #endif
 
@@ -399,6 +403,12 @@ enum IMGSENSOR_RETURN imgsensor_i2c_read(
 	pi2c_cfg->msg[1].len   = read_length;
 	pi2c_cfg->msg[1].buf   = pread_data;
 
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	dynamic_adjust_i2c_speed(
+			pi2c_cfg->msg,
+			((speed > 0) && (speed <= 1000))
+				? speed * 1000 : IMGSENSOR_I2C_SPEED * 1000);
+#endif
 	i2c_ret = mtk_i2c_transfer(
 			pinst->pi2c_client->adapter,
 			pi2c_cfg->msg,
@@ -455,6 +465,12 @@ enum IMGSENSOR_RETURN imgsensor_i2c_write(
 		pdata += write_per_cycle;
 	}
 
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	dynamic_adjust_i2c_speed(
+			pi2c_cfg->msg,
+			((speed > 0) && (speed <= 1000))
+				? speed * 1000 : IMGSENSOR_I2C_SPEED * 1000);
+#endif
 	i2c_ret = mtk_i2c_transfer(
 			pinst->pi2c_client->adapter,
 			pi2c_cfg->msg,
@@ -482,6 +498,7 @@ void imgsensor_i2c_filter_msg(struct IMGSENSOR_I2C_CFG *pi2c_cfg, bool en)
 	pi2c_cfg->pinst->status.filter_msg = en;
 }
 #ifndef OPLUS_FEATURE_CAMERA_COMMON
+//weiriqin@Cam.drv 2020/06/18, Modify for async power-on-off, ALPS04924900
 #ifdef IMGSENSOR_LEGACY_COMPAT
 #ifdef SENSOR_PARALLEISM
 #include <linux/unistd.h>

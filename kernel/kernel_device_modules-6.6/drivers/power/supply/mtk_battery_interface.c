@@ -56,7 +56,7 @@ int gauge_get_property(struct mtk_battery *gm, enum gauge_property gp,
  		pr_err("%s disable GM30", __func__);
 		return -EOPNOTSUPP;
 	}
-	pr_err("%s enable GM30", __func__);
+
 #endif
 	attr = gm->gauge->attr;
 	prop_control = &gm->prop_control;
@@ -233,7 +233,7 @@ int gauge_set_property(struct mtk_battery *gm, enum gauge_property gp,
  		pr_err("%s disable GM30", __func__);
 		return -EOPNOTSUPP;
 	}
-	pr_err("%s enable GM30", __func__);
+
 #endif
 	gauge = gm->gauge;
 

@@ -53,14 +53,17 @@ static DEFINE_MUTEX(miami_mutex);
 static struct work_struct miami_work;
 //static struct pwm_spec_config pwm_setting;
 
+/* Shipei.Chen@Cam.Drv, 20200515,  modify for torch to gpio driver!*/
 #define MIAMI_LED_MODE_DUTY 26
 #define MIAMI_TORCH_MODE_DUTY 27
 #define MIAMI_FACTORY_FLASH_DUTY 3
 
+/*wenhui.chen@Camera.Driver, 20200609, modify for flashlight current*/
 #define MIAMI_LEVEL_NUM 24
 #define MIAMI_LEVEL_TORCH 1
 static int g_duty_array[MIAMI_LEVEL_NUM] = {4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92, 96};
 
+/*wenhui.chen@Camera.Driver, 20200423, add for flashlight calibration*/
 static const int *miami_current;
 static const int sgm3785_current[MIAMI_LEVEL_NUM] = {
         40,80,120,160,200,240,280,320,360,400,440,480,520,560,600,640,680,720,760,
@@ -195,6 +198,7 @@ static int miami_pinctrl_set(int pin, int state)
 
 /* flashlight enable  pwm function */
 /* 52M/32/100 = 16KHZ  actually 21KHZ for SGM3785*/
+/*wenhui.chen@Camera.Driver, 20200426, modify for pwm freq*/
 int mt_flashlight_led_set_pwm(int pwm_num,u32 level )
 {
 	struct pwm_spec_config pwm_setting;
@@ -221,6 +225,7 @@ int mt_flashlight_led_set_pwm(int pwm_num,u32 level )
 /******************************************************************************
  * miami operations
  *****************************************************************************/
+/*wenhui.chen@Camera.Driver, 20200423, add for flashlight calibration*/
 static int miami_verify_level(int level)
 {
 	if (level < 0)
@@ -232,6 +237,7 @@ static int miami_verify_level(int level)
 }
 
 /* flashlight enable function */
+/*wenhui.chen@Camera.Driver, 20200514, modify for torch*/
 #ifdef FLASHLIGHT_BRIGHTNESS_ADD
 bool fl_state=false;
 #endif
@@ -252,6 +258,8 @@ static int miami_enable(void)
 	}
 #endif
 	pr_info("MIAMI Flash %s g_flash_duty = %d\n",__FUNCTION__,g_flash_duty);
+	/* Shipei.Chen@Cam.Drv, 20200515,  modify for torch to gpio driver!*/
+/*Wang.Gao@Cam.Drv, 20200804,  modify for torch current*/
 	if ((g_flash_duty == MIAMI_LED_MODE_DUTY) || (g_flash_duty == MIAMI_TORCH_MODE_DUTY)) {//led mode duty 26||27
 		miami_pinctrl_set(MIAMI_PINCTRL_PIN_FLASH_EN,0);
 		miami_pinctrl_set(MIAMI_PINCTRL_PIN_PWM_GPIO, 1);
@@ -384,6 +392,7 @@ static int miami_ioctl(unsigned int cmd, unsigned long arg)
 	case FLASH_IOC_SET_TIME_OUT_TIME_MS:
 		pr_info("FLASH_IOC_SET_TIME_OUT_TIME_MS(%d): %d\n",
 				channel, (int)fl_arg->arg);
+		/* wenhui.Chen@Cam.Drv,20200523,modify for led bug */
 		miami_timeout_ms = 0;//fl_arg->arg;
 		break;
 
@@ -409,6 +418,7 @@ static int miami_ioctl(unsigned int cmd, unsigned long arg)
 			hrtimer_cancel(&miami_timer);
 		}
 		break;
+/*wenhui.chen@Camera.Driver, 20200423, add for flashlight calibration*/
 	case FLASH_IOC_GET_DUTY_NUMBER:
 		pr_info("FLASH_IOC_GET_DUTY_NUMBER(%d)\n", channel);
 		fl_arg->arg = MIAMI_LEVEL_NUM;
@@ -617,6 +627,7 @@ static int miami_probe(struct platform_device *pdev)
 			goto err;
 		}
 	}
+/*wenhui.chen@Camera.Driver, 20200423, add for flashlight calibration*/
 	miami_current = sgm3785_current;
 
 
@@ -713,6 +724,7 @@ static int __init flashlight_miami_init(void)
 
 
 
+/* Yang.guo@Camera.Driver, 2020/03/25, add for [wingtech ATO factory app camera] */
 static void __exit flashlight_miami_exit(void)
 {
 	pr_info("Exit start.\n");

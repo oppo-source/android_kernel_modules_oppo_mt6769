@@ -1809,7 +1809,6 @@ static int lcm_probe(struct mipi_dsi_device *dsi)
 	//flag_silky_panel = BL_SETTING_DELAY_60HZ;
 	oplus_max_normal_brightness = MAX_NORMAL_BRIGHTNESS;
 	oplus_max_brightness = BRIGHTNESS_MAX;
-	oplus_enhance_mipi_strength = 1;
 	//g_is_silky_panel = true;
 
 	//sscanf(oplus_lcm_id2, "%d", &lcm_id2);

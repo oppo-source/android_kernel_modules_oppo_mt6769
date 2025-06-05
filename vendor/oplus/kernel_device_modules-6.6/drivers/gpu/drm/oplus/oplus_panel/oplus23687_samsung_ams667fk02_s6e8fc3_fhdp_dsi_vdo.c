@@ -1236,7 +1236,7 @@ static int lcm_probe(struct mipi_dsi_device *dsi)
 
 	register_device_proc("lcd", "AMS643AG01_23687", "samsung2048_23687");
 //	disp_aal_set_dre_en(1);
-	oplus_enhance_mipi_strength = 1;
+//	oplus_enhance_mipi_strength = 1;
 	ctx->hbm_en = false;
 	oplus_max_normal_brightness = MAX_NORMAL_BRIGHTNESS;
 	oplus_ofp_init(dev->of_node);

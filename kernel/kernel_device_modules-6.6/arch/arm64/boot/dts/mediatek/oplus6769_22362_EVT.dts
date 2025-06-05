@@ -672,6 +672,7 @@
 		led-bits = <12>;
 		trans-bits = <12>;
 		default-state = "on";
+                apollo-state = "disable";
 	};
 };
 
@@ -863,6 +864,11 @@
 	};
 };
 
+&mtee_svp {
+	hdcp: SecureHDCPPath {
+		compatible = "mediatek,mtk_sec_video_hdcp_path_support";
+	};
+};
 #include <oplus6769_22362_EVT/cust.dtsi>
 #include "mediatek/cust_mt6769_camera_atom.dtsi"
 //#include "mediatek/cust_mt6769_touch_1080x2400.dtsi"

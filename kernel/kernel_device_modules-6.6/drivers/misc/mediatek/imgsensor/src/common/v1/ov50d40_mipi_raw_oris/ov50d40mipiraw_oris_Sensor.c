@@ -133,16 +133,16 @@ static struct imgsensor_info_struct imgsensor_info = {
     },
 
     .custom1 = {
-        .pclk = 100000000, /*4080x3072@30.3fps*/
+        .pclk = 100000000, /*4096x3072@24fps*/
         .linelength = 850,
-        .framelength = 3920,
+        .framelength = 4902,
         .startx = 0,
         .starty = 0,
         .grabwindow_width = 4096,
         .grabwindow_height = 3072,
         .mipi_data_lp2hs_settle_dc = 85,
         .mipi_pixel_rate = 760800000,
-        .max_framerate = 300,
+        .max_framerate = 240,
     },
 
     .custom2 = {
@@ -205,7 +205,7 @@ static struct imgsensor_info_struct imgsensor_info = {
     .sensor_output_dataformat = SENSOR_OUTPUT_FORMAT_RAW_4CELL_R,
     .mclk = 24,//mclk value, suggest 24 or 26 for 24Mhz or 26Mhz
     .mipi_lane_num = SENSOR_MIPI_4_LANE,//mipi lane num
-    .i2c_addr_table = {0x6C,0x20,0x44,0x46,0xff},
+    .i2c_addr_table = {0x20,0xff},
     .i2c_speed = 1000,
 };
 

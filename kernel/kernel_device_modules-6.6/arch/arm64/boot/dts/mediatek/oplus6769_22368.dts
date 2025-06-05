@@ -666,9 +666,13 @@
 	backlight {
 		label = "lcd-backlight";
 		max-brightness = <4095>;
+		max-hw-brightness = <4095>;
+		min-hw-brightness = <1>;
+		min-brightness = <1>;
 		led-bits = <12>;
 		trans-bits = <12>;
 		default-state = "on";
+		apollo-state = "disable";
 	};
 };
 
@@ -837,6 +841,11 @@
 };
 //#endif /*OPLUS_FEATURE_STORAGE*/
 
+&mtee_svp {
+	hdcp: SecureHDCPPath {
+		compatible = "mediatek,mtk_sec_video_hdcp_path_support";
+	};
+};
 #include "mediatek/oplus_chg/oplus6769_charger_aladdin_atom33w.dtsi"
 &apuart0 {
 	rxpin = <95>;

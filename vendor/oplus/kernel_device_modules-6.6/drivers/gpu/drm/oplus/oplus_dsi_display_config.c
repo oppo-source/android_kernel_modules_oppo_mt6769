@@ -422,6 +422,22 @@ int oplus_dsi_display_checkdrv(struct device *dev, struct device_node **node)
 	return ret;
 }
 
+bool oplus_dsi_display_video_panel(struct dsi_panel_lcm *ctx) {
+	char *panel_name = ctx->panel_info.panel_name;
+
+	if (!panel_name) {
+		OPLUS_DSI_ERR("ctx/panel_name is NULL\n");
+		return -EINVAL;
+	}
+
+	if (!strcmp(panel_name, "panel_ab968_p_3_a0026_dsi_vdo")) {
+		OPLUS_DSI_INFO("%s: is video mode\n", panel_name);
+		return TRUE;
+	} else {
+		return false;
+	}
+}
+
 int oplus_dsi_display_init(void *dsi_device, void *ctx_dev)
 {
 	int ret = 0;
@@ -469,7 +485,13 @@ int oplus_dsi_display_init(void *dsi_device, void *ctx_dev)
 	}
 	dsi->lanes = 4;
 	dsi->format = MIPI_DSI_FMT_RGB888;
-	dsi->mode_flags = MIPI_DSI_MODE_LPM | MIPI_DSI_CLOCK_NON_CONTINUOUS;
+	if (oplus_dsi_display_video_panel(ctx)) {
+		dsi->mode_flags = MIPI_DSI_MODE_VIDEO | MIPI_DSI_MODE_VIDEO_SYNC_PULSE
+			| MIPI_DSI_MODE_LPM | MIPI_DSI_MODE_NO_EOT_PACKET
+			| MIPI_DSI_CLOCK_NON_CONTINUOUS;
+	} else {
+		dsi->mode_flags = MIPI_DSI_MODE_LPM | MIPI_DSI_CLOCK_NON_CONTINUOUS;
+	}
 	of_node_put(dst_node);
 	of_node_put(dsi_node);
 	return ret;

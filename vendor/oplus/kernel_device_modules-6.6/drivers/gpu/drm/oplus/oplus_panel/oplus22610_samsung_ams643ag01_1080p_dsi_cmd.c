@@ -38,7 +38,7 @@
 #include "../mediatek/mediatek_v2/mtk_drm_graphics_base.h"
 #endif
 
-#ifndef CONFIG_MTK_ROUND_CORNER_SUPPORT
+#ifdef CONFIG_MTK_ROUND_CORNER_SUPPORT
 #include "oplus22610_AMS643AG01_data_hw_roundedpattern.h"
 #endif
 
@@ -738,13 +738,13 @@ static struct mtk_panel_params ext_params = {
 	.vendor = "AMS643AG01_22610",
 	.manufacture = "samsung2048_22610",
 
-// #ifndef CONFIG_MTK_ROUND_CORNER_SUPPORT
-//         .round_corner_en = 1,
-//         .corner_pattern_height = ROUND_CORNER_H_TOP,
-//         .corner_pattern_height_bot = ROUND_CORNER_H_BOT,
-//         .corner_pattern_tp_size = sizeof(top_rc_pattern),
-//         .corner_pattern_lt_addr = (void *)top_rc_pattern,
-// #endif
+#ifdef CONFIG_MTK_ROUND_CORNER_SUPPORT
+         .round_corner_en = 1,
+         .corner_pattern_height = ROUND_CORNER_H_TOP,
+         .corner_pattern_height_bot = ROUND_CORNER_H_BOT,
+         .corner_pattern_tp_size = sizeof(top_rc_pattern),
+         .corner_pattern_lt_addr = (void *)top_rc_pattern,
+#endif
 // #ifdef CONFIG_OPLUS_OFP_V2
 // 	.oplus_ofp_need_keep_apart_backlight = false,
 // 	.oplus_ofp_hbm_on_delay = 0,
@@ -767,6 +767,7 @@ static struct mtk_panel_params ext_params = {
 // #endif
 // 	.oplus_dc_then_hbm_on = 0,
 	.oplus_display_global_dre = 1,
+// 	/* XuBai@MM.Display.LCD.Feature, add for moss disable hdr d65 */
 // 	.oplus_disable_hdr_d65 = 1,
 };
 
@@ -800,13 +801,13 @@ static struct mtk_panel_params ext_params_90hz = {
 
 	.vendor = "AMS643AG01_22610",
 	.manufacture = "samsung2048_22610",
-// #ifndef CONFIG_MTK_ROUND_CORNER_SUPPORT
-//         .round_corner_en = 1,
-//         .corner_pattern_height = ROUND_CORNER_H_TOP,
-//         .corner_pattern_height_bot = ROUND_CORNER_H_BOT,
-//         .corner_pattern_tp_size = sizeof(top_rc_pattern),
-//         .corner_pattern_lt_addr = (void *)top_rc_pattern,
-// #endif
+#ifdef CONFIG_MTK_ROUND_CORNER_SUPPORT
+         .round_corner_en = 1,
+         .corner_pattern_height = ROUND_CORNER_H_TOP,
+         .corner_pattern_height_bot = ROUND_CORNER_H_BOT,
+         .corner_pattern_tp_size = sizeof(top_rc_pattern),
+         .corner_pattern_lt_addr = (void *)top_rc_pattern,
+#endif
 // #ifdef CONFIG_OPLUS_OFP_V2
 // 	.oplus_ofp_need_keep_apart_backlight = true,
 // 	.oplus_ofp_hbm_on_delay = 11,
@@ -829,6 +830,7 @@ static struct mtk_panel_params ext_params_90hz = {
 // #endif
 // 	.oplus_dc_then_hbm_on = 0,
 	.oplus_display_global_dre = 1,
+// 	/* XuBai@MM.Display.LCD.Feature, add for moss disable hdr d65 */
 // 	.oplus_disable_hdr_d65 = 1,
 };
 static int mtk_panel_ext_param_set(struct drm_panel *panel, struct drm_connector *connector,

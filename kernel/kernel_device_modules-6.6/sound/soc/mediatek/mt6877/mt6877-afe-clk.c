@@ -16,6 +16,7 @@
 #include "mt6877-afe-clk.h"
 
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+/* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.PLATFORM, 2022/01/25, Add for audio kernel feedback */
 #include "../feedback/oplus_audio_kernel_fb.h"
 #ifdef dev_err
 #undef dev_err

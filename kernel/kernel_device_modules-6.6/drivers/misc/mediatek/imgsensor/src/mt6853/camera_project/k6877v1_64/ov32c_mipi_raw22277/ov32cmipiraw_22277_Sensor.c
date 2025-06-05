@@ -34,6 +34,7 @@
 
 #define OV32C_SENSOR_ID    0x3243
 
+/*xuefei.wan@Camera.DRV add for register device info 20220817*/
 extern enum IMGSENSOR_RETURN Eeprom_DataInit(
             enum IMGSENSOR_SENSOR_IDX sensor_idx,
             kal_uint32 sensorID);
@@ -9050,6 +9051,7 @@ static void custom5_setting(void)
 	table_write_cmos_sensor(custom5_setting_array,	sizeof(custom5_setting_array)/sizeof(kal_uint16));
 }
 
+/*shicheng@camera.driver, add for remosaic*/
 #define FOUR_CELL_XTALK_CAL_SIZE 1152
 #define FOUR_CELL_XTALK_CAL_ADDR 0x0E00
 #define FUSION_MODE_XTALK_CAL_SIZE 288
@@ -10510,6 +10512,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 		*feature_data = imgsensor_info.hs_trail;
 		*feature_para_len = 4;
 		break;
+//jixinji@vanyol.com,2022/08/24, add featurecontrol
 	case SENSOR_FEATURE_GET_MODULE_INFO:
 		break;
 	case SENSOR_FEATURE_GET_MODULE_SN:

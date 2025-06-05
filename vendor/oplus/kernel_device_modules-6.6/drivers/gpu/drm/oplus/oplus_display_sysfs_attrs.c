@@ -125,6 +125,7 @@ EXPORT_SYMBOL(osc_mode);
 
 unsigned int oplus_display_brightness = 0;
 
+/*Yaqiang.shi@RM.Display.driver,add for pq trigger*/
 bool pq_trigger = true;
 bool atomic_set_bl_en = false;
 unsigned int backup_bl_level;
@@ -813,6 +814,7 @@ static ssize_t oplus_display_set_pq_trigger(struct kobject *obj,
 
 	return count;
 }
+/* Zhijun.Ye@PSW.MM.Display.LCD.Machine 2020/10/23, add for dc cmd timing */
 int oplus_dc_threshold = 260;
 int oplus_panel_alpha = 0;
 int oplus_underbrightness_alpha = 0;
@@ -1254,8 +1256,8 @@ static ssize_t oplus_display_set_osc(struct kobject *kobj,
 		return 0;
 	}
 
-	if(0)
-		mtk_crtc_osc_freq_switch(crtc, temp_save, 0);
+	/*if(0)*/
+	mtk_crtc_osc_freq_switch(crtc, temp_save, 0);
 	osc_mode = temp_save;
 
 	return count;

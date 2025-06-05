@@ -29,6 +29,7 @@
 #endif
 
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/19,add PA manager*/
 #include "audio/mtk/oplus_speaker_manager/oplus_speaker_manager_platform.h"
 #include "audio/mtk/oplus_speaker_manager/oplus_speaker_manager_codec.h"
 #endif /* CONFIG_SND_SOC_OPLUS_PA_MANAGER */
@@ -672,6 +673,7 @@ static const char * const lo_in_mux_map[] = {
 
 static int lo_in_mux_map_value[] = {
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/28,add for speaker and handset 2in1*/
 	LO_MUX_OPEN,
 	LO_MUX_L_DAC,
 	LO_MUX_3RD_DAC,
@@ -699,6 +701,7 @@ static const char * const hp_in_mux_map[] = {
 	"Test Mode",
 	"HP Impedance",
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/28,add for speaker and handset 2in1*/
 	"Loud DualSPK Playback",
 #else
 	"undefined1",
@@ -714,6 +717,7 @@ static int hp_in_mux_map_value[] = {
 	HP_MUX_TEST_MODE,
 	HP_MUX_HP_IMPEDANCE,
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/28,add for speaker and handset 2in1*/
 	HP_MUX_HP_DUALSPK,
 #else
 	HP_MUX_OPEN,
@@ -1367,6 +1371,7 @@ static int mtk_hp_disable(struct mt6359_priv *priv)
 }
 
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/28,add for speaker and handset 2in1*/
 static int mtk_hp_dual_spk_enable(struct mt6359_priv *priv)
 {
 	dev_info(priv->dev, "%s(), dev_counter[DEV_HP] %d, mux %u\n",
@@ -1737,6 +1742,7 @@ static int mt_hp_event(struct snd_soc_dapm_widget *w,
 		if (mux == HP_MUX_HP || mux == HP_MUX_HPSPK)
 			mtk_hp_enable(priv);
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/28,add for speaker and handset 2in1*/
 		else if (mux == HP_MUX_HP_DUALSPK)
 			mtk_hp_dual_spk_enable(priv);
 #endif /*OPLUS_BUG_COMPATIBILITY*/
@@ -1759,6 +1765,7 @@ static int mt_hp_event(struct snd_soc_dapm_widget *w,
 		    priv->mux_select[MUX_HP_L] == HP_MUX_HPSPK)
 			mtk_hp_disable(priv);
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/28,add for speaker and handset 2in1*/
 		else if (priv->mux_select[MUX_HP_L] == HP_MUX_HP_DUALSPK)
 			mtk_hp_dual_spk_disable(priv);
 #endif /*OPLUS_BUG_COMPATIBILITY*/
@@ -1775,6 +1782,7 @@ static int mt_hp_event(struct snd_soc_dapm_widget *w,
 }
 
 #if IS_ENABLED(CONFIG_SND_SOC_FSA)
+/*#Yongpei.Yao@MULTIMEDIA.AUDIODRIVER.CODEC, 2021/07/20, supporting dynamic sense to ground, fix leakage bug */
 extern int fsa4480_sense_to_ground(bool bstate);
 #endif
 static int mt_rcv_event(struct snd_soc_dapm_widget *w,
@@ -1794,6 +1802,7 @@ static int mt_rcv_event(struct snd_soc_dapm_widget *w,
 
 		/* Disable handset short-circuit protection */
 #if IS_ENABLED(CONFIG_SND_SOC_FSA)
+/*Yongpei.Yao@MULTIMEDIA.AUDIODRIVER.CODEC, 2021/07/20, supporting dynamic sense to ground, fix leakage bug */
 		fsa4480_sense_to_ground(true);
 #endif
 		regmap_write(priv->regmap, MT6359_AUDDEC_ANA_CON6, 0x0010);
@@ -1826,6 +1835,7 @@ static int mt_rcv_event(struct snd_soc_dapm_widget *w,
 		regmap_write(priv->regmap, MT6359_ZCD_CON3,
 			     priv->ana_gain[AUDIO_ANALOG_VOLUME_HSOUTL]);
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/28,add for speaker and handset 2in1*/
 		/* Enable Audio DAC R */
 		regmap_update_bits(priv->regmap, MT6359_AUDDEC_ANA_CON0,
 				RG_AUDDACRPWRUP_VAUDP32_MASK_SFT |
@@ -1837,6 +1847,7 @@ static int mt_rcv_event(struct snd_soc_dapm_widget *w,
 		/* Enable low-noise mode of DAC */
 		regmap_write(priv->regmap, MT6359_AUDDEC_ANA_CON9, 0x0001);
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/28,add for speaker and handset 2in1*/
 		/* Switch HS MUX to audio DAC R */
 		regmap_write(priv->regmap, MT6359_AUDDEC_ANA_CON6, 0x0097);
 #else
@@ -1850,6 +1861,7 @@ static int mt_rcv_event(struct snd_soc_dapm_widget *w,
 				   RG_AUDHSMUXINPUTSEL_VAUDP32_MASK_SFT,
 				   RCV_MUX_OPEN);
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/28,add for speaker and handset 2in1*/
 		/* Disable Audio DAC R */
  		regmap_update_bits(priv->regmap, MT6359_AUDDEC_ANA_CON0,
 				RG_AUDDACRPWRUP_VAUDP32_MASK_SFT |
@@ -1871,6 +1883,7 @@ static int mt_rcv_event(struct snd_soc_dapm_widget *w,
 		regmap_update_bits(priv->regmap, MT6359_AUDDEC_ANA_CON6,
 				   RG_AUDHSPWRUP_IBIAS_VAUDP32_MASK_SFT, 0x0);
 #if IS_ENABLED(CONFIG_SND_SOC_FSA)
+/*Yongpei.Yao@MULTIMEDIA.AUDIODRIVER.CODEC, 2021/07/20, supporting dynamic sense to ground, fix leakage bug */
 		fsa4480_sense_to_ground(false);
 #endif
 		/* Disable AUD_ZCD */
@@ -1933,6 +1946,7 @@ static int mt_lo_event(struct snd_soc_dapm_widget *w,
 		/* Switch LOL MUX to audio DAC */
 		if (mux == LO_MUX_L_DAC) {
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/28,add for speaker and handset 2in1*/
 		       /* Enable Audio DAC L */
 		       regmap_update_bits(priv->regmap, MT6359_AUDDEC_ANA_CON0,
 				         RG_AUDDACLPWRUP_VAUDP32_MASK_SFT |
@@ -1945,6 +1959,7 @@ static int mt_lo_event(struct snd_soc_dapm_widget *w,
 			regmap_write(priv->regmap, MT6359_AUDDEC_ANA_CON9, 0xf200);
 			usleep_range(100, 120);
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/28,add for speaker and handset 2in1*/
 		        /* Switch LOL MUX to audio DAC L */
 		        regmap_update_bits(priv->regmap, MT6359_AUDDEC_ANA_CON7,
 				          0x3 << 2, 0x1 << 2);
@@ -1970,6 +1985,7 @@ static int mt_lo_event(struct snd_soc_dapm_widget *w,
 
 		if (mux == LO_MUX_L_DAC) {
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/28,add for speaker and handset 2in1*/
 		        /* Disable Audio DAC L */
 		        regmap_update_bits(priv->regmap, MT6359_AUDDEC_ANA_CON0,
 				          RG_AUDDACLPWRUP_VAUDP32_MASK_SFT |
@@ -4122,6 +4138,7 @@ static const struct snd_soc_dapm_route mt6359_dapm_routes[] = {
 	{"HPR Mux", "LoudSPK Playback", "DACR"},
 
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/28,add for speaker and handset 2in1*/
 	{"HPL Mux", "Loud DualSPK Playback", "DACL"},
 	{"HPR Mux", "Loud DualSPK Playback", "DACR"},
 #endif
@@ -4132,6 +4149,7 @@ static const struct snd_soc_dapm_route mt6359_dapm_routes[] = {
 
 	/* Receiver Path */
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/28,add for speaker and handset 2in1*/
 	{"RCV Mux", "Voice Playback", "DACR"},
 #else
         {"RCV Mux", "Voice Playback", "DACL"},
@@ -5905,6 +5923,7 @@ static int mt6359_codec_probe(struct snd_soc_component *cmpnt)
 	struct mt6359_priv *priv = snd_soc_component_get_drvdata(cmpnt);
 
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/19,add PA manager*/
 	int ret_pa_manager;
 #endif /* CONFIG_SND_SOC_OPLUS_PA_MANAGER */
 
@@ -5929,6 +5948,7 @@ static int mt6359_codec_probe(struct snd_soc_component *cmpnt)
 				       ARRAY_SIZE(mt6359_snd_vow_controls));
 
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/19,add PA manager*/
        ret_pa_manager = oplus_add_pa_manager_snd_controls(cmpnt);
        if (ret_pa_manager < 0) {
                pr_err("%s(), add oplus pa manager snd controls failed:\n",

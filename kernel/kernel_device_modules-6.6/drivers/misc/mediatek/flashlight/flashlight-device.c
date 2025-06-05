@@ -6,6 +6,7 @@
 #include "flashlight-core.h"
 
 #ifndef OPLUS_FEATURE_CAMERA_COMMON
+//Tanbowen@CAMERA.DRV, 2020/09/28. Add for distinguish dual and single flashlight
 #if defined(mt6739)
 const struct flashlight_device_id flashlight_id[] = {
 	/* {TYPE, CT, PART, "NAME", CHANNEL, DECOUPLE} */
@@ -120,6 +121,11 @@ const struct flashlight_device_id flashlight_id_single[] = {
 	{0, 0, 0, "flashlights-mt6360", 0, 1},
 };
 const struct flashlight_device_id flashlight_id_orisa[] = {
+	/* {TYPE, CT, PART, "NAME", CHANNEL, DECOUPLE} */
+	{0, 0, 0, "sc6607_24700", 0, 1},
+};
+
+const struct flashlight_device_id flashlight_id_orisc[] = {
 	/* {TYPE, CT, PART, "NAME", CHANNEL, DECOUPLE} */
 	{0, 0, 0, "sc6607_24700", 0, 1},
 };

@@ -490,10 +490,12 @@ static kal_uint32 streaming_control(kal_bool enable)
     return ERROR_NONE;
 }
 
+/*zhang xiangYang@camera.driver, add for remosaic*/
 #define FOUR_CELL_XTALK_CAL_SIZE 600
 #define FOUR_CELL_XTALK_CAL_ADDR 0x0E00
 static char FOUR_CELL_XTALK_CAL[FOUR_CELL_XTALK_CAL_SIZE + 2];
 
+/*zhang xiangYang@camera.driver, add for remosaic*/
 #define FOUR_CELL_DPC_SIZE 1920
 #define FOUR_CELL_DPC_ADDR 0x1070
 static char FOUR_CELL_DPC[FOUR_CELL_DPC_SIZE + 2];
@@ -1727,6 +1729,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
     case SENSOR_FEATURE_SET_LSC_TBL:
         break;
 //#ifdef OPLUS_FEATURE_CAMERA_COMMON
+//lizhihui@vanyol.com,2022/05/31, add featurecontrol
     case SENSOR_FEATURE_GET_MODULE_INFO:
         break;
     case SENSOR_FEATURE_GET_MODULE_SN:

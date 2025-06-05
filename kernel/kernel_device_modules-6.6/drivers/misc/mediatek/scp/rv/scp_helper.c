@@ -1349,6 +1349,7 @@ void scp_wdt_reset(int cpu_id)
 	{
 #endif
 #ifdef OPLUS_FEATURE_SENSOR
+	/*Xuemeng.Ma@PSW.BSP.SENSOR, 2021/09/01,add for ALPS06107163*/
 	if (cpu_id == 0 && IS_ERR_OR_NULL((void const *) scpreg.cfg_core0)) {
 		pr_debug("[SCP] scpreg.cfg_core0 error\n");
 		return;
@@ -3384,6 +3385,7 @@ static struct platform_driver mtk_scpsys_device = {
 };
 
 #if defined(CONFIG_OPLUS_FEATURE_FEEDBACK) || defined(CONFIG_OPLUS_FEATURE_FEEDBACK_MODULE)
+/* xiebaixue@PSW.BSP.SENSOR, 2021/03/22,add for scp ramdump feedback*/
 /* user-space event notify */
 static int scp_user_event_notify(struct notifier_block *nb,
 				  unsigned long event, void *ptr)
@@ -3591,6 +3593,7 @@ static int __init scp_init(void)
 		scp_init_vcore_request();
 
 #if defined(CONFIG_OPLUS_FEATURE_FEEDBACK) || defined(CONFIG_OPLUS_FEATURE_FEEDBACK_MODULE)
+/* xiebaixue@PSW.BSP.SENSOR, 2021/04/27,add for scp ramdump feedback*/
 	scp_A_register_notify(&scp_uevent_notifier);
 #endif
 	register_3way_semaphore_notifier(&scp_semaphore_init_notifier);

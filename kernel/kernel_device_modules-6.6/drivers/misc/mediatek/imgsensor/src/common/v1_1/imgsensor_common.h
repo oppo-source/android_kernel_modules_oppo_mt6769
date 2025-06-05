@@ -47,6 +47,7 @@ enum IMGSENSOR_RETURN {
 };
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*Henry.Chang@Camera.Driver add for Camera ModuleSN 20190505*/
 #define CAMERA_MODULE_SN_LENGTH                (20)
 #define AESYNC_DATA_LENGTH_TOTAL               (65)
 #define DUALCAM_CALI_DATA_LENGTH               (1561)
@@ -63,6 +64,7 @@ enum IMGSENSOR_RETURN {
 #define DUALCAM_CALI_DATA_LENGTH_TOTAL_TELE    (2450)
 #define DUALCAM_CALI_DATA_LENGTH_TELE          (909)
 #define CAMERA_MODULE_INFO_LENGTH              (8)
+//Feiping.Li@Cam.Drv,  20200116, add for 19131 dualcal
 #define S5K3P9S_DUALCAM_CALI_PART2_LENGTH      (0x115)
 #define OV48B_STEREO_START_ADDR          (0x2840) //
 #define OV48B_STEREO_START_ADDR_WIDE     (0x2840)
@@ -75,19 +77,23 @@ enum IMGSENSOR_RETURN {
 #define GC02M0B_STEREO_START_ADDR        (0x1500) //
 #define S5K3P9S_DUALCAM_CALI_PART_LENGTH    (0x500)
 #define S5KGM1ST_STEREO_START_ADDR          (0x2840) //
+//Wenjun.Wu@Cam.Drv,  20200420, add for 20001 dualcal
 #define OV16A10_AESYNC_START_ADDR              (0x2E60)
 #define OV16A10_STEREO_START_ADDR              (0x2F00) //
 #define OV16A10_STEREO_START_ADDR_WIDE         (0x2F00)
 #define OV16A10_STEREO_START_ADDR_TELE         (0x3520)
+//Henry.Chang@Cam.Drv,  20200511, add for 20075 dualcal
 #define S5KGW3_AESYNC_START_ADDR               (0x2540)
 #define S5KGW3_STEREO_START_ADDR               (0x1900) //
 #define S5KGW3_STEREO_START_ADDR_WIDE          (0x1900)
 #define S5KGW3_STEREO_START_ADDR_TELE          (0x1F20)
 #define IMX471_STEREO_START_ADDR               (0x1900) //
 #define GC02M1B_STEREO_START_ADDR              (0x0E28) //
+//yinlu@Cam.Drv,  20230217, add for 22277 AEsync
 #define OV64B_AESYNC_START_ADDR_MASTER         (0x2600)
 #define IMX355_AESYNC_START_ADDR_WIDE          (0x348D)
 #define IMX709_AESYNC_START_ADDR_TELE          (0x3F00)
+//Wangchao@Cam.Drv, 20230224, add for 22277 Tricamcal
 #define CALI_DATA_SLAVE_TELE_LENGTH_22277      (893)
 #define OV64B_STEREO_START_ADDR_MW_22277       (0x1F00)
 #define OV64B_STEREO_START_ADDR_MT_22277       (0x2700)

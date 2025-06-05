@@ -1953,14 +1953,22 @@ static u32 mdp_get_poll_gpr(u16 engine, u32 reg_addr)
 	case ENGBASE_MDP_TDSHP0:
 	case ENGBASE_MDP_COLOR0:
 	case ENGBASE_MDP_WROT0:
+#ifdef OPLUS_FEATURE_CAMERA_COMMON // ALPS09449859
+		gpr = CMDQ_GPR_R08;
+#else
 		gpr = CMDQ_GPR_R12;
+#endif
 		break;
 	case ENGBASE_MDP_RDMA1:
 	case ENGBASE_MDP_AAL1:
 	case ENGBASE_MDP_RSZ1:
 	case ENGBASE_MDP_TDSHP1:
 	case ENGBASE_MDP_WROT1:
+#ifdef OPLUS_FEATURE_CAMERA_COMMON // ALPS09449859
+		gpr = CMDQ_GPR_R10;
+#else
 		gpr = CMDQ_GPR_R14;
+#endif
 		break;
 	default:
 		CMDQ_ERR("%s engine not support:%hu reg_addr:%#x\n",

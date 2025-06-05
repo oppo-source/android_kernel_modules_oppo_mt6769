@@ -5,6 +5,7 @@
 
 #include "kd_imgsensor.h"
 #include "imgsensor_sensor_list.h"
+/*Henry.Chang@Cam.Drv add for 19551 20191010*/
 #ifndef OPLUS_FEATURE_CAMERA_COMMON
 #define OPLUS_FEATURE_CAMERA_COMMON
 #endif

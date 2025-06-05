@@ -6,6 +6,7 @@
        for kernel_device_modules-6.6
 **
 ** Date: 2024-07-10
+** Author: XieYuan@MULTIMEDIA.DISPLAY
 ********************************************************************************/
 #undef TRACE_SYSTEM
 #define TRACE_SYSTEM ged_perfetto

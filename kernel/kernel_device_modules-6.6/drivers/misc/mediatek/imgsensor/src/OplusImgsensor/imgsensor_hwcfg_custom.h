@@ -28,6 +28,7 @@
 
 
 #ifdef CONFIG_MACH_CAMERA_MT6877
+/*Wujianguo@Camera 2023/09/22, add for aw37004 ic*/
 #include "../../../aw37004/aw37004.h"
 #endif
 
@@ -70,10 +71,13 @@
 
 enum IMGSENSOR_POWER_ACTION_INDEX {
     IMGSENSOR_POWER_ACTION_EVENT_START = 0,
+    /*liukai@camera.drv,20200118 add for Rear Capture_mode exit AF motor noise*/
     IMGSENSOR_POWER_ACTION_AFNOSISE_ADD_19551,
     IMGSENSOR_POWER_ACTION_AFNOSISE_DEC_19551,
+    /*Feiping.Li@Camera.Drv, 20190710, add for pull-up gc02's avdd when main sensor is powered*/
     IMGSENSOR_POWER_ACTION_GC02AVDD_PULLUP_19301,
 
+    /*Henry.Chang@Camera.Drv add for hwcfg common 20200727*/
     IMGSENSOR_POWER_MATCHMIPI_HWCFG_INDEX = 81,
     IMGSENSOR_POWER_MATCHSENSOR_HWCFG_INDEX,
     IMGSENSOR_POWER_EXTERNLDO_ENABLE_INDEX,
@@ -176,18 +180,22 @@ extern struct CAMERA_DEVICE_INFO gImgEepromInfo;
 extern void oplus_imgsensor_hwcfg(void);
 extern void oplus_imgsensor_delay_set(struct IMGSENSOR_HW_POWER_INFO *ppwr_info, struct IMGSENSOR_HW_POWER_SEQ *ppwr_seq);
 #ifdef SENSOR_PLATFORM_5G_A
+/*GaoWang@Cam.Drv add for 20682 camera BringUp 20200928*/
 extern struct IMGSENSOR_HW_POWER_SEQ *oplus_platform_power_sequence;
 #endif
 
 #ifdef SENSOR_PLATFORM_4G_20682
+/*ChenMing@Cam.Drv add for 20730 camera BringUp 20211111*/
 extern struct IMGSENSOR_HW_POWER_SEQ *oplus_platform_power_sequence;
 #endif
 
 #ifdef SENSOR_PLATFORM_5G_B
+/*weiriqin@camera.drv, 2020/10/21, add for 19531 project mipi_switch*/
 extern struct IMGSENSOR_HW_POWER_SEQ *oplus_platform_power_sequence;
 #endif
 
 #ifdef CONFIG_MACH_CAMERA_MT6877
+/*Wujianguo@Camera 2023/09/22, add for aw37004 ic*/
 extern int aw37004_camera_power_up(int out_iotype);
 extern int aw37004_camera_power_down(int out_iotype);
 #endif
@@ -196,6 +204,7 @@ extern int pmic_ldo_get_type(void);
 extern int pmic_ldo_set_voltage_mv(unsigned int ldo_num, int set_mv);
 extern int pmic_ldo_set_disable(unsigned int ldo_num);
 #ifdef SENSOR_PLATFORM_5G_B
+/*weiriqin@camera.drv, 2020/10/21, add for 19531 project mipi_switch*/
 extern struct IMGSENSOR_HW_POWER_SEQ *oplus_platform_power_sequence;
 #endif
 extern int is_fan53870_pmic(void);
@@ -206,6 +215,7 @@ extern void pmic_gpio_enable(int pwr_status);
 extern void oplus_chg_set_camera_status(bool val);
 extern void oplus_chg_set_camera_on(bool val);
 extern bool oplus_is_system_camera(unsigned int val);
+/*luosenyao@Cam.Drv, 20211116 for Dali 20601 sensor porting*/
 #ifdef CONFIG_PROJECT_20601
 extern int is_check_lcm_status(void);
 #endif /* CONFIG_PROJECT_20601 */

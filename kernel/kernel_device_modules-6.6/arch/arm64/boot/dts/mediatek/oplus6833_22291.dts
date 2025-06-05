@@ -94,7 +94,7 @@
                 touchpanel,tp-index = <0>;
 		platform_support_project = <22083 22291 22292>;
 		platform_support_project_dir = <22083 22083 22083 22083>;
-		platform_support_project_commandline = "oplus22291_ili9883c_hlt_hd_dsi_vdo_lcm_drv","oplus22291_ili9883c_boe_vdo_lcm_drv","oplus22291_td4160_truly_hd_dsi_vdo_lcm_drv";
+		platform_support_project_commandline = "oplus22291_ili9883c_hlt_hd_dsi_vdo_lcm_drv","oplus22291_ili9883c_boe_hd_dsi_vdo_lcm_drv","oplus22291_td4160_truly_hd_dsi_vdo_lcm_drv";
 		/*panel properities*/
 		touchpanel,max-num-support = <10>;
 		touchpanel,tx-rx-num = <18 32>;
@@ -510,6 +510,7 @@
                 led-bits = <12>;
                 trans-bits = <12>;
                 default-state = "on";
+                apollo-state = "disable";
         };
 };
 

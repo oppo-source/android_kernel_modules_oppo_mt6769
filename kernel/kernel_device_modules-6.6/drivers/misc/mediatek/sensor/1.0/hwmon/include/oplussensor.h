@@ -20,6 +20,7 @@
 #ifndef __OPLUSSENSOR_H__
 #define __OPLUSSENSOR_H__
 
+/*xiebaixue@PSW.BSP.Sensor, 2020/04/17, Add for oplus sensor algo driver*/
 #define SENSOR_TYPE_CAMERA_PROTECT                     73
 #define SENSOR_TYPE_FREE_FALL                          74
 #define SENSOR_TYPE_PICKUP_DETECT                      75
@@ -61,6 +62,7 @@
 #define ID_REAR_REAR_FLICKER    (ID_OPLUS_BASE+SENSOR_TYPE_REAR_FLICKER - 1)
 /* end sensor ID */
 #define ID_SENSOR_MAX_HANDLE    (ID_REAR_REAR_FLICKER)
+/*QZL@PSW.BSP.Sensor, 2018/12/24, Add for oplus algo*/
 typedef struct {
 	uint32_t value;
 	uint16_t report_count;
@@ -132,6 +134,7 @@ typedef struct {
 } palm_detect_event_t;
 
 union oplus_data_unit_t {
+/*QZL@PSW.BSP.Sensor, 2018/12/24, Add for oplus algo*/
     camera_protect_event_t camera_protect_data_t;
     free_fall_event_t free_fall_data_t;
     pickup_detect_event_t pickup_detect_data_t;

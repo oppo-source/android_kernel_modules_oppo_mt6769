@@ -4,6 +4,7 @@
 ** Description : ADFR kernel module
 ** Version : 1.0
 ** Date : 2021/07/09
+** Author : Gaoxiaolei@MM.Display
 **
 ** ------------------------------- Revision History: -----------
 **  <author>        <data>        <version >        <desc>

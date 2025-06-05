@@ -44,6 +44,7 @@ enum IMGSENSOR_RETURN imgsensor_hw_init(struct IMGSENSOR_HW *phw)
 	}
 
 	#ifndef OPLUS_FEATURE_CAMERA_COMMON
+	/*wuyingchao@CAMERA.DRV modify for zhaoyun decouple*/
 	pcust_pwr_cfg = imgsensor_custom_config;
 	#else /* OPLUS_FEATURE_CAMERA_COMMON */
 	#ifdef IMGSENSOR_TB8786P2
@@ -180,6 +181,7 @@ static enum IMGSENSOR_RETURN imgsensor_hw_power_sequence(
 					    ppwr_info->pin_state_off);
 			}
 			#ifdef OPLUS_FEATURE_CAMERA_COMMON
+			/*wuyingchao@CAMERA.DRV modify for zhaoyun decouple*/
 			oplus_imgsensor_delay_set(ppwr_info,ppwr_seq);
 			#endif
 		}
@@ -201,6 +203,7 @@ enum IMGSENSOR_RETURN imgsensor_hw_power(
 	char str_index[LENGTH_FOR_SNPRINTF];
 	int ret = 0;
 	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	/*Henry.Chang@Camera.Drv add for hwcfg MIPISWITCH 20200728*/
 	struct IMGSENSOR_HW_POWER_SEQ *ppwr_seq = NULL;
 	#endif
 
@@ -235,6 +238,7 @@ enum IMGSENSOR_RETURN imgsensor_hw_power(
 			str_index);
 	}
 
+	/*Henry.Chang@Camera.Drv add for hwcfg SENSOR 20200727*/
 	ppwr_seq = Oplusimgsensor_matchhwcfg_power(IMGSENSOR_POWER_MATCHSENSOR_HWCFG_INDEX);
 	if (ppwr_seq != NULL) {
 		imgsensor_hw_power_sequence(

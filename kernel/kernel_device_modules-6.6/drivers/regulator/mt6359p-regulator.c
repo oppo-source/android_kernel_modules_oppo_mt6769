@@ -225,7 +225,7 @@ static const u32 volt18_voltages[] = {
 };
 
 static const u32 vcn13_voltages[] = {
-	900000, 1000000, 0, 1200000, 1300000,
+	900000, 1000000, 1050000, 1200000, 1300000,
 };
 
 static const u32 vcn33_voltages[] = {

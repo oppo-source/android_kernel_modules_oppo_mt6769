@@ -406,6 +406,7 @@ static kal_uint16 set_gain(kal_uint16 gain)
 	return gain;
 }    /*    set_gain  */
 
+//quchengzhang@Camera.Drv, 20200509, add for set correct mirror/flip
 static void set_mirror_flip(kal_uint8 image_mirror)
 {
 	LOG_INF("image_mirror = %d\n", image_mirror);

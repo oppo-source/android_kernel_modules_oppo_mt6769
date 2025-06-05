@@ -916,6 +916,7 @@ struct IMGSENSOR_SENSOR_LIST
     {0, {0}, NULL}, /* end of list */
 };
 
+/* supeng@Cam.Drv, 20211224,  sensor porting for athens-B!*/
 struct IMGSENSOR_SENSOR_LIST gimgsensor_sensor_list_20630[MAX_NUM_OF_SUPPORT_SENSOR] = {
 #if defined(S5KGW3_MIPI_RAW_ATHENSB)
 {S5KGW3_SENSOR_ID_20631, SENSOR_DRVNAME_S5KGW3_MIPI_RAW_ATHENSB, S5KGW3_MIPI_RAW_SensorInit},
@@ -1318,6 +1319,7 @@ struct IMGSENSOR_SENSOR_LIST
 };
 
 
+/* Hao.Wu@Cam.Drv, 20201127, sensor porting for 20611!*/
 struct IMGSENSOR_SENSOR_LIST gimgsensor_sensor_list_20611[MAX_NUM_OF_SUPPORT_SENSOR] = {
 #if defined(S5KGM1ST_MIPI_RAW_20611)
     {S5KGM1ST_SENSOR_ID_20611, SENSOR_DRVNAME_S5KGM1ST_MIPI_RAW_20611, S5KGM1ST_MAIN_MIPI_RAW_20611_SensorInit},
@@ -2284,6 +2286,7 @@ struct IMGSENSOR_HW_CFG imgsensor_custom_config_20151[] = {
     {IMGSENSOR_SENSOR_IDX_NONE}
 };
 
+//supeng@Cam.Drv, 20211224, add for 20631 camera drvier porting
 struct IMGSENSOR_HW_CFG imgsensor_custom_config_20630[] = {
     {
             IMGSENSOR_SENSOR_IDX_MAIN,
@@ -2295,6 +2298,7 @@ struct IMGSENSOR_HW_CFG imgsensor_custom_config_20630[] = {
                     {IMGSENSOR_HW_PIN_DVDD,  IMGSENSOR_HW_ID_REGULATOR},
                     //{IMGSENSOR_HW_PIN_PDN,   IMGSENSOR_HW_ID_GPIO},
                     {IMGSENSOR_HW_PIN_RST,   IMGSENSOR_HW_ID_GPIO},
+                    /* Shipei.Chen@Cam.Drv, 20200502,  sensor porting!*/
                     #ifdef OPLUS_FEATURE_CAMERA_COMMON
                     //{IMGSENSOR_HW_PIN_MIPI_SWITCH_SEL, IMGSENSOR_HW_ID_GPIO},
                     {IMGSENSOR_HW_PIN_AFVDD, IMGSENSOR_HW_ID_REGULATOR},
@@ -2371,6 +2375,7 @@ struct IMGSENSOR_HW_CFG imgsensor_custom_config_20633[] = {
                     {IMGSENSOR_HW_PIN_DVDD,  IMGSENSOR_HW_ID_REGULATOR},
                     //{IMGSENSOR_HW_PIN_PDN,   IMGSENSOR_HW_ID_GPIO},
                     {IMGSENSOR_HW_PIN_RST,   IMGSENSOR_HW_ID_GPIO},
+                    /* Shipei.Chen@Cam.Drv, 20200502,  sensor porting!*/
                     #ifdef OPLUS_FEATURE_CAMERA_COMMON
                     //{IMGSENSOR_HW_PIN_MIPI_SWITCH_SEL, IMGSENSOR_HW_ID_GPIO},
                     {IMGSENSOR_HW_PIN_AFVDD, IMGSENSOR_HW_ID_REGULATOR},
@@ -3431,6 +3436,7 @@ struct IMGSENSOR_HW_CFG imgsensor_custom_config_20611[] = {
             {IMGSENSOR_HW_PIN_DVDD,  IMGSENSOR_HW_ID_GPIO},
             //{IMGSENSOR_HW_PIN_PDN,   IMGSENSOR_HW_ID_GPIO},
             {IMGSENSOR_HW_PIN_RST,   IMGSENSOR_HW_ID_GPIO},
+            /* Shipei.Chen@Cam.Drv, 20200502,  sensor porting!*/
             {IMGSENSOR_HW_PIN_MIPI_SWITCH_SEL, IMGSENSOR_HW_ID_GPIO},
             {IMGSENSOR_HW_PIN_AFVDD, IMGSENSOR_HW_ID_REGULATOR},
             {IMGSENSOR_HW_PIN_NONE,  IMGSENSOR_HW_ID_NONE},
@@ -5722,6 +5728,7 @@ struct IMGSENSOR_HW_POWER_SEQ sensor_power_sequence_alicer[] = {
 };
 
 struct IMGSENSOR_HW_POWER_SEQ sensor_power_sequence_20611[] = {
+/* Shipei.Chen@Cam.Drv, 20200502,  sensor porting!*/
 #if defined(S5KGM1ST_MIPI_RAW_20611)
 		{
 			SENSOR_DRVNAME_S5KGM1ST_MIPI_RAW_20611,
@@ -5730,6 +5737,7 @@ struct IMGSENSOR_HW_POWER_SEQ sensor_power_sequence_20611[] = {
 				{AVDD, Vol_2800, 0},
 				{DVDD, Vol_1200, 0},
 				{DOVDD, Vol_1800, 1},
+				// /* Shipei.Chen@Cam.Drv, 20200502,  sensor porting!*/
 				{MIPISEL,Vol_High,3},
 				{AF_VDD, Vol_2800, 0},
 				{RST, Vol_High, 2},
@@ -5745,6 +5753,7 @@ struct IMGSENSOR_HW_POWER_SEQ sensor_power_sequence_20611[] = {
 //				{AVDD, Vol_2800, 0},
 //				{DVDD, Vol_1500, 0},
 //				{DOVDD, Vol_1800, 1},
+//				/* Shipei.Chen@Cam.Drv, 20200502,  sensor porting!*/
 //				{MIPISEL, Vol_High, 3},
 //				{SensorMCLK, Vol_High, 1},
 //				{RST, Vol_High, 2},

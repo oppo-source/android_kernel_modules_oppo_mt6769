@@ -192,6 +192,7 @@ int oplus_dsi_panel_parser_base(struct device_node *node, void *ext_param_dev, v
 			ctx->emduty_dbv_length = rc;
 		}
 	}
+        rc = utils->get_int(node, "oplus,enhance-mipi-strength", &ctx->enhance_mipi_strength);
 	rc = utils->get_int(node, "oplus,panel-type", &ext_param->panel_type);
 	rc = utils->get_int(node, "oplus,lane-swap-en", &ext_param->lane_swap_en);
 	rc = utils->get_int(node, "oplus,lcm-color-mode", &ext_param->lcm_color_mode);
@@ -201,6 +202,9 @@ int oplus_dsi_panel_parser_base(struct device_node *node, void *ext_param_dev, v
 	rc = utils->get_int(node, "oplus,physical-height-um", &ext_param->physical_height_um);
 	rc = utils->get_int(node, "oplus,keep_ulps", &ext_param->keep_ulps);
 	rc = utils->get_intarr(node, "oplus,lane-swap", (int *)(&ext_param->lane_swap[0][0]), sizeof(ext_param->lane_swap)/sizeof(ext_param->lane_swap[0][0]));
+	rc = utils->get_int(node, "oplus,vdo-per-frame-lp-enable", &ext_param->vdo_per_frame_lp_enable);
+	rc = utils->get_int(node, "oplus,change_fps_by_vfp_send_cmd", &ext_param->change_fps_by_vfp_send_cmd);
+	rc = utils->get_int(node, "oplus,change_fps_by_vfp_send_cmd_need_delay", &ext_param->change_fps_by_vfp_send_cmd_need_delay);
 
 	return rc;
 }
@@ -456,15 +460,45 @@ int oplus_dsi_panel_parser_phy_timcon(struct device_node *node, void *ext_param_
 int oplus_dsi_panel_parser_dyn_fps(struct device_node *node, void *ext_param_dev, void *ctx_dev)
 {
 	int rc = -EINVAL;
+	int i = 0, j = 0, len = 0, ret = 0;
+	char save[128] = { 0 };
 	struct dsi_panel_lcm *ctx = ctx_dev;
 	struct dsi_parser_utils *utils = ctx->parser_utils;
 	struct mtk_panel_params *ext_param = ext_param_dev;
+	u8 temp[sizeof(struct dfps_switch_cmd)] = {0};
 
 	rc = utils->get_int(node, "switch_en", &ext_param->dyn_fps.switch_en);
 	rc = utils->get_int(node, "vact_timing_fps", &ext_param->dyn_fps.vact_timing_fps);
+	rc = utils->get_int(node, "dyn_fps_data_rate", &ext_param->dyn_fps.data_rate);
 	rc = utils->get_int(node, "apollo_limit_superior_us", &ext_param->dyn_fps.apollo_limit_superior_us);
 	rc = utils->get_int(node, "apollo_limit_inferior_us", &ext_param->dyn_fps.apollo_limit_inferior_us);
 	rc = utils->get_int(node, "apollo_transfer_time_us", &ext_param->dyn_fps.apollo_transfer_time_us);
+
+	/* analyze oplus_dyn_fps_dfps_cmd_table: send frame change cmd for video mode panel */
+	for (i = 0; i < MAX_DYN_CMD_NUM; i++) {
+	ret = snprintf(save, sizeof(save),
+		"oplus_dyn_fps_dfps_cmd_table%u",
+		(unsigned int)i);
+	if (ret < 0 || (size_t)ret >= sizeof(save))
+		DDPMSG("%s, %d, snprintf failed\n", __func__, __LINE__);
+
+	len = of_property_read_variable_u8_array(node, save, &temp[0], 0,
+				sizeof(struct dfps_switch_cmd));
+	if (len < 0 || len > sizeof(struct dfps_switch_cmd)) {
+		DDPDBG("%s, %d: the %d dyn fps of invalid cmd:%d\n",
+			__func__, __LINE__, i, len);
+		continue;
+	} else if (len == 0)
+		continue;
+
+	ext_param->dyn_fps.dfps_cmd_table[i].src_fps = temp[0];
+	ext_param->dyn_fps.dfps_cmd_table[i].cmd_num = temp[1];
+	if (ext_param->dyn_fps.dfps_cmd_table[i].cmd_num == 0)
+		continue;
+	for (j = 0; j < 64; j++)
+		ext_param->dyn_fps.dfps_cmd_table[i].para_list[j] =
+				(unsigned char)temp[j + 2];
+	}
 
 	return rc;
 }

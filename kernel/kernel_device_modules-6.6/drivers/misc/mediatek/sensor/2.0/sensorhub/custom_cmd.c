@@ -232,7 +232,7 @@ int custom_cmd_comm_with(int sensor_type, struct custom_cmd *cust_cmd)
 		|| sensor_type == SENSOR_TYPE_OIS1
 		|| sensor_type == SENSOR_TYPE_OIS2
 		|| sensor_type == SENSOR_TYPE_OIS3
-		|| sensor_type == SENSOR_TYPE_OIS_IMU))
+		|| sensor_type == SENSOR_TYPE_OIS_IMU))    /* WangJianwei@CAMERA.DRV.2024/09/09, modify for transceiving custom_cmd to SAP */
 		return sap_custom_cmd_comm(sensor_type, cust_cmd);
 #endif
 

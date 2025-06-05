@@ -93,6 +93,7 @@ static struct uarthub_drv_cbs uarthub_drv_cbs;
 #define MTK_UART_HUB_12M_BAUD 12000000
 #define MTK_UART_HUB_24M_BAUD 24000000
 //#ifdef OPLUS_SATELLITE_CONFIG_UART
+//#zengjunyong@NETWORK.ARCH 2024/04/25, add for satellite config uart
 #define MTK_UART_HUB_4M_BAUD 4000000
 #define MTK_UART_HUB_921600_BAUD 921600
 //#endif
@@ -170,6 +171,7 @@ struct mtk8250_reg_data {
 struct mtk8250_data {
 	int			line;
 //#ifdef OPLUS_SATELLITE_CONFIG_UART
+//#zengjunyong@NETWORK.ARCH 2024/04/25, add for satellite config uart
 	int			satellite_uart1_line;
 	int			satellite_uart2_line;
 //endif
@@ -2144,6 +2146,7 @@ mtk8250_set_termios(struct uart_port *port, struct ktermios *termios,
 		serial_port_out(port, MTK_UART_FRACDIV_M, 0x1);
 
 //#ifdef OPLUS_SATELLITE_CONFIG_UART
+//#zengjunyong@NETWORK.ARCH 2024/04/25, add for satellite config uart
 	} else if (((data->satellite_uart1_line == 1) || (data->satellite_uart2_line == 1)) && (baud == MTK_UART_HUB_4M_BAUD)) {
 		serial_port_out(port, MTK_UART_SAMPLE_COUNT, 5);
 		serial_port_out(port, MTK_UART_SAMPLE_POINT, 2);
@@ -2231,6 +2234,7 @@ static int __maybe_unused mtk8250_runtime_suspend(struct device *dev)
 		clk_disable_unprepare(data->bus_clk);
 	}
 //#ifdef OPLUS_SATELLITE_CONFIG_UART
+//#zengjunyong@NETWORK.ARCH 2024/04/25, add for satellite config uart
 	if ((data->satellite_uart1_line == 1) || (data->satellite_uart2_line == 1)) {
 		pinctrl_pm_select_sleep_state(dev);
 	}
@@ -2257,6 +2261,7 @@ static int __maybe_unused mtk8250_runtime_resume(struct device *dev)
 	dev_dbg(dev, "[%s]:data->line[%d], uart_clk_count[%d]\n",
 			__func__, data->line, atomic_read(&data->uart_clk_count));
 //#ifdef OPLUS_SATELLITE_CONFIG_UART
+//#zengjunyong@NETWORK.ARCH 2024/04/25, add for satellite config uart
 	if ((data->satellite_uart1_line == 1) || (data->satellite_uart2_line == 1)) {
 		pinctrl_pm_select_default_state(dev);
 	}
@@ -2564,6 +2569,7 @@ static int mtk8250_probe_of(struct platform_device *pdev, struct uart_port *p,
 	int index = -1;
 	int uart_line = -1;
 //#ifdef OPLUS_SATELLITE_CONFIG_UART
+//#zengjunyong@NETWORK.ARCH 2024/04/25, add for satellite config uart
 	int satellite_dts_uart1_line = -1;
 	int satellite_dts_uart2_line = -1;
 //endif
@@ -2610,6 +2616,7 @@ static int mtk8250_probe_of(struct platform_device *pdev, struct uart_port *p,
 		}
 
 //#ifdef OPLUS_SATELLITE_CONFIG_UART
+//#zengjunyong@NETWORK.ARCH 2024/04/25, add for satellite config uart
 		err = of_property_read_u32(pdev->dev.of_node, "satellite-uart1-line", &satellite_dts_uart1_line);
 		if (err < 0) {
 			dev_info(&pdev->dev, "satellite_dts_uart1_line fail!!!\n");
@@ -3001,6 +3008,7 @@ static int __maybe_unused mtk8250_resume(struct device *dev)
 		disable_irq_wake(irq);
 
 //#ifdef OPLUS_SATELLITE_CONFIG_UART
+//#MaJian@NETWORK.ARCH 2024/04/25, add for satellite uart config
 #if 0
 	pinctrl_pm_select_default_state(dev);
 

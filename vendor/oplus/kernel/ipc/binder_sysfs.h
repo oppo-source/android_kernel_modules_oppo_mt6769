@@ -9,6 +9,7 @@ extern unsigned int unset_ux_match_t;
 extern int sync_insert_queue;
 extern int fg_list_dynamic_enable;
 extern int fg_list_async_first;
+extern int get_random_binder_task;
 
 int oplus_binder_sysfs_init(void);
 void oplus_binder_sysfs_deinit(void);

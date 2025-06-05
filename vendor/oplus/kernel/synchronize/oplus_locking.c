@@ -39,6 +39,7 @@ static inline struct oplus_task_struct *get_oplus_task_struct(struct task_struct
 
 static int debug_enable_flag;
 static bool init_done = false;
+static bool hook_registered = false;
 atomic64_t switch_in_cs_cnts;
 
 #define SAVE_TRACE_NUMS	4
@@ -351,7 +352,7 @@ static void unlock_handler(struct task_struct *tsk, u64 lock_id, int type)
 
 void mutex_lock_handler(void * unused, struct mutex * lock, unsigned long jiffies)
 {
-	if(!debug_enable_flag) return;
+	if(unlikely(!debug_enable_flag)) return;
 
 	get_lock_cnts(jiffies, MUTEX);
 
@@ -366,7 +367,7 @@ void mutex_lock_handler(void * unused, struct mutex * lock, unsigned long jiffie
 
 void rwsem_lock_handler(void * unused, struct rw_semaphore * sem, unsigned long jiffies)
 {
-	if(!debug_enable_flag) return;
+	if(unlikely(!debug_enable_flag)) return;
 	get_lock_cnts(jiffies, RWSEM);
 
 	if (jiffies) {	
@@ -379,7 +380,7 @@ void rwsem_lock_handler(void * unused, struct rw_semaphore * sem, unsigned long 
 
 void rtmutex_lock_handler(void * unused, struct rt_mutex * lock, unsigned long jiffies)
 {
-	if(!debug_enable_flag) return;
+	if(unlikely(!debug_enable_flag)) return;
 	get_lock_cnts(jiffies, RTMUTEX);
 
 	if (jiffies)
@@ -390,7 +391,7 @@ void rtmutex_lock_handler(void * unused, struct rt_mutex * lock, unsigned long j
 
 void android_vh_pcpu_rwsem_handler(void * unused, struct percpu_rw_semaphore * sem, unsigned long jiffies)
 {
-	if(!debug_enable_flag) return;
+	if(unlikely(!debug_enable_flag)) return;
 	get_lock_cnts(jiffies, PCP_RWSEM);
 
 /*
@@ -481,7 +482,7 @@ static void record_waiters_cnts(void *lock, int type)
 
 void mutex_wait_handler(void * unused, struct mutex *lock)
 {
-	if(!debug_enable_flag) return;
+	if(unlikely(!debug_enable_flag)) return;
 	/* Contend stats. */
 	atomic64_inc(&wait_cnt[MUTEX]);
 
@@ -491,7 +492,7 @@ void mutex_wait_handler(void * unused, struct mutex *lock)
 
 void rwsem_read_wait_handler(void * unused, struct rw_semaphore *sem)
 {
-	if(!debug_enable_flag) return;
+	if(unlikely(!debug_enable_flag)) return;
 	/* Contend stats. */
 	atomic64_inc(&wait_cnt[RWSEM]);
 
@@ -513,7 +514,7 @@ void rwsem_write_wait_handler(void * unused, struct rw_semaphore *sem)
 
 void rtmutex_wait_handler(void * unused, struct rt_mutex_base *lock)
 {
-	if(!debug_enable_flag) return;
+	if(unlikely(!debug_enable_flag)) return;
 	/* Contend stats. */
 	atomic64_inc(&wait_cnt[RTMUTEX]);
 
@@ -523,7 +524,7 @@ void rtmutex_wait_handler(void * unused, struct rt_mutex_base *lock)
 
 void pcp_wait_handler(void * unused, struct percpu_rw_semaphore *sem, bool is_reader, int phase)
 {
-	if(!debug_enable_flag) return;
+	if(unlikely(!debug_enable_flag)) return;
 	/* Contend stats. */
 	atomic64_inc(&wait_cnt[PCP_RWSEM]);
 
@@ -803,12 +804,74 @@ static void remove_proc_files(void)
 
 static int register_driver(void)
 {
+	REGISTER_TRACE(android_vh_record_mutex_lock_starttime, mutex_lock_handler, NULL, out);
+	REGISTER_TRACE(android_vh_record_rtmutex_lock_starttime, rtmutex_lock_handler, NULL, out1);
+	REGISTER_TRACE(android_vh_record_rwsem_lock_starttime, rwsem_lock_handler, NULL, out2);
+#ifdef CONFIG_PCPU_RWSEM_LOCKING_PROTECT
+	REGISTER_TRACE(android_vh_record_pcpu_rwsem_starttime, android_vh_pcpu_rwsem_handler, NULL, out3);
+	/*REGISTER_TRACE(android_vh_percpu_rwsem_wq_add, pcp_wait_handler, NULL, out4);*/
+#endif
+
+	REGISTER_TRACE(android_vh_mutex_wait_start, mutex_wait_handler, NULL, out4);
+	REGISTER_TRACE(android_vh_rtmutex_wait_start, rtmutex_wait_handler, NULL, out5);
+	REGISTER_TRACE(android_vh_rwsem_read_wait_start, rwsem_read_wait_handler, NULL, out6);
+	REGISTER_TRACE(android_vh_rwsem_write_wait_start, rwsem_write_wait_handler, NULL, out7);
+
+	hook_registered = true;
+	goto out;
+
+out7:
+	unregister_trace_android_vh_rwsem_read_wait_start(
+					rwsem_read_wait_handler, NULL);
+out6:
+	unregister_trace_android_vh_rtmutex_wait_start(
+				rtmutex_wait_handler, NULL);
+out5:
+	unregister_trace_android_vh_mutex_wait_start(
+				mutex_wait_handler, NULL);
+out4:
+#ifdef CONFIG_PCPU_RWSEM_LOCKING_PROTECT
+	unregister_trace_android_vh_record_pcpu_rwsem_starttime(
+				android_vh_pcpu_rwsem_handler, NULL);
+out3:
+#endif
+	unregister_trace_android_vh_record_rwsem_lock_starttime(
+				rwsem_lock_handler, NULL);
+out2:
+	unregister_trace_android_vh_record_rtmutex_lock_starttime(
+				rtmutex_lock_handler, NULL);
+out1:
+	unregister_trace_android_vh_record_mutex_lock_starttime(
+				mutex_lock_handler, NULL);
+
+out:
 	create_proc_files();
 	return 0;
 }
 
 static void unregister_driver(void)
 {
+	if(hook_registered){
+		unregister_trace_android_vh_rwsem_write_wait_start(
+					rwsem_write_wait_handler, NULL);
+		unregister_trace_android_vh_rwsem_read_wait_start(
+					rwsem_read_wait_handler, NULL);
+		unregister_trace_android_vh_rtmutex_wait_start(
+					rtmutex_wait_handler, NULL);
+		unregister_trace_android_vh_mutex_wait_start(
+					mutex_wait_handler, NULL);
+#ifdef CONFIG_PCPU_RWSEM_LOCKING_PROTECT
+		unregister_trace_android_vh_record_pcpu_rwsem_starttime(
+					android_vh_pcpu_rwsem_handler, NULL);
+#endif
+		unregister_trace_android_vh_record_rwsem_lock_starttime(
+					rwsem_lock_handler, NULL);
+		unregister_trace_android_vh_record_rtmutex_lock_starttime(
+					rtmutex_lock_handler, NULL);
+		unregister_trace_android_vh_record_mutex_lock_starttime(
+					mutex_lock_handler, NULL);
+	}
+	hook_registered = false;
 	remove_proc_files();
 }
 
@@ -875,46 +938,6 @@ int krn_reliab_init(void)
 		pr_err("failed to create proc node debug_enable_flag\n");
 		goto err_creat_debug_enable_flag;
 	}
-
-	REGISTER_TRACE(android_vh_record_mutex_lock_starttime, mutex_lock_handler, NULL, out);
-	REGISTER_TRACE(android_vh_record_rtmutex_lock_starttime, rtmutex_lock_handler, NULL, out1);
-	REGISTER_TRACE(android_vh_record_rwsem_lock_starttime, rwsem_lock_handler, NULL, out2);
-#ifdef CONFIG_PCPU_RWSEM_LOCKING_PROTECT
-	REGISTER_TRACE(android_vh_record_pcpu_rwsem_starttime, android_vh_pcpu_rwsem_handler, NULL, out3);
-	/*REGISTER_TRACE(android_vh_percpu_rwsem_wq_add, pcp_wait_handler, NULL, out4);*/
-#endif
-
-	REGISTER_TRACE(android_vh_mutex_wait_start, mutex_wait_handler, NULL, out4);
-	REGISTER_TRACE(android_vh_rtmutex_wait_start, rtmutex_wait_handler, NULL, out5);
-	REGISTER_TRACE(android_vh_rwsem_read_wait_start, rwsem_read_wait_handler, NULL, out6);
-	REGISTER_TRACE(android_vh_rwsem_write_wait_start, rwsem_write_wait_handler, NULL, out7);
-
-	return 0;
-
-out7:
-	unregister_trace_android_vh_rwsem_read_wait_start(
-					rwsem_read_wait_handler, NULL);
-out6:
-	unregister_trace_android_vh_rtmutex_wait_start(
-				rtmutex_wait_handler, NULL);
-out5:
-	unregister_trace_android_vh_mutex_wait_start(
-				mutex_wait_handler, NULL);
-out4:
-#ifdef CONFIG_PCPU_RWSEM_LOCKING_PROTECT
-	unregister_trace_android_vh_record_pcpu_rwsem_starttime(
-				android_vh_pcpu_rwsem_handler, NULL);
-out3:
-#endif
-	unregister_trace_android_vh_record_rwsem_lock_starttime(
-				rwsem_lock_handler, NULL);
-out2:
-	unregister_trace_android_vh_record_rtmutex_lock_starttime(
-				rtmutex_lock_handler, NULL);
-out1:
-	unregister_trace_android_vh_record_mutex_lock_starttime(
-				mutex_lock_handler, NULL);
-out:
 	return 0;
 
 err_creat_debug_enable_flag:

@@ -332,6 +332,7 @@ static struct SET_PD_BLOCK_INFO_T imgsensor_pd_info_2040_1536_preview =
 */
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*Caohua.Lin@Camera.Driver add for 18011/18311  board 20180723*/
 static kal_uint16 read_module_id(void)
 {
 	kal_uint16 get_byte=0;
@@ -386,6 +387,7 @@ static void write_cmos_sensor_8(kal_uint16 addr, kal_uint8 para)
 static kal_uint8 CAM_SN[CAMERA_MODULE_SN_LENGTH];
 static kal_uint8 CAM_INFO[CAMERA_MODULE_INFO_LENGTH];
 static kal_uint8 CAM_DUAL_DATA[DUALCAM_CALI_DATA_LENGTH_8ALIGN];
+/*Henry.Chang@Camera.Driver add for google ARCode Feature verify 20190531*/
 static kal_uint16 read_cmos_eeprom_8(kal_uint16 addr)
 {
 	kal_uint16 get_byte=0;
@@ -414,6 +416,7 @@ static void read_eepromData(void)
 	CAM_INFO[7] = read_cmos_eeprom_8(0xB);
 }
 
+/*Henry.Chang@camera.driver 20181129, add for sensor Module SET*/
 #define   WRITE_DATA_MAX_LENGTH     (16)
 static kal_int32 table_write_eeprom_30Bytes(kal_uint16 addr, kal_uint8 *para, kal_uint32 len)
 {
@@ -444,6 +447,7 @@ static kal_int32 write_eeprom_protect(kal_uint16 enable)
 	return ret;
 }
 
+/*Henry.Chang@camera.driver 20181129, add for sensor Module SET*/
 static kal_int32 write_Module_data(ACDK_SENSOR_ENGMODE_STEREO_STRUCT * pStereodata)
 {
 	kal_int32  ret = IMGSENSOR_RETURN_SUCCESS;
@@ -515,6 +519,7 @@ static kal_int32 write_Module_data(ACDK_SENSOR_ENGMODE_STEREO_STRUCT * pStereoda
 	return ret;
 }
 #endif
+/*wuyingchao@camera.driver 2021/06/23, add for HW_GGC write to sensor start*/
 #define JN1_HW_GGC_SIZE 173
 #define JN1_HW_GGC_START_ADDR 0x3AE0
 
@@ -568,6 +573,7 @@ static void write_sensor_HW_GGC(void)
 	}
 	#endif
 }
+/*wuyingchao@camera.driver 2021/06/23, add for HW_GGC write to sensor end*/
 
 static void set_dummy(void)
 {
@@ -3019,9 +3025,11 @@ static void preview_setting(void)
 static void capture_setting(kal_uint16 currefps)
 {
 	LOG_INF("%s 30 fps E! currefps:%d\n", __func__, currefps);
+	//Deng.Cao@Cam.Drv, change the capture setting to preview setting, 20191220 start.
 	/*S5KJN1SQ_EVT0_ReferenceSetfile_v0.4h_20220208  (Set)Wingtech*/
 	table_write_cmos_sensor(parkerb_shinetech_s5kjn103_capture_setting,
 		sizeof(parkerb_shinetech_s5kjn103_capture_setting)/sizeof(kal_uint16));
+	//Deng.Cao@Cam.Drv, change the capture setting to preview setting, 20191220 end.
 	LOG_INF("%s 30 fpsX\n", __func__);
 }
 
@@ -4256,6 +4264,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 		streaming_control(KAL_TRUE);
 		break;
 	#if 1
+	/* huangmiao@CAMERA.DRV,2022/09/22, modify hs_video binning_type 4 for slow motion */
 	case SENSOR_FEATURE_GET_BINNING_TYPE:
 		switch (*(feature_data + 1)) {
 		case MSDK_SCENARIO_ID_HIGH_SPEED_VIDEO:

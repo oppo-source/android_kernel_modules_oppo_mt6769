@@ -39,6 +39,18 @@ enum OBS_STATUS {
 	 OBS_NOT_ASYNC_UX,
 };
 
+#define BINDER_NAME                     "binder"
+#define HWBINDER_NAME			"hwbinder"
+#define VNDBINDER_NAME			"vndbinder"
+#define BINDER_THREAD_NAME		"binder:"
+#define HWBINDER_THREAD_NAME		"HwBinder:"
+#define VNDBINER_THREAD_NAME		"vndbinder:"
+enum {
+	PROC_CONTEXT_BINDER,
+	PROC_CONTEXT_HWBINDER,
+	PROC_CONTEXT_VNDBINDER,
+};
+
 #define INVALID_VALUE           -1
 #define MAX_UX_IN_LIST			20
 #define CHECK_MAX_NODE_FOR_ASYNC_THREAD		400
@@ -101,6 +113,7 @@ enum {
 	LOG_FG_LIST_LVL0	= 1U << 10,
 	LOG_FG_LIST_LVL1 = 1U << 11,
 	LOG_DUMP_LIST_MEMBER = 1U << 12,
+	LOG_TRACK_ASYNC_NODE = 1U << 13,
 };
 
 enum {
@@ -134,6 +147,8 @@ enum {
 	STATE_FG_TODO_NULL = 27,
 	STATE_FG_ADD_TO_FG = 28,
 	STATE_FG_VIP_THREAD_SKIP = 29,
+	STATE_PENDING_ASYNC = 30,
+	STATE_TASK_STRUCT_STATE = 100,
 	STATE_SYNC_SET_UX = 50,
 	STATE_SYNC_RESET_UX = 51,
 	STATE_SYNC_RT_SET_UX = 52,

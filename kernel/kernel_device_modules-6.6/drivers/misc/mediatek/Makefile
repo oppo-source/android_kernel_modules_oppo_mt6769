@@ -150,6 +150,7 @@ obj-$(CONFIG_DEVICE_MODULES_PCIE_MEDIATEK_SMT) += pcie/
 obj-$(CONFIG_MTK_SMAP) += smap/
 obj-$(CONFIG_MTK_WLA) += wla/
 #ifdef OPLUS_FEATURE_OEM_OCDT
+#wanghao@BSP.Kernel.Stability, 2021/08/31, add for bootmode
 obj-$(CONFIG_MTK_BOOT_COMMON) += boot_common/
 #endif
 obj-$(CONFIG_MTK_SPM_CAREVENT) += carevent/

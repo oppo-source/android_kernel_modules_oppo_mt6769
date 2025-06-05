@@ -97,6 +97,7 @@ struct dsi_panel_lcm {
 	int demura_dbv_length;
 	int emduty_dbv_length;
 	bool esd_is_triggered;
+        int enhance_mipi_strength;
 	const char *power_on_sequence[PANEL_POWER_SUPPLY_MAX * PANEL_POWER_SUPPLY_MESSAGE_MAX + 1];
 	const char *power_off_sequence[PANEL_POWER_SUPPLY_MAX * PANEL_POWER_SUPPLY_MESSAGE_MAX + 1];
 	struct dsi_regulator_info power_info;

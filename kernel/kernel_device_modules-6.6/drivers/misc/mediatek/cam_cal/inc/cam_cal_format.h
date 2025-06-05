@@ -161,6 +161,7 @@ struct STRUCT_CAM_CAL_PREGAIN_STRUCT {
 	unsigned char rGoldenB;
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/* huji@CAMERA.DRV.2024/04/02, add for Increment AWBRG&BG integer And fractional parts burn */
 	unsigned int r1RG_avg_lnt;
 	unsigned int r1RG_avg_dec;
 	unsigned int r1BG_avg_lnt;
@@ -206,6 +207,7 @@ struct STRUCT_CAM_CAL_SINGLE_2A_STRUCT {
 	unsigned char  S2aAfBitflagEn; //Bit: step 0(inf.), 1(marco), 2, 3, 4,5,6,7
 	unsigned short S2aAf[8];      //0x012c
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/* huji@CAMERA.DRV.2024/04/02, add for Machine burning code */
 	int InfFlag;
 	int PhoneInfDac;
 	int InfSkinTemp;

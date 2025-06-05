@@ -151,6 +151,7 @@ enum mt6375_chg_reg_field {
 	F_BATINT, F_BATPROTECT_EN,
 	/* MT6375_REG_CHG_TOP1 */
 	//#ifdef OPLUS_BUG_STABILITY
+	//wanghao@BSP.bootloader.bootflow, 2020/05/25, add for platform reset
 	F_CHG_EN, F_BUCK_EN, F_HZ, F_QON_RST_EN, F_BATFET_DISDLY, F_BATFET_DIS, F_PP_PG_FLAG,
 	//#endif
 	/* MT6375_REG_CHG_TOP2 */
@@ -495,6 +496,7 @@ static const struct mt6375_chg_field mt6375_chg_fields[F_MAX] = {
 	MT6375_CHG_FIELD(F_BUCK_EN, MT6375_REG_CHG_TOP1, 1, 1),
 	MT6375_CHG_FIELD(F_HZ, MT6375_REG_CHG_TOP1, 3, 3),
 	//#ifdef OPLUS_BUG_STABILITY
+	//wanghao@BSP.bootloader.bootflow, 2020/05/25, add for platform reset
 	MT6375_CHG_FIELD(F_QON_RST_EN, MT6375_REG_CHG_TOP1, 4, 4),
 	//#endif
 	MT6375_CHG_FIELD(F_BATFET_DISDLY, MT6375_REG_CHG_TOP1, 5, 5),
@@ -3402,6 +3404,7 @@ static int mt6375_chg_init_setting(struct mt6375_chg_data *ddata)
 	}
 
 	//#ifdef OPLUS_BUG_STABILITY
+	//wanghao@BSP.bootloader.bootflow, 2020/05/25, add for platform reset
 	ret = mt6375_chg_field_set(ddata, F_QON_RST_EN, 0);
 	if (ret < 0) {
 		dev_err(ddata->dev, "failed to disable qon_rst\n");

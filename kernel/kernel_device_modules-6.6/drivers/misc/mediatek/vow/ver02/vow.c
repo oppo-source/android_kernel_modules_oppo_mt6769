@@ -1144,6 +1144,7 @@ static bool vow_service_SetSpeakerModel(unsigned long arg)
 #endif
 
 #ifndef OPLUS_ARCH_EXTENDS
+/*zhuoyongsheng@MULTIMEDIA.VOW, 2024/09/05, Add for mtk vow failure to wakeup*/
 	I = vow_service_FindFreeSpeakerModel();
 	if (I == -1)
 		return false;
@@ -1152,6 +1153,7 @@ static bool vow_service_SetSpeakerModel(unsigned long arg)
 	if (vow_service_GetParameter(arg) != 0)
 		return false;
 #ifdef OPLUS_ARCH_EXTENDS
+/*zhuoyongsheng@MULTIMEDIA.VOW, 2024/09/05, Add for mtk vow failure to wakeup*/
 	I = vow_service_SearchSpeakerModelWithKeyword(vowserv.vow_info_apuser[1]);
 	if (I < 0) {
 		I = vow_service_FindFreeSpeakerModel();

@@ -254,6 +254,7 @@
 	qcom,support_3p6_standard;
 	qcom,usb_ntc_pullup = <100000>;
 	qcom,mastercharger_psy_set;
+	qcom,gsm_call_on;
 	oplus,use_external_cclogic;
 	status = "okay";
  };

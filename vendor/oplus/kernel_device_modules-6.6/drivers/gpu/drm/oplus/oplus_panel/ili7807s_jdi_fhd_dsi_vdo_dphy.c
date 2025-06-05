@@ -69,6 +69,8 @@ static int current_fps = 60;
 //static int bl_gamma = 0;
 //static short cabc_status = 0;
 static int esd_brightness;
+static int first_set_dimming;
+static int first_set_bl;
 //static bool bl_gamma = false;
 //static short frame_count = 0;
 
@@ -181,6 +183,7 @@ static void lcm_init_set_cabc(struct lcm *ctx, int cabc_mode)
 */
 static void lcm_panel_init(struct lcm *ctx)
 {
+	first_set_bl = 1;
 	pr_err("lcm_init\n");
 	ctx->reset_gpio = devm_gpiod_get(ctx->dev, "reset", GPIOD_OUT_HIGH);
 	if (IS_ERR(ctx->reset_gpio)) {
@@ -1355,6 +1358,7 @@ static void lcm_gamma_exit(void *dsi, dcs_write_gce cb, void *handle)
 	cb(dsi, handle, bl_tb34, ARRAY_SIZE(bl_tb34));
 }
 */
+/*Jiantao.Liu@ODM_WT.MM.Display.Lcd, 2020/07/08, LCD backlight support hight light mode with 12bit*/
 #define BL_X_MIN  2
 #define BL_X_MID	2047
 #define BL_X_MAX	4095
@@ -1373,6 +1377,7 @@ static void lcm_gamma_exit(void *dsi, dcs_write_gce cb, void *handle)
 #define BL_LEVEL_MIN    255
 static unsigned int oplus_private_set_backlight(unsigned int level)
 {
+	/*Jiantao.Liu@ODM_WT.MM.Display.Lcd, 2020/07/27, switch of LCD backlight current 24.5MA*/
 	unsigned int value_a = 796;
 	unsigned int value_b = BL_Y_MIN*1000000;
 	unsigned int level_temp = 0;
@@ -1403,11 +1408,13 @@ unsigned int g_bl_jdi_flag = 0;
 static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb,
 	void *handle, unsigned int level)
 {
+	char bl_tb2[] = {0x53, 0x2C};
 	level = oplus_private_set_backlight(level);
 	if((g_bl_jdi_flag == 0) && (level == 0)) {
 		pr_err("check brightness g_bl_jdi_flag level==%u ", level);
 		g_bl_jdi_flag = 1;
 	} else {
+	/*Jiantao.Liu@ODM_WT.MM.Display.Lcd, 2020/07/06, Add dimming off for power off sequence with tBLOFF*/
 	if (0 == level) {
         /* push_table(handle, lcm_dimming_off_setting, sizeof(lcm_dimming_off_setting) / sizeof(struct LCM_setting_table), 1); */
 		bl_level[0] = 0;
@@ -1420,6 +1427,15 @@ static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb,
 	}
 	bl_level[0] = 0x000F&(level >> 9);
 	bl_level[1] = 0x00FF&(level >> 1);
+	if (first_set_bl) {
+		msleep(12);
+		first_set_bl = 0;
+		first_set_dimming = 1;
+	}
+	if (first_set_dimming) {
+		cb(dsi, handle, bl_tb2, ARRAY_SIZE(bl_tb2));
+		first_set_dimming = 0;
+	}
 	//pr_err("[ HW check ac backlight ili7807s]level = %d para_list[0] = %x, \
 	//para_list[1]=%x\n", level, bl_level[0], bl_level[1]);
 
@@ -1466,10 +1482,20 @@ static int oplus_esd_backlight_recovery(void *dsi, dcs_write_gce cb,
 		void *handle)
 {
 	char bl_tb0[] = {0x51, 0x03, 0xff};
+	char bl_tb2[] = {0x53, 0x2C};
 	bl_tb0[1] = esd_brightness >> 8;
 	bl_tb0[2] = esd_brightness & 0xFF;
+	if (first_set_bl) {
+		msleep(12);
+		first_set_bl = 0;
+		first_set_dimming = 1;
+	}
 	if (!cb)
 		return -1;
+	if (first_set_dimming) {
+		cb(dsi, handle, bl_tb2, ARRAY_SIZE(bl_tb2));
+		first_set_dimming = 0;
+	}
 	cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
 
 	return 1;

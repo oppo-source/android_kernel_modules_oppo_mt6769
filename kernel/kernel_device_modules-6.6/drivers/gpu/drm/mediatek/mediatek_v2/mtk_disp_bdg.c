@@ -70,6 +70,7 @@ static int mt6382_nfc_gpio_value;
 static bool bdg_spi_already_first_init;
 
 //#ifdef OPLUS_BUG_STABILITY
+//tangyingbo@CONNECTIVITY.NFC.RW,6111404, 2023/08/18, change NFC clk output from software control to hardware(mt6382) control.
 static int nfc_clk_mode;
 //#endif
 
@@ -5451,6 +5452,7 @@ int bdg_common_init(enum DISP_BDG_ENUM module,
 #endif
 
 //#ifndef OPLUS_BUG_STABILITY
+//tangyingbo@CONNECTIVITY.NFC.RW,6111404, 2023/08/18, change NFC clk output from software control to hardware(mt6382) control.
 	/*mtk case ALPS08225966, only when nfc clk mode in "software control" mode,then enable/disable nfc clk output by software method*/
 /*
 	if (nfc_clk_already_enabled)
@@ -5560,6 +5562,7 @@ int bdg_common_init(enum DISP_BDG_ENUM module,
 	output_debug_signal();
 	//BDG_OUTREG32(cmdq, TX_REG[0]->DSI_RESYNC_CON, 0x0);
 //#ifdef OPLUS_BUG_STABILITY
+//tangyingbo@CONNECTIVITY.NFC.RW,6111404, 2023/08/18, change NFC clk output from software control to hardware(mt6382) control.
 	if (nfc_clk_mode == 1) {
 	/*mtk case ALPS08225966, need re-configure mt6382 to hardware control mode when power on mt6382*/
 		DDPMSG("set nfc clk mode as hw ctrl\n");
@@ -6069,6 +6072,7 @@ irqreturn_t nfc_eint_thread_handler(int irq, void *data)
 void nfc_request_eint_irq(void)
 {
 //#ifdef OPLUS_BUG_STABILITY
+//tangyingbo@CONNECTIVITY.NFC.RW,6111404, 2023/08/18, change NFC clk output from software control to hardware(mt6382) control.
 	int ret = 0;
 //#endif
 
@@ -6087,6 +6091,7 @@ void nfc_request_eint_irq(void)
 	}
 
 //#ifdef OPLUS_BUG_STABILITY
+//tangyingbo@CONNECTIVITY.NFC.RW,6111404, 2023/08/18, change NFC clk output from software control to hardware(mt6382) control.
 	//mtk case ALPS08225966, configure mt6382 to "hardware control" mode according to the dts config.
 	ret = of_property_read_u32(node, "nfc_clk_mode", &nfc_clk_mode);
 	if (!ret) {

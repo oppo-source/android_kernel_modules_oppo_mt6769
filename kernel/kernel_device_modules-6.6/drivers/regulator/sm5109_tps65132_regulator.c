@@ -5,7 +5,7 @@
  * Copyright (C) 2021 ST-Ericsson SA
  * Written on behalf of Linaro for ST-Ericsson
  *
- * Author: Linus Shi Yaqiang
+ * Author: Linus Shi Yaqiang <shiyaqiang@realme.com>
  *
  * License terms: GNU General Public License (GPL) version 2
  */
@@ -148,7 +148,7 @@ static void __exit _lcm_i2c_exit(void)
 module_init(_lcm_i2c_init);
 module_exit(_lcm_i2c_exit);
 
-MODULE_AUTHOR("Shi Yaqiang,");
+MODULE_AUTHOR("Shi Yaqiang, <shiyaqiang@realme.com>");
 MODULE_DESCRIPTION("20015 regulator driver");
 MODULE_LICENSE("GPL v2");
 MODULE_ALIAS("platform:20015-regulator");

@@ -246,6 +246,10 @@ int dsu_freq_agg(int cpu, int max_freq_in_gear, int quant, int wl, int *dsu_targ
 	return dsu_freq;
 }
 EXPORT_SYMBOL_GPL(dsu_freq_agg);
+int mtk_dsu_freq_piling = 0;
+int mtk_dsu_freq_real = 0;
+EXPORT_SYMBOL(mtk_dsu_freq_real);
+EXPORT_SYMBOL(mtk_dsu_freq_piling);
 
 void set_dsu_target_freq(struct cpufreq_policy *policy)
 {
@@ -306,6 +310,12 @@ skip_single_idle_cpu:
 
 	freq_state.dsu_target_freq = dsu_target_freq;
 	c->sb_ch = dsu_target_freq;
+	if (unlikely(mtk_dsu_freq_piling != 0)) {
+		c->sb_ch = mtk_dsu_freq_piling;
+		freq_state.dsu_target_freq = mtk_dsu_freq_piling;
+	}
+
+	mtk_dsu_freq_real = c->sb_ch;
 	return;
 #endif
 }

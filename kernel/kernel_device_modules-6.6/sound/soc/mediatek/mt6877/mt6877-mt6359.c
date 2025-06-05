@@ -21,6 +21,7 @@
 #include "../../codecs/mt6359.h"
 #endif
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+/* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.PLATFORM, 2022/01/25, Add for audio kernel feedback */
 #include "../feedback/oplus_audio_kernel_fb.h"
 #ifdef dev_err
 #undef dev_err
@@ -213,6 +214,7 @@ static const struct snd_soc_dapm_route mt6877_mt6359_routes[] = {
 };
 
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+/* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.MACHINE, 2020/10/10, add for audiohal feedback */
 #define HAL_FEEDBACK_MAX_BYTES         (512)
 extern int hal_feedback_config_get(struct snd_kcontrol *kcontrol,
 			unsigned int __user *bytes,
@@ -233,6 +235,7 @@ static const struct snd_kcontrol_new mt6877_mt6359_controls[] = {
 			  sizeof(struct mt6877_compress_info),
 			  mt6877_compress_info_get, mt6877_compress_info_set),
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+/* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.MACHINE, 2020/10/10, add for audiohal feedback */
 	SND_SOC_BYTES_TLV("HAL FEEDBACK",
 			  HAL_FEEDBACK_MAX_BYTES,
 			  hal_feedback_config_get, hal_feedback_config_set),
@@ -351,6 +354,7 @@ static int mt6877_mt6359_mtkaif_calibration(struct snd_soc_pcm_runtime *rtd)
 			/* handle if never test done */
 			if (++counter > 10000) {
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+/* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.PLATFORM, 2022/01/25, Add for audio kernel feedback */
 				dev_err_not_fb(afe->dev, "%s(), test fail, cycle_1 %d, cycle_2 %d, cycle_3 %d, monitor 0x%x\n",
 					__func__,
 					cycle_1, cycle_2, cycle_3, monitor);
@@ -1510,6 +1514,7 @@ static int mt6877_mt6359_dev_probe(struct platform_device *pdev)
 					"mediatek,speaker-codec");
 	if (!spk_node) {
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+/* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.PLATFORM, 2022/01/25, Add for audio kernel feedback */
 			dev_err_not_fb(&pdev->dev,
 				"spk_codec of_get_child_by_name fail\n");
 #else

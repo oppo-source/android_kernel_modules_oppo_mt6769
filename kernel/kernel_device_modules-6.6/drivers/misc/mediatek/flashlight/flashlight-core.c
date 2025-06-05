@@ -68,6 +68,7 @@ static int pt_strict; /* always be zero in C standard */
 
 static int pt_is_low(int pt_low_vol, int pt_low_bat, int pt_over_cur);
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+//Tanbowen@CAMERA.DRV, 2020/09/28. Add for distinguish dual and single flashlight
 #include <soc/oplus/system/oplus_project.h>
 extern const struct flashlight_device_id flashlight_id_dual[];
 extern const struct flashlight_device_id flashlight_id_single[];
@@ -76,6 +77,7 @@ extern const struct flashlight_device_id flashlight_id_atom[];
 extern const struct flashlight_device_id flashlight_id_ark[];
 extern const struct flashlight_device_id flashlight_id_sy6560[];
 extern const struct flashlight_device_id flashlight_id_orisa[];
+extern const struct flashlight_device_id flashlight_id_orisc[];
 extern const struct flashlight_device_id flashlight_id_miami[];
 const struct flashlight_device_id *flashlight_id;
 int flashlight_device_num = 0;
@@ -290,6 +292,7 @@ int flashlight_get_part_index(int part_id)
 EXPORT_SYMBOL(flashlight_get_part_index);
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+// chenchong@CAMERA.DRV.2023/06/27, Add for engineer camera control single flashlight
 static int select_lednum(struct flashlight_dev *fdev, int lednum)
 {
 	struct flashlight_dev_arg fl_dev_arg;
@@ -384,6 +387,7 @@ int flashlight_dev_register(
 	int i;
 
 	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	//Tanbowen@CAMERA.DRV, 2020/09/28. Add for distinguish dual and single flashlight
 	if (is_project(19537) || is_project(19538) ||
 		is_project(19539) || is_project(19536) ||
 		is_project(19541) || is_project(20291) ||
@@ -397,6 +401,12 @@ int flashlight_dev_register(
 	} else {
 		flashlight_id = flashlight_id_dual;
 		flashlight_device_num = 2;
+	}
+
+	if (is_project(24700) || is_project(24701) || is_project(24702) || is_project(24709)) {
+		pr_info("set flashlight id orisa\n");
+		flashlight_id = flashlight_id_orisc;
+		flashlight_device_num = 1;
 	}
 
 	if (is_project(24713) || is_project(24715) || is_project(24714) || is_project(24728)) {
@@ -614,12 +624,14 @@ static int flashlight_update_charger_status(struct flashlight_dev *fdev)
 	/* ioctl */
 	fl_dev_arg.channel = fdev->dev_id.channel;
 	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	//Haoyuliang@CAMERA.DRV, 20230609, add for differentiate between pre-flashes and touch flashes
 	fl_dev_arg.arg = fdev->charger_status;
 	#endif /*OPLUS_FEATURE_CAMERA_COMMON*/
 	if (fdev->ops->flashlight_ioctl(FLASH_IOC_IS_CHARGER_READY,
 				(unsigned long)&fl_dev_arg))
 		pr_info("Failed to get charger status\n");
 	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	//Haoyuliang@CAMERA.DRV, 20230609, add for differentiate between pre-flashes and touch flashes
 	else if (fl_dev_arg.arg == 2)
 		fdev->charger_status = FLASHLIGHT_CHARGER_READY;
 	#endif /*OPLUS_FEATURE_CAMERA_COMMON*/
@@ -880,6 +892,7 @@ static long _flashlight_ioctl(
 		fl_arg.arg = 0;
 #ifdef CONFIG_MTK_FLASHLIGHT_PT
 	#ifndef OPLUS_FEATURE_CAMERA_COMMON
+	// wuyong@Camera.DRV, 20220907, add for enable flashlight event low power state
 		fl_arg.arg = pt_is_low(pt_low_vol, pt_low_bat, pt_over_cur);
 		if (fl_arg.arg)
 			pr_debug("Pt status: (%d,%d,%d)\n",
@@ -912,6 +925,7 @@ static long _flashlight_ioctl(
 	case FLASH_IOC_IS_CHARGER_READY:
 		mutex_lock(&fl_mutex);
 		#ifdef OPLUS_FEATURE_CAMERA_COMMON
+		//Haoyuliang@CAMERA.DRV, 20230609, add for differentiate between pre-flashes and touch flashes
 		fdev->charger_status = fl_arg.arg;
 		#endif /*OPLUS_FEATURE_CAMERA_COMMON*/
 		flashlight_update_charger_status(fdev);
@@ -1022,6 +1036,7 @@ static long _flashlight_ioctl(
 		break;
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+// chenchong@CAMERA.DRV.2024/03/21, Add for engineer camera control single flashlight
 	case OPLUS_FLASH_IOC_SELECT_LED_NUM:
 		pr_info("OPLUS_FLASH_IOC_SELECT_LED_NUM(%d,%d,%d): %d\n",
 				type, ct, part, fl_arg.arg);
@@ -2171,6 +2186,7 @@ static int __init flashlight_init(void)
 
 #ifdef CONFIG_MTK_FLASHLIGHT_PT
 	#ifndef OPLUS_FEATURE_CAMERA_COMMON
+	// wuyong@CAMERA.DRV, 20230130, add for fixing flashlignt disabled by pt
 	register_low_battery_notify(
 			&pt_low_vol_callback, LOW_BATTERY_PRIO_FLASHLIGHT, NULL);
 	register_bp_thl_notify(

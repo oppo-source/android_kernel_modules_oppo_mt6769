@@ -1496,6 +1496,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 		}
 	}
 		break;
+//jixinji@vanyol.com,2022/08/24, add featurecontrol
 	case SENSOR_FEATURE_GET_MODULE_INFO:
 		break;
 	case SENSOR_FEATURE_GET_MODULE_SN:

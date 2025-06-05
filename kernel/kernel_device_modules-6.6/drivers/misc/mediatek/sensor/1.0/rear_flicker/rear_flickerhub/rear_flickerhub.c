@@ -12,6 +12,7 @@
 #include "SCP_power_monitor.h"
 #include <linux/pm_wakeup.h>
 #ifdef OPLUS_FEATURE_SENSOR
+/*Fei.Mo@PSW.BSP.Sensor, 2017/12/17, Add for get sensor_devinfo*/
 #include "../../oplus_sensor_devinfo/sensor_devinfo.h"
 #endif
 #define REAR_FLICKERHUB_DEV_NAME     "rear_flicker_hub_pl"
@@ -121,6 +122,7 @@ static ssize_t rear_flicker_show(struct device_driver *ddri, char *buf)
 		return snprintf(buf, PAGE_SIZE, "ERROR: %d\n", res);
 	else
 #ifndef OPLUS_FEATURE_SENSOR
+/*Fei.Mo@PSW.BSP.Sensor, 2017/12/17, Modify for get flickerps value to engineer mode*/
 		return snprintf(buf, PAGE_SIZE, "0x%04X\n", obj->rear_flicker);
 #else
 		return snprintf(buf, PAGE_SIZE, "%u\n", obj->rear_flicker);

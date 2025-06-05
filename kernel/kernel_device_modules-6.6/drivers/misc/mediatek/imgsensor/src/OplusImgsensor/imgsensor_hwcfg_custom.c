@@ -19,6 +19,7 @@
 #define PCB_VERSION_10   (10)
 
 #ifdef CONFIG_PROJECT_20601
+/*luosenyao@Cam.Drv, 20211116 for Dali 20601 sensor porting*/
 #include <linux/mutex.h>
 #include <linux/ioctl.h>
 #include <linux/i3c/device.h>
@@ -254,6 +255,7 @@ enum IMGSENSOR_RETURN Oplusimgsensor_ldoenable_power(
         }
     }
 #ifdef CONFIG_PROJECT_20601
+/*luosenyao@Cam.Drv, 20211116 Add for Dali->s 20601 sensor porting*/
     else if ((pwr_status == IMGSENSOR_HW_POWER_STATUS_ON)
         && (is_project(20601) || is_project(20602)|| is_project(20660))) {
         last_camera_status = camera_status;
@@ -288,6 +290,7 @@ enum IMGSENSOR_RETURN Oplusimgsensor_ldoenable_power(
     return IMGSENSOR_RETURN_SUCCESS;
 }
 
+/*lipancheng@Cam.Drv, 20211029 Add for diana-b->s 20645 sensor porting*/
 
 enum IMGSENSOR_RETURN Oplusimgsensor_power_fan53870_20645(
         enum   IMGSENSOR_SENSOR_IDX      sensor_idx,
@@ -546,6 +549,7 @@ enum IMGSENSOR_RETURN Oplusimgsensor_ldo_powerset_23687(
         enum   IMGSENSOR_HW_POWER_STATUS pwr_status)
 {
     #ifdef CONFIG_MACH_CAMERA_MT6877
+    /*Wujianguo@Camera 2023/09/22, add for aw37004 ic*/
     if (pwr_status == IMGSENSOR_HW_POWER_STATUS_ON) {
         pr_info("[%s] sensor_idx:%d pwr_status:%d pin:%d", __func__, sensor_idx, pwr_status, pin);
         if (pin == IMGSENSOR_HW_PIN_DVDD && (sensor_idx == 0 || sensor_idx == 6)){
@@ -1020,6 +1024,7 @@ enum IMGSENSOR_RETURN Oplusimgsensor_power_fan53870_21881(
 
 }
 
+/*Added by rentianzhi@camera.drv, 2021/06/01, Bringup camera for 21015.*/
 enum IMGSENSOR_RETURN Oplusimgsensor_power_fan53870_21015(
         enum   IMGSENSOR_SENSOR_IDX   sensor_idx,
         enum   IMGSENSOR_HW_PIN       pin,
@@ -1073,6 +1078,7 @@ enum IMGSENSOR_RETURN Oplusimgsensor_power_fan53870_21015(
     return IMGSENSOR_RETURN_SUCCESS;
 }
 
+/*luosenyao@Cam.Drv, 20211116 Add for Dali->s 20601 sensor porting*/
 enum IMGSENSOR_RETURN Oplusimgsensor_power_fan53870_20601(
         enum   IMGSENSOR_SENSOR_IDX      sensor_idx,
         enum   IMGSENSOR_HW_PIN          pin,
@@ -1629,6 +1635,7 @@ enum IMGSENSOR_RETURN Oplusimgsensor_ldo_powerset(
         pr_debug("match Oplusimgsensor_power_fan53870_21881\n");
     }
 
+/*luosenyao@Cam.Drv, 20211116 Add for Dali->s 20601 sensor porting*/
     if(is_project(20601) || is_project(20602) || is_project(20660)){
         return Oplusimgsensor_power_fan53870_20601(sensor_idx,pin,pwr_status);
     }
@@ -1643,6 +1650,7 @@ enum IMGSENSOR_RETURN Oplusimgsensor_ldo_powerset(
         return Oplusimgsensor_power_fan53870_21305(sensor_idx,pin,pwr_status);
     }
 
+    /*guoxiaowei@Cam.Drv,21211224 Add for Apollof->s 216A0 sensorporting*/
     if(is_project(0x216A0)){
         return IMGSENSOR_RETURN_ERROR;
     }
@@ -1753,16 +1761,20 @@ void Oplusimgsensor_powerstate_notify(bool val)
 
         if (val && (notify_cnt == 0)) {
             pr_info("[%s] val:%d", __func__, val);
+#if IS_ENABLED(CONFIG_OPLUS_CHG)
             oplus_chg_set_camera_status(val);
             oplus_chg_set_camera_on(val);
+#endif
             notify_cnt++;
             return;
         }
 
         if (!val && (notify_cnt != 0)) {
             pr_info("[%s] val:%d", __func__, val);
+#if IS_ENABLED(CONFIG_OPLUS_CHG)
             oplus_chg_set_camera_status(val);
             oplus_chg_set_camera_on(val);
+#endif
             notify_cnt = 0;
             return;
         }
@@ -1771,8 +1783,10 @@ void Oplusimgsensor_powerstate_notify(bool val)
     if (is_project(21015) || is_project(21217) || is_project(20609) || is_project(0x2060A) || is_project(0x2060B)
         || is_project(0x2070C) || is_project(20796) || is_project(20795) || is_project(0x206FF)) {
         pr_info("[%s] val:%d", __func__, val);
+#if IS_ENABLED(CONFIG_OPLUS_CHG)
         oplus_chg_set_camera_status(val);
         oplus_chg_set_camera_on(val);
+#endif
     }
 }
 

@@ -1053,6 +1053,7 @@ static struct subdrv_mode_struct mode_struct[] = {
 		.delay_frame = 2,
 		.csi_param = {0},
 		.ana_gain_max = BASEGAIN * 64,
+		.awb_enabled = true,
 //		.sensor_setting_info = {
 //			.sensor_scenario_usage = RMSC_MASK,
 //			.equivalent_fps = 15,
@@ -1106,6 +1107,7 @@ static struct subdrv_mode_struct mode_struct[] = {
 		.multi_exposure_ana_gain_range[IMGSENSOR_EXPOSURE_LE].max = BASEGAIN * 16,
 		.pdc_enabled = TRUE,
 		.sensor_output_dataformat = SENSOR_OUTPUT_FORMAT_RAW_4CELL_B,
+		.awb_enabled = true,
 //		.sensor_setting_info = {
 //			.sensor_scenario_usage = INSENSORZOOM_MASK,
 //			.equivalent_fps = 30,
@@ -1159,6 +1161,7 @@ static struct subdrv_mode_struct mode_struct[] = {
 		.multi_exposure_ana_gain_range[IMGSENSOR_EXPOSURE_LE].max = BASEGAIN * 16,
 		.pdc_enabled = TRUE,
 		.sensor_output_dataformat = SENSOR_OUTPUT_FORMAT_RAW_4CELL_B,
+		.awb_enabled = true,
 //		.sensor_setting_info = {
 //			.sensor_scenario_usage = INSENSORZOOM_MASK,
 //			.equivalent_fps = 24,
@@ -1970,18 +1973,15 @@ static void feedback_awbgain(struct subdrv_ctx *ctx, kal_uint32 r_gain, kal_uint
 	UINT32 r_gain_int = 0;
 	UINT32 b_gain_int = 0;
 
-	if (ctx->current_scenario_id == SENSOR_SCENARIO_ID_CUSTOM3 || // RMSC
-			ctx->current_scenario_id == SENSOR_SCENARIO_ID_CUSTOM5) { // QRMSC
-		DRV_LOG(ctx, "feedback_awbgain r_gain: %d, b_gain: %d\n", r_gain, b_gain);
-		r_gain_int = r_gain / 512;
-		b_gain_int = b_gain / 512;
-		brzamain_feedback_awbgain[5] = r_gain_int;
-		brzamain_feedback_awbgain[7] = (r_gain - r_gain_int * 512) / 2;
-		brzamain_feedback_awbgain[9] = b_gain_int;
-		brzamain_feedback_awbgain[11] = (b_gain - b_gain_int * 512) / 2;
-		subdrv_i2c_wr_regs_u8(ctx, brzamain_feedback_awbgain,
-			ARRAY_SIZE(brzamain_feedback_awbgain));
-	}
+	DRV_LOG(ctx, "feedback_awbgain r_gain: %d, b_gain: %d\n", r_gain, b_gain);
+	r_gain_int = r_gain / 512;
+	b_gain_int = b_gain / 512;
+	brzamain_feedback_awbgain[5] = r_gain_int;
+	brzamain_feedback_awbgain[7] = (r_gain - r_gain_int * 512) / 2;
+	brzamain_feedback_awbgain[9] = b_gain_int;
+	brzamain_feedback_awbgain[11] = (b_gain - b_gain_int * 512) / 2;
+	subdrv_i2c_wr_regs_u8(ctx, brzamain_feedback_awbgain,
+		ARRAY_SIZE(brzamain_feedback_awbgain));
 }
 
 static int brzamain_set_awb_gain(struct subdrv_ctx *ctx, u8 *para, u32 *len) {

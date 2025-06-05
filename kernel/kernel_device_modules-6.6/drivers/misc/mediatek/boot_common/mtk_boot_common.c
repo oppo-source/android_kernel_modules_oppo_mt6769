@@ -206,6 +206,7 @@ static const struct file_operations boot_fops = {
 };
 
 #ifdef OPLUS_BUG_STABILITY
+/* Bin.Li@EXP.BSP.bootloader.bootflow, 2017/05/24, Add for boot reason proc node for mtk platform */
 static struct kobject *systeminfo_kobj;
 static ssize_t ftmmode_show(struct kobject *kobj, struct kobj_attribute *attr,
 				char *buf)
@@ -214,6 +215,7 @@ static ssize_t ftmmode_show(struct kobject *kobj, struct kobj_attribute *attr,
 		return sprintf(buf, "%d\n", SILENCE_BOOT);
 	else if (oppo_boot_mode == OPPO_SAFE_BOOT)
 		return sprintf(buf, "%d\n", SAFE_BOOT);
+	/* xiaofan.yang@PSW.TECH.AgingTest, 2019/09/09,Add for factory agingtest */
 	else if (oppo_boot_mode == OPPO_AGING_BOOT)
 		return sprintf(buf, "%d\n", AGING_BOOT);
 	else
@@ -279,6 +281,7 @@ static int __init create_sysfs(void)
 	}
 
 #ifdef OPLUS_BUG_STABILITY
+/* Bin.Li@EXP.BSP.bootloader.bootflow, 2017/05/24, Add for boot reason proc node for mtk platform */
 	systeminfo_kobj = kobject_create_and_add("systeminfo", NULL);
 	printk("oppo create systeminto node suscess!\n");
 	if (systeminfo_kobj)
@@ -321,6 +324,7 @@ static int boot_mode_proc_show(struct seq_file *p, void *v)
 
 #if 0
 #ifdef OPLUS_BUG_STABILITY
+/* Bin.Li@EXP.BSP.bootloader.bootflow, 2017/05/24, Add for oppo boot mode */
 OPPO_BOOTMODE oppo_boot_mode = OPPO_NORMAL_BOOT;
 static int oppo_get_boot_mode(char *oppo_boot_mode_char)
 {
@@ -338,6 +342,7 @@ static int oppo_get_boot_mode(char *oppo_boot_mode_char)
 	{
 		oppo_boot_mode = OPPO_SAFE_BOOT;
 	}
+	/* xiaofan.yang@PSW.TECH.AgingTest, 2019/09/09,Add for factory agingtest */
 	else if (boot_mode_temp == 3)
 	{
 		oppo_boot_mode = OPPO_AGING_BOOT;

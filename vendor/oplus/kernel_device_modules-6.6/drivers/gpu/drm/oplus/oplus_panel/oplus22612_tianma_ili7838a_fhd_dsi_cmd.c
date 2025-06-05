@@ -39,12 +39,11 @@
 #define REGFLAG_DELAY       0xFFFC
 #define REGFLAG_UDELAY  0xFFFB
 #define REGFLAG_END_OF_TABLE    0xFFFD
-/* #ifdef OPLUS_FEATURE_ONSCREENFINGERPRINT */
 /* add for ofp */
-//#include "../oplus/oplus_display_onscreenfingerprint.h"
-/* #endif */ /* OPLUS_FEATURE_ONSCREENFINGERPRINT */
+#include "../../oplus/oplus_display_onscreenfingerprint.h"
+#include "../../mediatek/mediatek_v2/mtk-cmdq-ext.h"
+#include"../../mediatek/mediatek_v2/mtk_dsi.h"
 #include <mtk_boot_common.h>
-
 
 #define BRIGHTNESS_MAX    4095
 #define BRIGHTNESS_HALF   2047
@@ -530,7 +529,8 @@ static struct mtk_panel_params ext_params = {
 	.oplus_ofp_pre_hbm_off_delay = 0,
 	.oplus_ofp_hbm_off_delay = 17,
 #endif
-/*	.oplus_osc_hoping_fps_switch = true,
+	.oplus_osc_hoping_fps_switch = true,
+/*
 	//.oplus_wait_te = 0,
 	.oplus_uiready_before_time = 17,
 	.oplus_display_global_dre = 1,
@@ -640,7 +640,8 @@ static struct mtk_panel_params ext_params_90hz = {
         .oplus_ofp_pre_hbm_off_delay = 0,
         .oplus_ofp_hbm_off_delay = 12,
 #endif
-/*        .oplus_osc_hoping_fps_switch = true,
+        .oplus_osc_hoping_fps_switch = true,
+/*
         //.oplus_wait_te = 0,
        .oplus_uiready_before_time = 12,
         .oplus_display_global_dre = 1,
@@ -750,7 +751,8 @@ static struct mtk_panel_params ext_params_120hz = {
         .oplus_ofp_pre_hbm_off_delay = 2,
         .oplus_ofp_hbm_off_delay = 0,
 #endif
-/*        .oplus_osc_hoping_fps_switch = true,
+        .oplus_osc_hoping_fps_switch = true,
+/*
         //.oplus_wait_te = 1,
         .oplus_uiready_before_time = 9,
         .backlight_dsiable_threhold = 3000,
@@ -984,6 +986,7 @@ static unsigned long panel_doze_get_mode_flags(struct drm_panel *panel, int doze
 		       | MIPI_DSI_CLOCK_NON_CONTINUOUS;
 	}
 
+	/* Hujie@PSW.MM.DisplayDriver.AOD, 2019/12/10, add for keylog*/
 	pr_err("debug for %s, mode flags =%d, doze_en = %d\n", __func__,mode_flags,doze_en);
 	return mode_flags;
 }
@@ -993,11 +996,14 @@ static int panel_doze_disable(struct drm_panel *panel, void *dsi, dcs_write_gce 
 {
 	//struct lcm *ctx = panel_to_lcm(panel);
 	unsigned int i=0;
+	/* Hujie@PSW.MM.DisplayDriver.AOD, 2019/12/10, add for keylog*/
+	struct drm_crtc *crtc = NULL;
+	struct mtk_dsi *mtk_dsi = dsi;
 	pr_err("debug for lcm %s\n", __func__);
-
 	/*if (oplus_fp_notify_down_delay)
 		aod_finger_unlock_flag = 1;*/
 
+	crtc = mtk_dsi->encoder.crtc;
 	/* Switch back to VDO mode */
 	for (i = 0; i < (sizeof(lcm_aod_to_normal) / sizeof(struct LCM_setting_table)); i++) {
 		unsigned cmd;
@@ -1033,6 +1039,10 @@ static int panel_doze_disable(struct drm_panel *panel, void *dsi, dcs_write_gce 
 	}*/
        /* keep vcore on */
        //lpm_smc_spm_dbg(MT_SPM_DBG_SMC_UID_SUSPEND_PWR_CTRL, MT_LPM_SMC_ACT_SET, PW_REG_SPM_VCORE_REQ, 0x0);
+
+	if(!oplus_ofp_backlight_filter(crtc, handle, oplus_display_brightness)) {
+			jdi_setbacklight_cmdq(dsi, cb, handle, oplus_display_brightness);
+	}
        pr_info("%s, call lpm_smc_spm_dbg keep vcore off for exit AOD!\n", __func__);
 
 	aod_state = false;
@@ -1116,6 +1126,7 @@ static int panel_doze_enable(struct drm_panel *panel, void *dsi, dcs_write_gce c
 	unsigned int i=0;
 	char bl_aod1[] = {0xFF,0x78,0x38,0x00};
 	char bl_aod2[] = {0x13};
+	/* Hujie@PSW.MM.DisplayDriver.AOD, 2019/12/10, add for keylog*/
 	pr_err("debug for lcm %s, panel_init = %d\n", __func__, panel_init);
 	aod_state = true;
 //	aod_flag = true;
@@ -1184,6 +1195,7 @@ static int panel_doze_enable(struct drm_panel *panel, void *dsi, dcs_write_gce c
 static int panel_doze_enable_start(void *dsi, dcs_write_gce cb, void *handle)
 {
 	int cmd = 0;
+/* Hujie@PSW.MM.DisplayDriver.AOD, 2019/12/10, add for keylog*/
 	pr_err("debug for lcm %s\n", __func__);
 
 	cmd = 0x28;
@@ -1198,6 +1210,7 @@ static int panel_doze_enable_end(void *dsi, dcs_write_gce cb, void *handle)
 {
 	int cmd = 0;
 	int send_buf[3];
+/* Hujie@PSW.MM.DisplayDriver.AOD, 2019/12/10, add for keylog*/
 	pr_err("debug for lcm %s\n", __func__);
 
 	cmd = 0x29;
@@ -1222,6 +1235,7 @@ static int panel_doze_post_disp_on(void *dsi, dcs_write_gce cb, void *handle)
 
 	int cmd = 0;
 
+/* Hujie@PSW.MM.DisplayDriver.AOD, 2019/12/10, add for keylog*/
 	pr_err("debug for boe lcm %s\n", __func__);
 
 	cmd = 0x29;
@@ -1237,6 +1251,7 @@ static int panel_doze_post_disp_off(void *dsi, dcs_write_gce cb, void *handle)
 
 	int cmd = 0;
 
+	/* Hujie@PSW.MM.DisplayDriver.AOD, 2019/12/10, add for keylog*/
 	pr_err("debug for boe lcm %s\n", __func__);
 
 	cmd = 0x28;
@@ -1288,6 +1303,7 @@ static int lcm_panel_poweron(struct drm_panel *panel)
 	struct jdi *ctx = panel_to_jdi(panel);
 	int ret;
 
+	/* Hujie@PSW.MM.DisplayDriver.AOD, 2019/12/10, add for keylog*/
 
 	if (ctx->prepared)
 		return 0;

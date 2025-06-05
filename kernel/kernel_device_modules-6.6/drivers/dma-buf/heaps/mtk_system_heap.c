@@ -891,7 +891,7 @@ static void mtk_mm_heap_dma_buf_release(struct dma_buf *dmabuf)
 		 file_inode(dmabuf->file)->i_ino, buffer->len,
 		 dmabuf->name?:"NULL");
 	spin_unlock(&dmabuf->name_lock);
-	//add by zhenghaiqing for dma debug
+	//add by zhenghaiqing@oppo.com for dma debug
 	trace_mtk_dma_free(buffer->len, dmabuf->android_kabi_reserved2, dmabuf->name?:"NULL");
 	dmabuf_release_check(dmabuf);
 
@@ -936,7 +936,7 @@ static void system_heap_dma_buf_release(struct dma_buf *dmabuf)
 	struct sg_table *table;
 	struct scatterlist *sg;
 	int i, j;
-	//add by zhenghaiqing for dma debug
+	//add by zhenghaiqing@oppo.com for dma debug
 	trace_mtk_dma_free(buffer->len, dmabuf->android_kabi_reserved2, dmabuf->name?:"NULL");
 	dmabuf_release_check(dmabuf);
 
@@ -1359,7 +1359,7 @@ static struct dma_buf *system_heap_do_allocate(struct dma_heap *heap,
 		ret = PTR_ERR(dmabuf);
 		goto free_pages;
 	}
-    //add by zhenghaiqing for dma debug
+    //add by zhenghaiqing@oppo.com for dma debug
     /*
 	 * use android_kabi_reserved2 as inode no. but it has potential risk if
 	 * google uses it.

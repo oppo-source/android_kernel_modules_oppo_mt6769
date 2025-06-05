@@ -17,6 +17,7 @@
 #include <linux/mutex.h>
 #include "imgsensor_hwcfg_custom.h"
 
+extern struct CAMERA_DEVICE_INFO gImgEepromInfoOrisC;
 extern int iReadRegI2C(u8 *a_pSendData, u16 a_sizeSendData,
                        u8 *a_pRecvData, u16 a_sizeRecvData, u16 i2cId);
 extern int iReadRegI2CTiming(u8 *a_pSendData, u16 a_sizeSendData,

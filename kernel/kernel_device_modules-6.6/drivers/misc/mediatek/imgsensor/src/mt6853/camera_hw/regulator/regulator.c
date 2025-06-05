@@ -14,10 +14,12 @@
 #include "regulator.h"
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/* Feiping@Cam.Drv, 20190921, add for 19169 AF*/
 #include <soc/oplus/system/oplus_project.h>
 #include "imgsensor.h"
 #endif
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*chenqiang@Cam.Drv, 20201218, add for fix issue of voltage change in same LDO*/
 static bool regulator_status[IMGSENSOR_SENSOR_IDX_MAX_NUM][REGULATOR_TYPE_MAX_NUM] = {{false}};
 static void check_for_regulator_get(struct REGULATOR *preg,
 struct device *pdevice, unsigned int sensor_index, unsigned int regulator_index);
@@ -29,6 +31,7 @@ static DEFINE_MUTEX(g_regulator_state_mutex);
 static struct regulator *regVCAMAF = NULL;
 static const int regulator_voltage[] = {
 	REGULATOR_VOLTAGE_0,
+	REGULATOR_VOLTAGE_800,
 	REGULATOR_VOLTAGE_1000,
 	REGULATOR_VOLTAGE_1050,
 	REGULATOR_VOLTAGE_1100,
@@ -51,6 +54,7 @@ struct REGULATOR_CTRL regulator_control[REGULATOR_TYPE_MAX_NUM] = {
 static struct REGULATOR reg_instance;
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/* Feiping@Cam.Drv, 20190921, add for 19169 AF*/
 extern struct IMGSENSOR gimgsensor;
 struct regulator *regulator_get_regVCAMAF(void)
 {
@@ -58,6 +62,7 @@ struct regulator *regulator_get_regVCAMAF(void)
 	return regulator_get(&((pimgsensor->hw.common.pplatform_device)->dev), "vcammainaf");
 }
 EXPORT_SYMBOL(regulator_get_regVCAMAF);
+/* Feiping@Cam.Drv, 20200102, add for 19040 AF*/
 struct regulator *regulator_get_regVCAMAF_19040(int sensor_idx)
 {
 	struct IMGSENSOR *pimgsensor = &gimgsensor;
@@ -69,6 +74,7 @@ EXPORT_SYMBOL(regulator_get_regVCAMAF_19040);
 #endif
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*Shengguang.Zhu@Cam.Drv, 20210317, add for 20609*/
 extern struct IMGSENSOR gimgsensor;
 struct regulator *regulator_get_regVCAMAF_20609(void)
 {
@@ -137,6 +143,7 @@ static enum IMGSENSOR_RETURN regulator_release(void *pinstance)
 }
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+//Feiping.Li@Cam.Drv, 20191231, add for solve camera cause reboot
 extern struct IMGSENSOR gimgsensor;
 static struct regulator *regulator_reinit(void *pinstance, int sensor_idx, int type)
 {
@@ -227,6 +234,7 @@ static enum IMGSENSOR_RETURN regulator_set(
 	reg_type_offset = REGULATOR_TYPE_VCAMA;
 
 	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	/*chenqiang@Cam.Drv, 20201218, add for fix issue of voltage change in same LDO*/
 	if (ghw_device_common)
 		check_for_regulator_get(preg, &ghw_device_common->pplatform_device->dev, sensor_idx,(reg_type_offset + pin - IMGSENSOR_HW_PIN_AVDD));
 	#endif /*OPLUS_FEATURE_CAMERA_COMMON*/
@@ -235,6 +243,7 @@ static enum IMGSENSOR_RETURN regulator_set(
 		preg->pregulator[sensor_idx][
 			reg_type_offset + pin - IMGSENSOR_HW_PIN_AVDD];
     #ifdef OPLUS_FEATURE_CAMERA_COMMON
+	//Feiping.Li@Cam.Drv, 20200102, add for porting 19040 sensor
 	if(IS_ERR(pregulator)){
         pregulator = regulator_reinit(preg, sensor_idx, reg_type_offset + pin - IMGSENSOR_HW_PIN_AVDD);
 		if (IS_ERR(pregulator)) {
@@ -267,6 +276,7 @@ static enum IMGSENSOR_RETURN regulator_set(
 				regulator_voltage[
 				  pin_state - IMGSENSOR_HW_PIN_STATE_LEVEL_0]);
 				#ifdef OPLUS_FEATURE_CAMERA_COMMON
+				/*chenqiang@Cam.Drv, 20201218, add for fix issue of voltage change in same LDO*/
 				check_for_regulator_put(preg, sensor_idx, (reg_type_offset + pin - IMGSENSOR_HW_PIN_AVDD));
 				#endif /*OPLUS_FEATURE_CAMERA_COMMON*/
 				return IMGSENSOR_RETURN_ERROR;
@@ -281,11 +291,13 @@ static enum IMGSENSOR_RETURN regulator_set(
 					"[regulator]fail to regulator_disable, powertype: %d\n",
 					pin);
 				#ifdef OPLUS_FEATURE_CAMERA_COMMON
+				/*chenqiang@Cam.Drv, 20201218, add for fix issue of voltage change in same LDO*/
 				check_for_regulator_put(preg, sensor_idx,(reg_type_offset + pin - IMGSENSOR_HW_PIN_AVDD));
 				#endif /*OPLUS_FEATURE_CAMERA_COMMON*/
 				return IMGSENSOR_RETURN_ERROR;
 			}
 			#ifdef OPLUS_FEATURE_CAMERA_COMMON
+			/*chenqiang@Cam.Drv, 20201218, add for fix issue of voltage change in same LDO*/
 			check_for_regulator_put(preg, sensor_idx,(reg_type_offset + pin - IMGSENSOR_HW_PIN_AVDD));
 			#endif /*OPLUS_FEATURE_CAMERA_COMMON*/
 			atomic_dec(enable_cnt);
@@ -301,6 +313,7 @@ static enum IMGSENSOR_RETURN regulator_set(
 }
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*chenqiang@Cam.Drv, 20201218, add for fix issue of voltage change in same LDO*/
 static void check_for_regulator_get(struct REGULATOR *preg,
 	struct device *pdevice, unsigned int sensor_index,
 	unsigned int regulator_index)
@@ -384,6 +397,7 @@ static enum IMGSENSOR_RETURN regulator_dump(void *pinstance)
 		i < REGULATOR_TYPE_MAX_NUM;
 		i++) {
              #ifdef OPLUS_FEATURE_CAMERA_COMMON
+			//Feiping.Li@Cam.Drv, 20200114, add for fix kernel dump issue
 			if (IS_ERR_OR_NULL(preg->pregulator[j][i])) {
 				PK_DBG("regulator idx(%d, %d) alread release ", j, i);
 				return IMGSENSOR_RETURN_SUCCESS;

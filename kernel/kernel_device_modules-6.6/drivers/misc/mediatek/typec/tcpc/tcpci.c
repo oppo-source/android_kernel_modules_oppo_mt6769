@@ -502,6 +502,7 @@ EXPORT_SYMBOL(tcpci_notify_hvdcp_detect_dn);
 #endif
 
 #ifdef OPLUS_FEATURE_CHG_BASIC
+/* @BSP.CHG.Basic 2023/01/06 add for audio switch */
 int tcpci_notify_switch_get_state(struct tcpc_device *tcpc, bool (*pfunc)(int))
 {
 	struct tcp_notify tcp_noti;

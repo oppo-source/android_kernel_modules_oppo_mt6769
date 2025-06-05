@@ -649,6 +649,7 @@ enum CRTC_GCE_EVENT_TYPE {
 	EVENT_WDMA1_EOF,
 	EVENT_STREAM_BLOCK,
 	EVENT_CABC_EOF,
+	EVENT_VDO_CABC_EOF,
 	EVENT_DSI_SOF,
 	/*Msync 2.0*/
 	EVENT_SYNC_TOKEN_VFP_PERIOD,
@@ -1181,6 +1182,7 @@ struct mtk_drm_crtc {
 
 	ktime_t pf_time;
 	ktime_t sof_time;
+	ktime_t prev_pf_time;
 	spinlock_t pf_time_lock;
 	struct task_struct *signal_present_fece_task;
 	struct cmdq_cb_data cb_data;

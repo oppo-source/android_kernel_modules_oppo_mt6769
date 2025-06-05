@@ -150,7 +150,7 @@ static struct SET_PD_BLOCK_INFO_T imgsensor_pd_info = {
 		/* <cust6> <cust7> <cust8> <cust9> <cust10>*/
 		{0, 192}, {2048, 1536}, {0, 0}, {0, 384}, {0, 384},
 		/* <cust11> <cust12> <cust13> <cust14> <cust15> */
-		{1056, 792}, {0, 0}, {0, 0}, {0, 0}, {0, 192},
+		{1120, 840}, {0, 0}, {0, 0}, {0, 0}, {0, 192},
 		/* <cust16> <cust17> <cust18> <cust19>*/
 		{0, 384}, {0, 0}, {2048, 1536}, {0, 0},
 	},
@@ -674,6 +674,16 @@ static struct mtk_mbus_frame_desc_entry frame_desc_cus11[] = {
 			.vsize = 1392,
 			.user_data_desc = VC_STAGGER_NE,
 			.fs_seq = MTK_FRAME_DESC_FS_SEQ_ONLY_ONE,
+		},
+	},
+	{
+		.bus.csi2 = {
+			.channel = 0,
+			.data_type = 0x30,
+			.hsize = 1856,
+			.vsize = 348,
+			.user_data_desc = VC_PDAF_STATS_NE_PIX_1,
+			.dt_remap_to_type = MTK_MBUS_FRAME_DESC_REMAP_TO_RAW10,
 		},
 	},
 };
@@ -1680,7 +1690,7 @@ static struct subdrv_mode_struct mode_struct[] = {
 			.w2_tg_size = 1856,
 			.h2_tg_size = 1392,
 		},
-		.pdaf_cap = FALSE,
+		.pdaf_cap = TRUE,
 		.imgsensor_pd_info = &imgsensor_pd_info,
 		.ae_binning_ratio = 1000,
 		.fine_integ_line = 590,

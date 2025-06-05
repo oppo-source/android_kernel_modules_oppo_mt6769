@@ -34,7 +34,11 @@ ccflags-y += -I$(DEVICE_MODULES_PATH)/drivers/misc/mediatek/usb/usb20/
 
 # for typec event
 ifeq ($(CONFIG_TCPC_CLASS),$(filter $(CONFIG_TCPC_CLASS),m y))
+ifndef CONFIG_OPLUS_PD_EXT_SUPPORT
 	ccflags-y += -I$(DEVICE_MODULES_PATH)/drivers/misc/mediatek/typec/tcpc/inc
+else
+	ccflags-y += -I$(DEVICE_MODULES_PATH)/drivers/power/oplus/pd_ext/inc
+endif
 endif
 
 # define_trace.h needs to know how to find our header

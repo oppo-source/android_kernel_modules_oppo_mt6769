@@ -2399,6 +2399,7 @@ bool set_frame_group_task_to_perfer_cpu(struct task_struct *p, int *target_cpu)
 	int iter_cpu = 0;
 	int orig_cls_id = 0;
 	int start_cls = -1;
+	struct oplus_sched_cluster *temp_cls;
 	struct rq *orig_rq = NULL;
 	struct oplus_rq *orig_orq = NULL;
 	bool walk_next_cls = false;
@@ -2439,6 +2440,13 @@ bool set_frame_group_task_to_perfer_cpu(struct task_struct *p, int *target_cpu)
 		if (grp->preferred_cluster == NULL)
 			return false;
 
+		/* preferred_cluster has concurrency issues with clear_all_frame_task() */
+		temp_cls = grp->preferred_cluster;
+		if (!temp_cls)
+			return false;
+		start_cls = temp_cls->id;
+
+
 		orig_rq = cpu_rq(*target_cpu);
 		orig_orq = (struct oplus_rq *)orig_rq->android_oem_data1;
 		orig_cls_id = topology_cluster_id(*target_cpu);
@@ -2447,7 +2455,6 @@ bool set_frame_group_task_to_perfer_cpu(struct task_struct *p, int *target_cpu)
 		 * The frame boost selection is referenced to the walt core selection,
 		 * as it is not possible to override the boost, eg sched boost and task boost
 		 */
-		start_cls = grp->preferred_cluster->id;
 		if (orig_cls_id > start_cls) {
 			struct oplus_task_struct *ots_curr = get_oplus_task_struct(orig_rq->curr);
 

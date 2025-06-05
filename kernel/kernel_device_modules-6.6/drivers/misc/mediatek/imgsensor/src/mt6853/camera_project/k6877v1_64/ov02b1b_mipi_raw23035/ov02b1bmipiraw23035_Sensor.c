@@ -498,6 +498,7 @@ static void ihdr_write_shutter_gain(
 }
 
 
+/*Feiping@Camera.Drv, 20190603, add for set correct mirror/flip */
 static void set_mirror_flip(kal_uint8 image_mirror)
 {
 	LOG_INF("image_mirror = %d\n", image_mirror);

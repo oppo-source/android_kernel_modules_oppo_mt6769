@@ -468,6 +468,7 @@ helper-value = <0>, /*MTK_DRM_OPT_STAGE*/
                 led-bits = <12>;
                 trans-bits = <12>;
                 default-state = "on";
+		apollo-state = "disable";
         };
 };
 

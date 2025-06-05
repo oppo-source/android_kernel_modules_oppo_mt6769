@@ -600,6 +600,7 @@ static int lcm_prepare(struct drm_panel *panel)
 #endif
 /*
 #ifdef LCD_LOAD_TP_FW
+	// shifan@bsp.tp 20191226 add for loading tp fw when screen lighting on
 	lcd_queue_load_tp_fw();
 #endif
 */
@@ -669,7 +670,7 @@ static struct mtk_panel_params ext_params = {
 	//.vfp_low_power = 148,
 	.oplus_esd_sleep_status = true,
 	.oplus_esd_sleep_ms = 5000,
-	.cust_esd_check = 0,
+	.cust_esd_check = 1,
 	.esd_check_enable = 1,
 	.lcm_esd_check_table[0] = {
 		.cmd = 0x09, .count = 3, .para_list[0] = 0x80, .para_list[1] = 0x03, .para_list[2] = 0x06,
@@ -690,7 +691,7 @@ static struct mtk_panel_params ext_params_50hz = {
 	//.vfp_low_power = 4484,
 	.oplus_esd_sleep_status = true,
 	.oplus_esd_sleep_ms = 5000,
-	.cust_esd_check = 0,
+	.cust_esd_check = 1,
 	.esd_check_enable = 1,
 	.lcm_esd_check_table[0] = {
 		.cmd = 0x09, .count = 3, .para_list[0] = 0x80, .para_list[1] = 0x03, .para_list[2] = 0x06,
@@ -733,7 +734,7 @@ static struct mtk_panel_params ext_params_60hz = {
 	//.vfp_low_power = 2316, /* 60 FPS */
 	.oplus_esd_sleep_status = true,
 	.oplus_esd_sleep_ms = 5000,
-	.cust_esd_check = 0,
+	.cust_esd_check = 1,
 	.esd_check_enable = 1,
 	.lcm_esd_check_table[0] = {
 		.cmd = 0x09, .count = 3, .para_list[0] = 0x80, .para_list[1] = 0x03, .para_list[2] = 0x06,
@@ -772,7 +773,7 @@ static struct mtk_panel_params ext_params_60hz = {
 };
 #endif
 
-#if 0
+
 static void cabc_switch(void *dsi, dcs_write_gce cb,void *handle, unsigned int cabc_mode)
 {
     char bl_tb1[] = {0x55, 0x03}; /* no cabc ui pictures videoes*/
@@ -828,7 +829,7 @@ static void cabc_switch(void *dsi, dcs_write_gce cb,void *handle, unsigned int c
 	cabc_status = cabc_mode;
     /* cabc_lastlevel = cabc_mode; */
 }
-#endif
+
 static int panel_ata_check(struct drm_panel *panel)
 {
 	/* Customer test by own ATA tool */
@@ -995,7 +996,7 @@ static struct mtk_panel_funcs ext_funcs = {
 	.ext_param_set = mtk_panel_ext_param_set,
 	//.mode_switch = mode_switch,
 	.ata_check = panel_ata_check,
-	//.cabc_switch = cabc_switch,
+	.cabc_switch = cabc_switch,
 };
 #endif
 

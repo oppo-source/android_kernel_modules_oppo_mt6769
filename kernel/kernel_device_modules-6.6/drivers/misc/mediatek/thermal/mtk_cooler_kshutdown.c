@@ -15,7 +15,7 @@
 #include <linux/printk.h>
 #include <linux/types.h>
 #include <linux/kobject.h>
-
+#include <soc/oplus/system/oplus_project.h>
 #include "mt-plat/mtk_thermal_monitor.h"
 
 #define mtk_cooler_kshutdown_dprintk(fmt, args...)	\
@@ -64,9 +64,8 @@ static unsigned long cl_kshutdown_state[MAX_NUM_INSTANCE_MTK_COOLER_KSHUTDOWN]
 		mtk_cooler_kshutdown_dprintk(
 				"%s %s invokes machine_power_off\n", __func__,
 				cdev->type);
-
-		//machine_power_off();
-		pm_power_off();
+                if (get_eng_version() != HIGH_TEMP_AGING)
+		        pm_power_off();
 	}
 
 	return 0;

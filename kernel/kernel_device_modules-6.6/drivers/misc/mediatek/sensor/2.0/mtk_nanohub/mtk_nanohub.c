@@ -30,6 +30,7 @@
 #include "mtk_nanohub_ipi.h"
 
 #ifdef CONFIG_OPLUS_FEATURE_SENSOR_ALGORITHM
+/*Fei.Mo@PSW.BSP.Sensor, 2017/12/17, Add for get sensor_devinfo*/
 #include "../oplus_sensor_devinfo/sensor_devinfo_v2.h"
 #endif
 
@@ -300,6 +301,7 @@ static int mtk_nanohub_direct_push_work(void *data)
 }
 
 #ifdef CONFIG_OPLUS_FEATURE_SENSOR_ALGORITHM
+/*Fei.Mo@PSW.BSP.Sensor, 2020/04/23, Add oplus device info msg*/
 static void
 SCP_sensorHub_set_oplus_cmd(union SCP_SENSOR_HUB_DATA *rsp,
 					int rx_len)

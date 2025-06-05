@@ -5,10 +5,12 @@
 
 #include "regulator.h"
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*Henry.Chang@Cam.Drv, 20200727, add for 20131*/
 #include "imgsensor.h"
 #include <soc/oplus/system/oplus_project.h>
 #endif
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*chenqiang@Cam.Drv, 20201218, add for fix issue of voltage change in same LDO*/
 static bool regulator_status[IMGSENSOR_SENSOR_IDX_MAX_NUM][REGULATOR_TYPE_MAX_NUM] = {{false}};
 static void check_for_regulator_get(struct REGULATOR *preg,
 struct device *pdevice, unsigned int sensor_index, unsigned int regulator_index);
@@ -19,6 +21,7 @@ static DEFINE_MUTEX(g_regulator_state_mutex);
 #endif /*OPLUS_FEATURE_CAMERA_COMMON*/
 static const int regulator_voltage[] = {
 	REGULATOR_VOLTAGE_0,
+	REGULATOR_VOLTAGE_800,
 	REGULATOR_VOLTAGE_1000,
 	REGULATOR_VOLTAGE_1050,
 	REGULATOR_VOLTAGE_1100,
@@ -37,6 +40,7 @@ struct REGULATOR_CTRL regulator_control[REGULATOR_TYPE_MAX_NUM] = {
 	{"vcamd"},
 	{"vcamio"},
 	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	/*Henry.Chang@Cam.Drv, 20200727, add for 20131*/
 	{"vcamaf"},
 	{"vcama1"},
 	{"vcamd1"}
@@ -46,6 +50,7 @@ struct REGULATOR_CTRL regulator_control[REGULATOR_TYPE_MAX_NUM] = {
 static struct REGULATOR reg_instance;
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*Henry.Chang@Cam.Drv, 20200727, add for 20131*/
 extern struct IMGSENSOR gimgsensor;
 struct regulator *regulator_get_regVCAMAF(void)
 {
@@ -71,6 +76,7 @@ struct regulator *regulator_get_regVCAMAF_ALICE(void)
 #endif
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*daizhenggang@Cam.Drv, 20211230, add for 20609*/
 extern struct IMGSENSOR gimgsensor;
 struct regulator *regulator_get_regVCAMAF_20609(void)
 {
@@ -88,6 +94,7 @@ EXPORT_SYMBOL(regulator_get_regVCAMAF_bladeb);
 #endif
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*lixiaobing@Cam.Drv,MTK pach case id  ALPS07840513,Open the interrupt and Increase OC debounce time*/
 extern unsigned int pmic_config_interface(unsigned int RegNum,
 				   unsigned int val,
 				   unsigned int MASK,
@@ -103,10 +110,12 @@ static enum IMGSENSOR_RETURN regulator_init(
 	char str_regulator_name[LENGTH_FOR_SNPRINTF];
 
 	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	/*chenqiang@Cam.Drv, 20201218, add for fix issue of voltage change in same LDO*/
 	ghw_device_common = pcommon;
 	of_node_record = pcommon->pplatform_device->dev.of_node;
 	#endif /*OPLUS_FEATURE_CAMERA_COMMON*/
 	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	/*lixiaobing@Cam.Drv,MTK pach case id  ALPS07840513,Open the interrupt and Increase OC debounce time*/
 	if (is_project(22629) || is_project(22710) || is_project(22711)) {
 		//pmic_config_interface(0x1b14, 0xffff, 0xFFFF, 0x0);
 		//pmic_config_interface(0x1c54, 0x1c72, 0xFFFF, 0x0);
@@ -167,6 +176,7 @@ static enum IMGSENSOR_RETURN regulator_release(void *pinstance)
 }
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*Henry.Chang@Cam.Drv, 20200727, add for 20131*/
 static struct regulator *regulator_reinit(void *pinstance, int sensor_idx, int type)
 {
 	struct REGULATOR *preg = (struct REGULATOR *)pinstance;
@@ -182,6 +192,7 @@ static struct regulator *regulator_reinit(void *pinstance, int sensor_idx, int t
 	pr_err("reinit %s regulator[%d][%d] = %pK\n", str_regulator_name,
 			sensor_idx, type, preg->pregulator[sensor_idx][type]);
 	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	/*lixiaobing@Cam.Drv,MTK pach case id  ALPS07840513,Open the interrupt and Increase OC debounce time*/
 	if (is_project(22629) || is_project(22710) || is_project(22711)) {
 		//pmic_config_interface(0x1b14, 0xfbff, 0xFFFF, 0x0);
 	}
@@ -208,11 +219,12 @@ static enum IMGSENSOR_RETURN regulator_set(
 	int reg_type_offset;
 	atomic_t             *enable_cnt;
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*dengchao@CAMERA.DRIVER just porting form R version*/
 	if (is_project(22083) || is_project(22084) || is_project(22291) || is_project(22292) || is_project(22631) || is_project(22632) || is_project(23602)
 	|| is_project(23053) || is_project(23054) || is_project(23253) || is_project(23055)
 	|| is_project(21101) || is_project(21102) || is_project(21235) || is_project(21236) || is_project(21041) || is_project(21042)
 	|| is_project(22087) || is_project(22088) || is_project(22331) || is_project(22332) || is_project(22333) || is_project(22334) || is_project(22869)
-	|| is_project(0x216A0) || is_project(22610) || is_project(22705) || is_project(22706) || is_project(21831) || is_project(0x2163B) || is_project(0x2163C) || is_project(0x2163D)
+	|| is_project(0x216A0) || is_project(21831) || is_project(0x2163B) || is_project(0x2163C) || is_project(0x2163D)
 	|| is_project(21639) || is_project(0x216CD) || is_project(0x216CE) || is_project(22603) || is_project(22604) || is_project(22609)
 	|| is_project(0x2260A) || is_project(0x2260B) || is_project(22669) || is_project(0x2266A) || is_project(0x2266B) || is_project(0x2266C)) {
 		PK_DBG("to set current regulator pin:%d", pin);
@@ -359,6 +371,7 @@ static enum IMGSENSOR_RETURN regulator_set(
 	}
 #endif
 	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	/*Henry.Chang@Cam.Drv, 20200727, add for 20131*/
 	if (pin > IMGSENSOR_HW_PIN_FAN53870_ENABLE   ||
 	#else
 	if (pin > IMGSENSOR_HW_PIN_DOVDD   ||
@@ -371,6 +384,7 @@ static enum IMGSENSOR_RETURN regulator_set(
 	reg_type_offset = REGULATOR_TYPE_VCAMA;
 
 	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	/*chenqiang@Cam.Drv, 20201218, add for fix issue of voltage change in same LDO*/
 	if (ghw_device_common)
 		check_for_regulator_get(preg, &ghw_device_common->pplatform_device->dev, sensor_idx,(reg_type_offset + pin - IMGSENSOR_HW_PIN_AVDD));
 	#endif /*OPLUS_FEATURE_CAMERA_COMMON*/
@@ -378,6 +392,7 @@ static enum IMGSENSOR_RETURN regulator_set(
 		reg_type_offset + pin - IMGSENSOR_HW_PIN_AVDD];
 
 	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	/*Henry.Chang@Cam.Drv, 20200727, add for 20131*/
 	if(IS_ERR(pregulator)) {
 		pregulator = regulator_reinit(preg, sensor_idx, reg_type_offset + pin - IMGSENSOR_HW_PIN_AVDD);
 		if (IS_ERR(pregulator)) {
@@ -408,6 +423,7 @@ static enum IMGSENSOR_RETURN regulator_set(
 				  pin_state - IMGSENSOR_HW_PIN_STATE_LEVEL_0]);
 			}
 			#ifdef OPLUS_FEATURE_CAMERA_COMMON
+			/*Henry.Chang@Cam.Drv, 20200727, add for 20131*/
 			if (!regulator_set_load(pregulator, 10000)) {
 				PK_DBG("set load success");
 			}
@@ -420,6 +436,7 @@ static enum IMGSENSOR_RETURN regulator_set(
 				regulator_voltage[
 				  pin_state - IMGSENSOR_HW_PIN_STATE_LEVEL_0]);
 				#ifdef OPLUS_FEATURE_CAMERA_COMMON
+				/*chenqiang@Cam.Drv, 20201218, add for fix issue of voltage change in same LDO*/
 				check_for_regulator_put(preg, sensor_idx, (reg_type_offset + pin - IMGSENSOR_HW_PIN_AVDD));
 				#endif /*OPLUS_FEATURE_CAMERA_COMMON*/
 				return IMGSENSOR_RETURN_ERROR;
@@ -434,11 +451,13 @@ static enum IMGSENSOR_RETURN regulator_set(
 					"[regulator]fail to regulator_disable, powertype: %d\n",
 					pin);
 				#ifdef OPLUS_FEATURE_CAMERA_COMMON
+				/*chenqiang@Cam.Drv, 20201218, add for fix issue of voltage change in same LDO*/
 				check_for_regulator_put(preg, sensor_idx,(reg_type_offset + pin - IMGSENSOR_HW_PIN_AVDD));
 				#endif /*OPLUS_FEATURE_CAMERA_COMMON*/
 				return IMGSENSOR_RETURN_ERROR;
 			}
 			#ifdef OPLUS_FEATURE_CAMERA_COMMON
+			/*chenqiang@Cam.Drv, 20201218, add for fix issue of voltage change in same LDO*/
 			check_for_regulator_put(preg, sensor_idx,(reg_type_offset + pin - IMGSENSOR_HW_PIN_AVDD));
 			#endif /*OPLUS_FEATURE_CAMERA_COMMON*/
 			atomic_dec(enable_cnt);
@@ -454,6 +473,7 @@ static enum IMGSENSOR_RETURN regulator_set(
 }
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*chenqiang@Cam.Drv, 20201218, add for fix issue of voltage change in same LDO*/
 static void check_for_regulator_get(struct REGULATOR *preg,
 	struct device *pdevice, unsigned int sensor_index,
 	unsigned int regulator_index)
@@ -539,6 +559,7 @@ static enum IMGSENSOR_RETURN regulator_dump(void *pinstance)
 		i < REGULATOR_TYPE_MAX_NUM;
 		i++) {
 			#ifdef OPLUS_FEATURE_CAMERA_COMMON
+			/*Henry.Chang@Cam.Drv, 20200727, add for 20131*/
 			if (IS_ERR_OR_NULL(preg->pregulator[j][i])) {
 				PK_DBG("regulator idx(%d, %d) alread release ", j, i);
 				return IMGSENSOR_RETURN_SUCCESS;

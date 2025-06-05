@@ -14,6 +14,8 @@
 #include <linux/usb/ch9.h>
 #include <linux/time.h>
 #include <linux/dma-mapping.h>
+#include <linux/usb/quirks.h>
+#include <linux/usb.h>
 
 #include "musb_core.h"
 #include "musb_host.h"
@@ -2874,6 +2876,8 @@ static int
 	qh->maxpacket = usb_endpoint_maxp(epd);
 	qh->type = usb_endpoint_type(epd);
 
+	trace_musb_urb_enqueue_(urb);
+
 	/* Bits 11 & 12 of wMaxPacketSize encode high bandwidth multiplier.
 	 * Some musb cores don't support high bandwidth ISO transfers; and
 	 * we don't (yet!) support high bandwidth interrupt transfers.
@@ -3418,6 +3422,82 @@ static int musb_bus_resume(struct usb_hcd *hcd)
 	return 0;
 }
 
+
+/* quirk list in usbcore */
+static const struct usb_device_id mtk_usb_quirk_list[] = {
+	/* AM33/CM33 HeadSet */
+	{USB_DEVICE(0x12d1, 0x3a07), .driver_info = USB_QUIRK_IGNORE_REMOTE_WAKEUP|USB_QUIRK_RESET},
+	{ }  /* terminating entry must be last */
+};
+
+static int usb_match_device(struct usb_device *dev, const struct usb_device_id *id)
+{
+	if ((id->match_flags & USB_DEVICE_ID_MATCH_VENDOR) &&
+		id->idVendor != le16_to_cpu(dev->descriptor.idVendor))
+		return 0;
+
+	if ((id->match_flags & USB_DEVICE_ID_MATCH_PRODUCT) &&
+		id->idProduct != le16_to_cpu(dev->descriptor.idProduct))
+		return 0;
+
+	/* No need to test id->bcdDevice_lo != 0, since 0 is never */
+	/*   greater than any unsigned number. */
+	if ((id->match_flags & USB_DEVICE_ID_MATCH_DEV_LO) &&
+		(id->bcdDevice_lo > le16_to_cpu(dev->descriptor.bcdDevice)))
+		return 0;
+
+	if ((id->match_flags & USB_DEVICE_ID_MATCH_DEV_HI) &&
+		(id->bcdDevice_hi < le16_to_cpu(dev->descriptor.bcdDevice)))
+		return 0;
+
+	if ((id->match_flags & USB_DEVICE_ID_MATCH_DEV_CLASS) &&
+		(id->bDeviceClass != dev->descriptor.bDeviceClass))
+		return 0;
+
+	if ((id->match_flags & USB_DEVICE_ID_MATCH_DEV_SUBCLASS) &&
+		(id->bDeviceSubClass != dev->descriptor.bDeviceSubClass))
+		return 0;
+
+	if ((id->match_flags & USB_DEVICE_ID_MATCH_DEV_PROTOCOL) &&
+		(id->bDeviceProtocol != dev->descriptor.bDeviceProtocol))
+		return 0;
+
+	return 1;
+}
+
+static u32 usb_detect_static_quirks(struct usb_device *udev,
+					const struct usb_device_id *id)
+{
+	u32 quirks = 0;
+
+	for (; id->match_flags; id++) {
+		if (!usb_match_device(udev, id))
+			continue;
+
+		quirks |= (u32)(id->driver_info);
+		dev_info(&udev->dev,
+			  "Set usbcore quirk_flags 0x%x for device %04x:%04x\n",
+			  (u32)id->driver_info, id->idVendor,
+			  id->idProduct);
+	}
+
+	return quirks;
+}
+
+static void musb_mtk_apply_quirk(struct usb_device *udev)
+{
+	if (!udev)
+		return;
+
+	udev->quirks = usb_detect_static_quirks(udev, mtk_usb_quirk_list);
+}
+
+static int musb_update_device(struct usb_hcd *hcd, struct usb_device *udev)
+{
+	musb_mtk_apply_quirk(udev);
+	return 0;
+}
+
 const struct hc_driver musb_hc_driver = {
 	.description = "musb-hcd",
 	.product_desc = "MUSB HDRC host driver",
@@ -3443,4 +3523,6 @@ const struct hc_driver musb_hc_driver = {
 	.bus_resume = musb_bus_resume,
 	/* .start_port_reset    = NULL, */
 	/* .hub_irq_enable      = NULL, */
+	.update_device = musb_update_device,
 };
+

@@ -48,6 +48,7 @@ extern struct CAMERA_DEVICE_INFO gImgEepromInfo;
 
 #define MULTI_WRITE    1
 
+/* Pengfei.Zhao@Camera.DRV add for register device info 20201028*/
 #define DEVICE_VERSION_GC02M1    "gc02m1"
 static kal_uint8 deviceInfo_register_value = 0x00;
 

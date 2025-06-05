@@ -76,7 +76,6 @@ extern void lcd_queue_load_tp_fw(void);
 static int esd_brightness;
 unsigned long esd_flag = 0;
 unsigned int g_shutdown_flag = 0;
-unsigned int doze_disable_backlight_flag_lv = 0;
 //static int current_esd_fps;
 
 /* enable this to check panel self -bist pattern */
@@ -89,6 +88,8 @@ unsigned int doze_disable_backlight_flag_lv = 0;
 
 /*TP define*/
 #define LCD_CTL_TP_LOAD_FW 0x10
+#define LCD_CTL_CS_ON      0x19
+#define LCD_CTL_AOD_OFF    0x29
 
 //static char bl_open[] = { 0x53, 0x2C };
 /*esd check*/
@@ -206,8 +207,18 @@ static void lcm_panel_init(struct lcm *ctx)
 	int blank = 0;
 
 #ifdef LCD_LOAD_TP_FW
+	// shifan@bsp.tp 20191226 add for loading tp fw when screen lighting on
 	lcd_queue_load_tp_fw();
 #endif
+	lcm_dcs_write_seq_static(ctx, 0xFF, 0x27);
+	lcm_dcs_write_seq_static(ctx, 0xFB, 0x01);
+	lcm_dcs_write_seq_static(ctx, 0xD0, 0x03);
+	lcm_dcs_write_seq_static(ctx, 0xD1, 0x54);
+	lcm_dcs_write_seq_static(ctx, 0xD2, 0x30);
+	lcm_dcs_write_seq_static(ctx, 0xD4, 0x10);
+	lcm_dcs_write_seq_static(ctx, 0xFF, 0xD0);
+	lcm_dcs_write_seq_static(ctx, 0xFB, 0x01);
+	lcm_dcs_write_seq_static(ctx, 0xC9, 0x1C);
 	lcm_dcs_write_seq_static(ctx, 0xFF, 0x20);
 	lcm_dcs_write_seq_static(ctx, 0xFB, 0x01);
 	lcm_dcs_write_seq_static(ctx, 0x01, 0x66);
@@ -223,6 +234,8 @@ static void lcm_panel_init(struct lcm *ctx)
 	lcm_dcs_write_seq_static(ctx, 0xFF, 0x23);
 	lcm_dcs_write_seq_static(ctx, 0xFB, 0x01);
 	lcm_dcs_write_seq_static(ctx, 0x00, 0x80);
+	lcm_dcs_write_seq_static(ctx, 0x05, 0x77);
+	lcm_dcs_write_seq_static(ctx, 0x06, 0x00);
 	lcm_dcs_write_seq_static(ctx, 0x07, 0x00);
 	lcm_dcs_write_seq_static(ctx, 0x08, 0x01);
 	lcm_dcs_write_seq_static(ctx, 0x09, 0x00);
@@ -285,6 +298,7 @@ static void lcm_panel_init(struct lcm *ctx)
 
 	lcm_dcs_write_seq_static(ctx, 0xFF, 0x24);
 	lcm_dcs_write_seq_static(ctx, 0xFB, 0x01);
+	lcm_dcs_write_seq_static(ctx, 0xC2, 0xC6);
 	lcm_dcs_write_seq_static(ctx, 0x00, 0x26);
 	lcm_dcs_write_seq_static(ctx, 0x01, 0x26);
 	lcm_dcs_write_seq_static(ctx, 0x02, 0x22);
@@ -445,6 +459,7 @@ static void lcm_panel_init(struct lcm *ctx)
 	lcm_dcs_write_seq_static(ctx, 0xFF, 0x10);
 	lcm_dcs_write_seq_static(ctx, 0xFB, 0x01);
 	lcm_dcs_write_seq_static(ctx, 0x35, 0x00);
+	lcm_dcs_write_seq_static(ctx, 0x68, 0x04, 0x01);
 	lcm_dcs_write_seq_static(ctx, 0x51, 0x00, 0x00);
 	lcm_dcs_write_seq_static(ctx, 0x53, 0x24);
 	lcm_dcs_write_seq_static(ctx, 0x55, 0x00);
@@ -521,9 +536,9 @@ static int lcm_unprepare(struct drm_panel *panel)
 	msleep(90);
 	pr_err("[TP]flag_poweroff = %d\n",flag_poweroff);
 	if (flag_poweroff == 1) {
-		ctx->reset_gpio = devm_gpiod_get(ctx->dev, "reset", GPIOD_OUT_HIGH);
+		/*ctx->reset_gpio = devm_gpiod_get(ctx->dev, "reset", GPIOD_OUT_HIGH);
 		gpiod_set_value(ctx->reset_gpio, 0);
-		devm_gpiod_put(ctx->dev, ctx->reset_gpio);
+		devm_gpiod_put(ctx->dev, ctx->reset_gpio);*/
 
 		ctx->bias_neg =
 			devm_gpiod_get_index(ctx->dev, "bias", 1, GPIOD_OUT_HIGH);
@@ -591,8 +606,15 @@ static int lcm_prepare(struct drm_panel *panel)
 #endif
 //	_lcm_i2c_write_bytes(0x0, 0xf);
 //	_lcm_i2c_write_bytes(0x1, 0xf);
-	usleep_range(15*1000, 15001);
+	usleep_range(5*1000, 5001);
 	devm_gpiod_put(ctx->dev, ctx->reset_gpio);
+	ctx->reset_gpio = devm_gpiod_get(ctx->dev, "reset", GPIOD_OUT_HIGH);
+	usleep_range(5 * 1000, 5001);
+	gpiod_set_value(ctx->reset_gpio, 0);
+	usleep_range(5 * 1000, 5001);
+	gpiod_set_value(ctx->reset_gpio, 1);
+	devm_gpiod_put(ctx->dev, ctx->reset_gpio);
+	usleep_range(10*1000, 10001);
 	lcm_panel_init(ctx);
 	lcm_init_set_cabc(ctx);
 	ret = ctx->error;
@@ -606,6 +628,7 @@ static int lcm_prepare(struct drm_panel *panel)
 #endif
 /*
 #ifdef LCD_LOAD_TP_FW
+	// shifan@bsp.tp 20191226 add for loading tp fw when screen lighting on
 	lcd_queue_load_tp_fw();
 #endif
 */
@@ -702,24 +725,25 @@ static struct mtk_panel_params ext_params = {
 	.physical_height_um = 154610,
 	.oplus_esd_sleep_status = true,
 	.oplus_esd_sleep_ms = 5000,
-	.cust_esd_check = 1,
+	.cust_esd_check = 0,
 	.esd_check_enable = 1,
-	.lcm_esd_check_table[0] = {
-		.cmd = 0x0A, .count = 1, .para_list[0] = 0x9C,
-	},
-	.lcm_esd_check_table[1] = {
-		.cmd = 0xAB, .count = 2, .para_list[0] = 0x00, .para_list[1] = 0x00,
-	},
-
 	.data_rate = DATA_RATE, /* 943 */
 	.pll_clk = PLL_CLOCK,
 	//.data_rate_khz = 1030000, /* 943307 */
 
 	.oplus_display_global_dre = 1,
+	.oplus_display_lcd_tp_aod = 1,
 	.doze_disable_backlight_flag_enable = 1,
-	.doze_disable_backlight_flag = &doze_disable_backlight_flag_lv,
 	.dyn_fps = {
 		.switch_en = 1, .vact_timing_fps = 90,
+	},
+	.dyn = {
+		.switch_en = 1,
+		.pll_clk = 648,
+		.data_rate = 1296,
+		.hbp = 72,
+		.hfp = 30,
+		.hsa = 10,
 	},
 };
 
@@ -730,23 +754,25 @@ static struct mtk_panel_params ext_params_50hz = {
 	.physical_height_um = 154610,
 	.oplus_esd_sleep_status = true,
 	.oplus_esd_sleep_ms = 5000,
-	.cust_esd_check = 1,
+	.cust_esd_check = 0,
 	.esd_check_enable = 1,
-	.lcm_esd_check_table[0] = {
-		.cmd = 0x0A, .count = 1, .para_list[0] = 0x9C,
-	},
-	.lcm_esd_check_table[1] = {
-		.cmd = 0xAB, .count = 2, .para_list[0] = 0x00, .para_list[1] = 0x00,
-	},
 	.data_rate = DATA_RATE, /* 943 */
 	.pll_clk = PLL_CLOCK,
 	//.data_rate_khz = 1030000, /* 943307 */
 
 	.oplus_display_global_dre = 1,
+	.oplus_display_lcd_tp_aod = 1,
 	.doze_disable_backlight_flag_enable = 1,
-	.doze_disable_backlight_flag = &doze_disable_backlight_flag_lv,
 	.dyn_fps = {
 		.switch_en = 1, .vact_timing_fps = 50,
+	},
+	.dyn = {
+		.switch_en = 1,
+		.pll_clk = 648,
+		.data_rate = 1296,
+		.hbp = 72,
+		.hfp = 30,
+		.hsa = 10,
 	},
 };
 
@@ -757,23 +783,25 @@ static struct mtk_panel_params ext_params_60hz = {
 	.physical_height_um = 154610,
 	.oplus_esd_sleep_status = true,
 	.oplus_esd_sleep_ms = 5000,
-	.cust_esd_check = 1,
+	.cust_esd_check = 0,
 	.esd_check_enable = 1,
-	.lcm_esd_check_table[0] = {
-		.cmd = 0x0A, .count = 1, .para_list[0] = 0x9C,
-	},
-	.lcm_esd_check_table[1] = {
-		.cmd = 0xAB, .count = 2, .para_list[0] = 0x00, .para_list[1] = 0x00,
-	},
 	.data_rate = DATA_RATE, /* 943 */
 	.pll_clk = PLL_CLOCK,
 	//.data_rate_khz = 1030000, /* 943307 */
 
 	.oplus_display_global_dre = 1,
+	.oplus_display_lcd_tp_aod = 1,
 	.doze_disable_backlight_flag_enable = 1,
-	.doze_disable_backlight_flag = &doze_disable_backlight_flag_lv,
 	.dyn_fps = {
 		.switch_en = 1, .vact_timing_fps = 60,
+	},
+	.dyn = {
+		.switch_en = 1,
+		.pll_clk = 648,
+		.data_rate = 1296,
+		.hbp = 72,
+		.hfp = 30,
+		.hsa = 10,
 	},
 };
 
@@ -784,23 +812,25 @@ static struct mtk_panel_params ext_params_120hz = {
 	.physical_height_um = 154610,
 	.oplus_esd_sleep_status = true,
 	.oplus_esd_sleep_ms = 5000,
-	.cust_esd_check = 1,
+	.cust_esd_check = 0,
 	.esd_check_enable = 1,
-	.lcm_esd_check_table[0] = {
-		.cmd = 0x0A, .count = 1, .para_list[0] = 0x9C,
-	},
-	.lcm_esd_check_table[1] = {
-		.cmd = 0xAB, .count = 2, .para_list[0] = 0x00, .para_list[1] = 0x00,
-	},
 	.data_rate = DATA_RATE, /* 943 */
 	.pll_clk = PLL_CLOCK,
 	//.data_rate_khz = 1030000, /* 943307 */
 
 	.oplus_display_global_dre = 1,
+	.oplus_display_lcd_tp_aod = 1,
 	.doze_disable_backlight_flag_enable = 1,
-	.doze_disable_backlight_flag = &doze_disable_backlight_flag_lv,
 	.dyn_fps = {
 		.switch_en = 1, .vact_timing_fps = 120,
+	},
+	.dyn = {
+		.switch_en = 1,
+		.pll_clk = 648,
+		.data_rate = 1296,
+		.hbp = 72,
+		.hfp = 30,
+		.hsa = 10,
 	},
 };
 #endif
@@ -903,16 +933,23 @@ static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb, void *handle,
 	/* bl_level = map_exp[level]; */
 	unsigned int mode;
 
-	mode = get_boot_mode();
+	/*Exceptional backlight filtering*/
+	if(level == 4)
+		return 0;
 
+	mode = get_boot_mode();
+	/*
 	if (mode == KERNEL_POWER_OFF_CHARGING_BOOT && level > 0)
 		level = 2047;
+		if (silence_mode == 1)
+			level = 0; */
+
 	/*if ((level > 0) && (level < oplus_max_normal_brightness)) {
 		bl_level = map_exp[level];
 	}
 	*/
 	if (mode == KERNEL_POWER_OFF_CHARGING_BOOT && level > 0)
-		bl_level = 2047;
+		level = 2047;
 	else
 		bl_level = level;
 
@@ -932,6 +969,10 @@ static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb, void *handle,
 			aod_state = false;
 			return 0;
 	}
+	if ((aod_state == 1) && (level == 1000)) {
+		aod_state = false;
+		return 0;
+	}
 
 	if (1==level)
 	{
@@ -941,7 +982,7 @@ static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb, void *handle,
 	bl_tb0[1] = (bl_level >> 8)& 0x0f;
 	bl_tb0[2] = bl_level & 0xFF;
 
-	if (bl_level < LOW_BACKLIGHT_LEVEL) {
+	if ((bl_level != 0) && (bl_level < LOW_BACKLIGHT_LEVEL)) {
 		cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
 	}
 	esd_brightness = level;
@@ -968,39 +1009,79 @@ static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb, void *handle,
 
 static int panel_doze_disable(struct drm_panel *panel, void *dsi, dcs_write_gce cb, void *handle)
 {
-        char bl_tb0[] = {0x51, 0x0F, 0xFF};
+        struct lcm *ctx = panel_to_lcm(panel);
+        char bl_tb1[] = {0x53, 0x2c};
 
-        int level;
-        level = doze_disable_backlight_flag_lv;
+        int mode;
+        int blank;
         aod_state = false;
 
-        bl_tb0[1] = level >> 8;
-        bl_tb0[2] = level & 0xFF;
         pr_err("debug for lcm %s\n", __func__);
 
-        cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
-        pr_err("%s, AOD backlight level = %d\n", __func__, level);
+        if (!ctx->prepared) {
+                return 0;
+        }
+        pr_info(" %s : TP AOD reset start\n", __func__);
+
+        mode = get_boot_mode();
+        pr_info("[TP] in dis_panel_power_on,mode = %d\n", mode);
+        if ((mode != MSM_BOOT_MODE__FACTORY) &&(mode != MSM_BOOT_MODE__RF) && (mode != MSM_BOOT_MODE__WLAN)) {
+                blank = LCD_CTL_CS_ON;
+                mtk_disp_notifier_call_chain(MTK_DISP_EVENT_FOR_TOUCH, &blank);
+                pr_err("[TP]TP CS will chang to spi mode and high\n");
+                usleep_range(5000, 5100);
+                /*blank = LCD_CTL_TP_LOAD_FW;
+                mtk_disp_notifier_call_chain(MTK_DISP_EVENT_FOR_TOUCH, &blank);
+                pr_info("[TP] start to load fw!\n");*/
+                blank =  LCD_CTL_AOD_OFF;
+                mtk_disp_notifier_call_chain(MTK_DISP_EVENT_FOR_TOUCH, &blank);
+				pr_info("[TP] EXIT AOD success!\n");
+        }
+        pr_info(" %s : TP AOD reset end\n", __func__);
+        cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
         return 0;
 }
 
 static int panel_doze_enable(struct drm_panel *panel, void *dsi, dcs_write_gce cb, void *handle)
 {
         char bl_tb0[] = {0x51, 0x0F, 0xFF};
+        char bl_tb1[] = {0x53, 0x24};
 
         int level;
-        level = 300;/*To be confirmed*/
+        level = 880;  //50nit
         aod_state = true;
-        doze_disable_backlight_flag_lv = 0;
 
         bl_tb0[1] = level >> 8;
         bl_tb0[2] = level & 0xFF;
         pr_err("debug for lcm %s\n", __func__);
 
+        cb(dsi, handle, bl_tb1, ARRAY_SIZE(bl_tb1));
         cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
         pr_err("%s, AOD backlight level = %d\n", __func__, level);
         return 0;
 }
 
+static int panel_set_aod_light_mode(void *dsi, dcs_write_gce cb, void *handle, unsigned int level)
+{
+	int backlight;
+	char bl_tb0[] = {0x51, 0x0F, 0xFF};
+
+	if (level == 0) {
+                backlight = 880;  //50 nit
+		bl_tb0[1] = (backlight >> 8)& 0x0f;
+		bl_tb0[2] = backlight & 0xff;
+
+                cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
+	} else {
+                backlight = 201;  //10 nit
+		bl_tb0[1] = (backlight >> 8)& 0x0f;
+		bl_tb0[2] = backlight & 0xff;
+
+                cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
+	}
+	pr_err("debug for lcm %s- level = %d backlight = %d\n",__func__, level, backlight);
+	return 0;
+}
 static int oplus_esd_backlight_recovery(void *dsi, dcs_write_gce cb,
 		void *handle)
 {
@@ -1086,6 +1167,7 @@ static struct mtk_panel_funcs ext_funcs = {
 	.cabc_switch = cabc_switch,
 	.doze_enable = panel_doze_enable,
 	.doze_disable = panel_doze_disable,
+	.set_aod_light_mode = panel_set_aod_light_mode,
 };
 
 struct panel_desc {

@@ -191,7 +191,7 @@ static struct imgsensor_info_struct imgsensor_info = {
 	.custom2_delay_frame = 1,	/* enter custom2 delay frame num */
 	.frame_time_delay_frame = 2,
 
-	.isp_driving_current = ISP_DRIVING_6MA,
+	.isp_driving_current = ISP_DRIVING_2MA,
 	.sensor_interface_type = SENSOR_INTERFACE_TYPE_MIPI,
 	.mipi_sensor_type = MIPI_OPHY_NCSI2, /* 0,MIPI_OPHY_NCSI2; 1,MIPI_OPHY_CSI2 */
 	.mipi_settle_delay_mode = 1,
@@ -315,6 +315,7 @@ static struct SET_PD_BLOCK_INFO_T imgsensor_pd_info_3264_2448_custom2 =
 
 #if 0
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*Caohua.Lin@Camera.Driver add for 18011/18311  board 20180723*/
 static kal_uint16 read_module_id(void)
 {
 	kal_uint16 get_byte=0;
@@ -398,6 +399,7 @@ static void read_s5kjn1_QRSerialdata(UINT8 *read_s5kjn1_QRSerialdata,
 static kal_uint8 CAM_SN[CAMERA_MODULE_SN_LENGTH];
 static kal_uint8 CAM_INFO[CAMERA_MODULE_INFO_LENGTH];
 static kal_uint8 CAM_DUAL_DATA[DUALCAM_CALI_DATA_LENGTH_8ALIGN];
+/*Henry.Chang@Camera.Driver add for google ARCode Feature verify 20190531*/
 static kal_uint16 read_cmos_eeprom_8(kal_uint16 addr)
 {
 	kal_uint16 get_byte=0;
@@ -426,6 +428,7 @@ static void read_eepromData(void)
 	CAM_INFO[7] = read_cmos_eeprom_8(0xB);
 }
 
+/*Henry.Chang@camera.driver 20181129, add for sensor Module SET*/
 #define   WRITE_DATA_MAX_LENGTH     (16)
 static kal_int32 table_write_eeprom_30Bytes(kal_uint16 addr, kal_uint8 *para, kal_uint32 len)
 {
@@ -456,6 +459,7 @@ static kal_int32 write_eeprom_protect(kal_uint16 enable)
 	return ret;
 }
 
+/*Henry.Chang@camera.driver 20181129, add for sensor Module SET*/
 static kal_int32 write_Module_data(ACDK_SENSOR_ENGMODE_STEREO_STRUCT * pStereodata)
 {
 	kal_int32  ret = IMGSENSOR_RETURN_SUCCESS;
@@ -2866,8 +2870,10 @@ static void preview_setting(void)
 static void capture_setting(kal_uint16 currefps)
 {
 	LOG_INF("%s 30 fps E! currefps:%d\n", __func__, currefps);
+	//Deng.Cao@Cam.Drv, change the capture setting to preview setting, 20191220 start.
 	table_write_cmos_sensor(s5kjn1_capture_setting,
 		sizeof(s5kjn1_capture_setting)/sizeof(kal_uint16));
+	//Deng.Cao@Cam.Drv, change the capture setting to preview setting, 20191220 end.
 	LOG_INF("%s 30 fpsX\n", __func__);
 }
 

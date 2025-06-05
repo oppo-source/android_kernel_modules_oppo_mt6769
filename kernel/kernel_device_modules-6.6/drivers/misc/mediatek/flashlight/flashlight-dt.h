@@ -31,6 +31,8 @@
 #define ARK_DTNAME_I2C    "mediatek,strobe_main"
 #endif //OPLUS_FEATURE_CAMERA_COMMON
 
+#define ORISC_DTNAME      "mediatek,flashlights_orisc"
+#define ORISC_DTNAME_I2C  "mediatek,strobe_main"
 #define ORISA_DTNAME      "mediatek,flashlights_orisa"
 #define ORISA_DTNAME_I2C  "mediatek,strobe_main"
 #define AW3644_DTNAME_I2C "mediatek,strobe_main"

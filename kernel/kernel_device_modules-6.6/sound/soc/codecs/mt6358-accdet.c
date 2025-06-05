@@ -1595,6 +1595,7 @@ static irqreturn_t mtk_accdet_irq_handler_thread(int irq, void *data)
 
 #if IS_ENABLED(CONFIG_SND_SOC_FSA)
 //#ifdef OPLUS_ARCH_EXTENDS
+/* XiongHu@MULTIMEDIA.AUDIODRIVER 2024/06/17, supporting type-c headphone detect bypass */
 extern void fsa4480_register_ext_eint_handler(int (*phandler)(bool plug_flag));
 int typec_sw_eint_handler(bool plug_flag)
 {

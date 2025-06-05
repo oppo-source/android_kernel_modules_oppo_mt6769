@@ -7,7 +7,11 @@
 #include <linux/random.h>
 #include <linux/slab.h>
 #include <linux/of.h>
+#if IS_ENABLED(CONFIG_MTK_GPU_LEGACY)
+#include <gpufreq_v2_legacy.h>
+#else
 #include <gpufreq_v2.h>
+#endif
 #include <ged_base.h>
 #include <ged_dcs.h>
 #include <ged_dvfs.h>
@@ -87,7 +91,8 @@ static int ged_get_top_idx_by_freq(int gpu_freq_tar, int minfreq_idx)
 GED_ERROR ged_gpufreq_init(void)
 {
 	int i, j, k = 0;
-	int min_freq, freq_scale = 0;
+	int min_freq = 0;
+        int freq_scale = 0;
 	const struct gpufreq_opp_info *opp_table;
 	const struct gpufreq_opp_info *opp_top_table;
 	struct gpufreq_core_mask_info *core_mask_table;

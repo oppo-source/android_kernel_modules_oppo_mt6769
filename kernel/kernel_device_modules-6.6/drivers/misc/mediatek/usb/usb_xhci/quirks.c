@@ -53,6 +53,9 @@ static const struct usb_audio_quirk_flags_table mtk_snd_quirk_flags_table[] = {
 		   QUIRK_FLAG_CTL_MSG_DELAY),
 		DEVICE_FLG(0x22d9, 0x9101,
 		   QUIRK_FLAG_CTL_MSG_DELAY_5M),
+
+		DEVICE_FLG(0x262a, 0x187a, QUIRK_FLAG_CTL_MSG_DELAY),
+		DEVICE_FLG(0x2fc6, 0xf826, QUIRK_FLAG_CTL_MSG_DELAY),
 		{} /* terminator */
 };
 

@@ -25,6 +25,21 @@
     .i4SlaveAddr = {0xA0, 0xA8, 0xA2, 0xA8},
 };*/
 
+struct CAMERA_DEVICE_INFO gImgEepromInfoOrisC = {
+    .i4SensorNum = 2,
+    .pCamModuleInfo = {
+        {OV50D40_SENSOR_ID_ORIS,  0xA0, {0x00, 0x06}, 0x50, 1, {0x44, 0x44, 0x46, 0x46}, "Cam_r0", "ov50d40_mipi_raw_oris"},
+        {HI846_SENSOR_ID_ORIS, 0x40, {0x00, 0x06}, 0x22B, 0, {0xFF,0xFF,0xFF,0xFF}, "Cam_f",  "hi846_mipi_raw_oris"},
+    },
+    .i4MWDataIdx = 0xFF,
+    .i4MTDataIdx = 0xFF,
+    .i4FrontDataIdx = 0xFF,
+    .i4NormDataLen = 40,
+    .i4MWDataLen = 3102,
+    .i4MWStereoAddr = {0xFFFF, 0xFFFF},
+    .i4MTStereoAddr = {0xFFFF, 0xFFFF},
+    .i4FrontStereoAddr = {0xFFFF, 0xFFFF},
+};
 kal_uint16 Eeprom_1ByteDataRead(kal_uint16 addr, kal_uint16 slaveaddr)
 {
     kal_uint16 get_byte = 0;
@@ -75,6 +90,7 @@ static enum IMGSENSOR_RETURN Eeprom_QcomHeaderCheck(kal_uint8 *header)
 }
 #endif
 
+/*Henry.Chang@camera.driver 20181129, add for sensor Module SET*/
 static enum IMGSENSOR_RETURN Eeprom_TableWrite(kal_uint16 addr, kal_uint8 *para,
                                     kal_uint32 len, kal_uint16 i4SlaveAddr)
 {
@@ -1350,6 +1366,11 @@ enum IMGSENSOR_RETURN Eeprom_SensorInfoValid(
     }
 #endif
 
+    if (is_project(24700) || is_project(24701) || is_project(24702)
+        || is_project(24709) || is_project(24713) || is_project(24714)){
+        pCamDeviceObj = &gImgEepromInfoOrisC;
+    }
+
     if (sensor_idx > pCamDeviceObj->i4SensorNum - 1) {
         pr_info("[%s] sensor_idx:%d > i4SensorNum: %d", __func__, sensor_idx, pCamDeviceObj->i4SensorNum);
         return IMGSENSOR_RETURN_ERROR;
@@ -1541,6 +1562,12 @@ void Eeprom_CamSNDataRead(enum IMGSENSOR_SENSOR_IDX sensor_idx, kal_uint16 slave
         /*Read camera SN-23bytes*/
         snLength = OPLUS_CAMERASN_LENS_23;
     }
+
+    if (is_project(24700) || is_project(24701) || is_project(24702)
+        || is_project(24709) || is_project(24713) || is_project(24714)){
+        pCamDeviceObj = &gImgEepromInfoOrisC;
+    }
+
     /*Read camera SN-20bytes*/
     dataAddr = pCamDeviceObj->pCamModuleInfo[sensor_idx].i4CamSNAddr;
     for (i = 0; i < snLength; i++) {
@@ -1565,6 +1592,12 @@ void Eeprom_CamAFCodeDataRead(enum IMGSENSOR_SENSOR_IDX sensor_idx, kal_uint16 s
         pCamDeviceObj = &gImgEepromInfo_21881;
     }
 #endif
+
+    if (is_project(24700) || is_project(24701) || is_project(24702)
+        || is_project(24709) || is_project(24713) || is_project(24714)){
+        pCamDeviceObj = &gImgEepromInfoOrisC;
+    }
+
     if (is_project(22610) || is_project(23231)
         || is_project(23613) || is_project(23686) || is_project(23687) || is_project(23689)
         || is_project(23707) || is_project(23709) || is_project(23051) || is_project(23241)
@@ -1609,6 +1642,11 @@ void Eeprom_StereoDataRead(enum IMGSENSOR_SENSOR_IDX sensor_idx, kal_uint16 slav
         pCamDeviceObj = &gImgEepromInfo_21881;
     }
 #endif
+
+    if (is_project(24700) || is_project(24701) || is_project(24702)
+        || is_project(24709) || is_project(24713) || is_project(24714)){
+        pCamDeviceObj = &gImgEepromInfoOrisC;
+    }
 
     /*Read Single StereoParamsData and joint stereoData*/
     if (pCamDeviceObj->i4MWDataIdx == IMGSENSOR_SENSOR_IDX_MAIN2) {
@@ -1709,6 +1747,11 @@ void Eeprom_DistortionParamsRead(enum IMGSENSOR_SENSOR_IDX sensor_idx, kal_uint1
     }
 #endif
 
+    if (is_project(24700) || is_project(24701) || is_project(24702)
+        || is_project(24709) || is_project(24713) || is_project(24714)){
+        pCamDeviceObj = &gImgEepromInfoOrisC;
+    }
+
     if (sensor_idx == IMGSENSOR_SENSOR_IDX_MAIN2 && pCamDeviceObj->i4DistortionAddr) {
         dataAddr = pCamDeviceObj->i4DistortionAddr;
         for (i = 0; i < dataLens; i++) {
@@ -1785,6 +1828,11 @@ enum CUSTOM_CAMERA_ERROR_CODE_ENUM Eeprom_Control(
         pCamDeviceObj = &gImgEepromInfo_21881;
     }
 #endif
+
+    if (is_project(24700) || is_project(24701) || is_project(24702)
+        || is_project(24709) || is_project(24713) || is_project(24714)){
+        pCamDeviceObj = &gImgEepromInfoOrisC;
+    }
 
     i4Sensor_idx = pCamDeviceObj->i4CurSensorIdx;
     i4SensorID = pCamDeviceObj->i4CurSensorId;

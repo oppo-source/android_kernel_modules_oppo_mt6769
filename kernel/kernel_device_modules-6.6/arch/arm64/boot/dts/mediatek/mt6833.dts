@@ -59,8 +59,8 @@
 	chosen: chosen {
 		bootargs = "console=tty0 root=/dev/ram \
 			8250.nr_uarts=4 \
-			log_buf_len=4m \
 			rcupdate.rcu_expedited=1 \
+			restrict_cma_redirect \
 			vmalloc=400M swiotlb=noforce \
 			firmware_class.path=/vendor/firmware \
 			androidboot.hardware=mt6833 \
@@ -560,7 +560,7 @@
 		svp-region-based-size = <0 0x18000000>;
 		tui-size = <0 0x4000000>;
 		wfd-region-based-size = <0 0x4000000>;
-		prot-region-based-size = <0 0x8000000>;
+		prot-region-based-size = <0 0x0000000>;
 	};
 
 	ssmr {

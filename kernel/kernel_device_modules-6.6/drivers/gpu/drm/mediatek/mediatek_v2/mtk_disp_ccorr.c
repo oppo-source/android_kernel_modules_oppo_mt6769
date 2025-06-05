@@ -40,6 +40,10 @@
 #define mtk_leds_brightness_set(x, y, m, n) do { } while (0)
 #endif
 
+#ifdef OPLUS_FEATURE_DISPLAY
+#include <mtk_boot_common.h>
+#endif
+
 #define DISP_REG_CCORR_EN		(0x000)
 #define DISP_REG_CCORR_INTEN		(0x008)
 #define DISP_REG_CCORR_INTSTA		(0x00C)
@@ -367,6 +371,14 @@ int disp_ccorr_set_color_matrix(struct mtk_ddp_comp *comp, struct cmdq_pkt *hand
 	#ifdef OPLUS_FEATURE_DISPLAY
 	struct mtk_drm_crtc *mtk_crtc = comp->mtk_crtc;
 	#endif /* OPLUS_FEATURE_DISPLAY */
+
+#ifdef OPLUS_FEATURE_DISPLAY
+	if (ccorr_data->g_prim_ccorr_force_linear &&
+		(get_boot_mode() == KERNEL_POWER_OFF_CHARGING_BOOT || get_boot_mode() == LOW_POWER_OFF_CHARGING_BOOT)) {
+		DDPPR_ERR("%s power off charging boot, return\n", __func__);
+		return 0;
+	}
+#endif
 
 	if (handle == NULL) {
 		DDPPR_ERR("%s: cmdq can not be NULL\n", __func__);

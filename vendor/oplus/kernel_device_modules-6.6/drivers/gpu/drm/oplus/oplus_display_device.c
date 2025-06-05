@@ -104,12 +104,16 @@ static const struct panel_ioctl_desc panel_ioctls[] = {
 	PANEL_IOCTL_DEF(PANEL_IOCTL_GET_LONGRUI_AOD, oplus_ofp_get_longrui_aod_config),
 	PANEL_IOCTL_DEF(PANEL_IOCTL_SET_SHUTDOWN_FLAG, oplus_display_set_shutdown_flag),
 	PANEL_IOCTL_DEF(PANEL_IOCTL_GET_PANEL_STAGE, oplus_display_panel_get_stage),
+#ifdef OPLUS_FEATURE_DISPLAY_MAINLINE
 	PANEL_IOCTL_DEF(PANEL_IOCTL_SET_MIPI_ERR_CHECK, oplus_display_panel_set_mipi_err_check),
 	PANEL_IOCTL_DEF(PANEL_IOCTL_GET_MIPI_ERR_CHECK, oplus_display_panel_get_mipi_err_check),
+#endif /* OPLUS_FEATURE_DISPLAY_MAINLINE */
 	PANEL_IOCTL_DEF(PANEL_IOCTL_SET_ESD_STATUS, oplus_display_panel_set_esd_status),
 	PANEL_IOCTL_DEF(PANEL_IOCTL_GET_ESD_STATUS, oplus_display_panel_get_esd_status),
+#ifdef OPLUS_FEATURE_DISPLAY_MAINLINE
 	PANEL_IOCTL_DEF(PANEL_IOCTL_SET_CRC_CHECK, oplus_display_panel_set_crc_check),
 	PANEL_IOCTL_DEF(PANEL_IOCTL_GET_CRC_CHECK, oplus_display_panel_get_crc_check),
+#endif /* OPLUS_FEATURE_DISPLAY_MAINLINE */
 };
 
 static int panel_open(struct inode *inode, struct file *filp)

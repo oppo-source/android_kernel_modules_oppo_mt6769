@@ -31,6 +31,7 @@
 #include "mt6359p-accdet.h"
 #include "mt6359p.h"
 #if IS_ENABLED(CONFIG_SND_SOC_FSA)
+// Yongpei.Yao@MULTIMEDIA.AUDIODRIVER.HEADSET, 2020/11/04, support mic and ground switch to fix headset detect bug
 #include "audio/codecs/fsa44xx/fsa4480-i2c.h"
 #endif /* CONFIG_SND_SOC_FSA */
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_DISCRETE_TYPEC_SWITCH)
@@ -177,8 +178,10 @@ static u32 button_press_debounce = 0x400;
 static u32 button_press_debounce_01 = 0x800;
 
 #if IS_ENABLED(CONFIG_SND_SOC_FSA)
+//Yongpei.Yao@MULTIMEDIA.AUDIODRIVER.HEADSET, 2020/11/04, support mic and ground switch to fix headset detect bug
 static bool b_mic_ground_switch = false;
 extern int fsa4480_switch_event(struct device_node *node, enum fsa_function event);
+// Yongzhi.Zhang@PSW.MM.AudioDriver.HeadsetDet.1222012, 2019/03/25, add for hp delay detection
 struct delayed_work hp_detect_work;
 #endif /* CONFIG_SND_SOC_FSA */
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_DISCRETE_TYPEC_SWITCH)
@@ -943,9 +946,11 @@ static void send_key_event(u32 keycode, u32 flag)
 static void send_status_event(u32 cable_type, u32 status)
 {
 	int report = 0;
+
 	switch (cable_type) {
 	case HEADSET_NO_MIC:
 #if IS_ENABLED(CONFIG_SND_SOC_FSA)
+//Yongpei.Yao@MULTIMEDIA.AUDIODRIVER.HEADSET, 2020/11/04, support mic and ground switch to fix headset detect bug
 		if (status == 1) {
 			fsa4480_switch_event(NULL, 0);
 			b_mic_ground_switch = true;
@@ -1701,6 +1706,7 @@ static inline void enable_accdet(u32 state_swctrl)
 }
 
 #if IS_ENABLED(CONFIG_SND_SOC_FSA)
+/* XiongHu@MULTIMEDIA.AUDIODRIVER 2024/06/17, supporting type-c headphone detect bypass */
 extern void fsa4480_register_ext_eint_handler(int (*phandler)(bool plug_flag));
 
 int typec_ext_eint_handler(bool plug_flag)
@@ -1879,6 +1885,7 @@ static void dis_micbias_work_callback(struct work_struct *work)
 			ACCDET_SW_EN_SFT);
 		disable_accdet();
 #if IS_ENABLED(CONFIG_SND_SOC_FSA)
+// Yongpei.Yao@MULTIMEDIA.AUDIODRIVER.HEADSET, 2020/11/04, support mic and ground switch to fix headset detect bug
 		if (b_mic_ground_switch) {
 			fsa4480_switch_event(NULL, 0);
 			b_mic_ground_switch = false;
@@ -1900,7 +1907,6 @@ static void eint_work_callback(struct work_struct *work)
 			jiffies_to_msecs(7 * HZ));
 
 		accdet_init();
-
 		enable_accdet(0);
 	} else {
 		mutex_lock(&accdet->res_lock);
@@ -2149,6 +2155,46 @@ static void accdet_work_callback(struct work_struct *work)
 	__pm_relax(accdet->wake_lock);
 }
 
+#if IS_ENABLED(CONFIG_SND_SOC_OPLUS_DISCRETE_TYPEC_SWITCH)
+static bool check_cable_type_headphone(void)
+{
+	u32 cur_AB;
+	cur_AB = accdet_read(ACCDET_MEM_IN_ADDR) >> ACCDET_STATE_MEM_IN_OFFSET;
+	cur_AB = cur_AB & ACCDET_STATE_AB_MASK;
+	pr_err("accdet %s(), cur_status:%s current AB = %d\n", __func__,
+		     accdet_status_str[accdet->accdet_status], cur_AB);
+	if ((accdet->cable_type == HEADSET_NO_MIC) || (cur_AB == ACCDET_STATE_AB_00)) {
+		pr_err("%s() true done",__func__);
+		return true;
+	}
+	pr_err("%s() false done",__func__);
+	return false;
+}
+
+static void headphone_work_callback(struct work_struct *work)
+{
+	bool is_headphone = false;
+	pr_err("%s()",__func__);
+	if (g_accdet_interrupt) {
+		g_accdet_interrupt = false;
+		pr_err("%s() g_accdet_interrupt = %d",__func__, g_accdet_interrupt);
+		return;
+	}
+	__pm_stay_awake(accdet->wake_lock);
+	is_headphone = check_cable_type_headphone();
+	mutex_lock(&accdet->res_lock);
+	if (accdet->eint_sync_flag && is_headphone) {
+			send_status_event(accdet->cable_type, 1);
+	} else {
+		pr_info("%s() Headset has been plugout or 4-pole microphone\n",
+			__func__);
+	}
+	mutex_unlock(&accdet->res_lock);
+	pr_err("%s() report cable_type %d done\n", __func__,accdet->cable_type);
+	__pm_relax(accdet->wake_lock);
+}
+#endif
+
 static void accdet_queue_work(void)
 {
 	int ret;
@@ -2170,6 +2216,7 @@ static int pmic_eint_queue_work(int eintID)
 			__func__);
 		accdet->cur_eint_state = EINT_PLUG_OUT;
 #if IS_ENABLED(CONFIG_SND_SOC_FSA)
+// Yongzhi.Zhang@PSW.MM.AudioDriver.HeadsetDet.1222012, 2019/03/25, add for hp delay detection
 		pr_info("%s water in no delayed work scheduled when plugging out\n", __func__);
 		cancel_delayed_work_sync(&hp_detect_work);
 		schedule_delayed_work(&hp_detect_work, 0);
@@ -2202,6 +2249,7 @@ static int pmic_eint_queue_work(int eintID)
 				}
 			}
 #ifdef OPLUS_BUG_COMPATIBILITY
+// Yongzhi.Zhang@PSW.MM.AudioDriver.HeadsetDet.1222012, 2019/03/25, add for hp delay detection
 		if (accdet->cur_eint_state == EINT_PLUG_IN) {
 #if IS_ENABLED(CONFIG_SND_SOC_FSA)
 			pr_info("%s delayed work 50ms scheduled when plugging in\n", __func__);
@@ -3576,6 +3624,13 @@ static int accdet_probe(struct platform_device *pdev)
 		ret = -1;
 		goto err_create_workqueue;
 	}
+
+#if IS_ENABLED(CONFIG_SND_SOC_OPLUS_DISCRETE_TYPEC_SWITCH)
+	if (accdet_dts.hs_det_discrete == 1) {
+		INIT_DELAYED_WORK(&headphone_event_work, headphone_work_callback);
+	}
+#endif
+
 	if (HAS_CAP(accdet->data->caps, ACCDET_AP_GPIO_EINT)) {
 		accdet->accdet_eint_type = IRQ_TYPE_LEVEL_LOW;
 		ret = ext_eint_setup(pdev);

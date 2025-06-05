@@ -383,6 +383,41 @@ static ssize_t proc_fg_list_async_first_read(struct file *file, char __user *buf
 	return simple_read_from_buffer(buf, count, ppos, buffer, len);
 }
 
+static ssize_t proc_get_random_binder_task_write(struct file *file, const char __user *buf,
+		size_t count, loff_t *ppos)
+{
+	char buffer[8];
+	int err, val;
+
+	memset(buffer, 0, sizeof(buffer));
+
+	if (count > sizeof(buffer) - 1)
+		count = sizeof(buffer) - 1;
+
+	if (copy_from_user(buffer, buf, count))
+		return -EFAULT;
+
+	buffer[count] = '\0';
+	err = kstrtoint(strstrip(buffer), 10, &val);
+	if (err)
+		return err;
+
+	get_random_binder_task = val;
+
+	return count;
+}
+
+static ssize_t proc_get_random_binder_task_read(struct file *file, char __user *buf,
+		size_t count, loff_t *ppos)
+{
+	char buffer[20];
+	size_t len = 0;
+
+	len = snprintf(buffer, sizeof(buffer), "%d\n", get_random_binder_task);
+
+	return simple_read_from_buffer(buf, count, ppos, buffer, len);
+}
+
 static const struct proc_ops proc_async_ux_enable_fops = {
 	.proc_write		= proc_async_ux_enable_write,
 	.proc_read		= proc_async_ux_enable_read,
@@ -439,6 +474,12 @@ static const struct proc_ops proc_fg_list_enable_fops = {
 static const struct proc_ops proc_fg_list_async_first_fops = {
 	.proc_write		= proc_fg_list_async_first_write,
 	.proc_read		= proc_fg_list_async_first_read,
+	.proc_lseek		= default_llseek,
+};
+
+static const struct proc_ops proc_get_random_binder_task_fops = {
+	.proc_write		= proc_get_random_binder_task_write,
+	.proc_read		= proc_get_random_binder_task_read,
 	.proc_lseek		= default_llseek,
 };
 
@@ -511,9 +552,17 @@ int oplus_binder_sysfs_init(void)
 		goto err_create_fg_list_async_first;
 	}
 
+	proc_node = proc_create("get_random_binder_task", 0666, d_oplus_binder, &proc_get_random_binder_task_fops);
+	if (!proc_node) {
+		pr_err("failed to create proc node get_random_binder_task\n");
+		goto err_create_get_random_binder_task;
+	}
+
 	pr_info("%s success\n", __func__);
 	return 0;
 
+err_create_get_random_binder_task:
+	remove_proc_entry("fg_list_async_first", d_oplus_binder);
 err_create_fg_list_async_first:
 	remove_proc_entry("fg_list_enable", d_oplus_binder);
 err_create_fg_list_enable:
@@ -550,5 +599,6 @@ void oplus_binder_sysfs_deinit(void)
 	remove_proc_entry("sync_insert_queue", d_oplus_binder);
 	remove_proc_entry("fg_list_enable", d_oplus_binder);
 	remove_proc_entry("fg_list_async_first", d_oplus_binder);
+	remove_proc_entry("get_random_binder_task", d_oplus_binder);
 	remove_proc_entry(OPLUS_BINDER_PROC_DIR, NULL);
 }

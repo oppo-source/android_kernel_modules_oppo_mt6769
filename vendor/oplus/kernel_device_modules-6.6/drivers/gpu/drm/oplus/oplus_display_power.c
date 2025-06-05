@@ -441,7 +441,7 @@ int oplus_dsi_panel_prepare(void *ctx_dev)
 }
 EXPORT_SYMBOL(oplus_dsi_panel_prepare);
 
-MODULE_AUTHOR("Xiaolei Gao");
+MODULE_AUTHOR("Xiaolei Gao <gaoxiaolei@oppo.com>");
 MODULE_DESCRIPTION("OPPO panel power");
 MODULE_LICENSE("GPL v2");
 

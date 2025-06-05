@@ -42,6 +42,7 @@ struct stCAM_CAL_LIST_STRUCT g_camCalList[] = {
 	/*B+B. No Cal data for main2 OV8856*/
 	{S5K2P7_SENSOR_ID, 0xA0, Common_read_region},
 	{HI5022Q_SENSOR_ID23618, 0xA1, Common_read_region},
+	{HI846_SENSOR_ID_ORIS, 0x40, Hi846_oris_read_region, MAX_EEPROM_SIZE_8K},
 	{SC820CS_SENSOR_ID23618, 0x20, sc820cs_read_region, MAX_EEPROM_SIZE_8K},
 #ifdef SUPPORT_S5K4H7
 	{S5K4H7_SENSOR_ID, 0xA0, zte_s5k4h7_read_region},

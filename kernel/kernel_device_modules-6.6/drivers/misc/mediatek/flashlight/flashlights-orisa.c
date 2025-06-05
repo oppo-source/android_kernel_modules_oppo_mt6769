@@ -121,9 +121,9 @@ static volatile int oris_level_ch1 = -1;
 static volatile int oris_level_ch2 = -1;
 
 static const int sc6607_24700_current[sc6607_24700_LEVEL_NUM] = {
-    25,   50,   75,   110,  125,  150,  175,  200,  250,  300,
-    350,  400,  450,  500,  550,  600,  650,  700,  750,  800,
-    850,  900,  950,  1000, 1050, 1100, 1150, 1200
+    37,    50,    62,    75,   125,  150,  175,  200,  250,  300,
+    350,   400,   450,   500,  550,  600,  650,  700,  750,  800,
+    850,   900,   950,   1000, 1050, 1100, 1150, 1200
 };
 
 //static const int sc6607_current[ARK_LEVEL_NUM] = {
@@ -136,7 +136,7 @@ static const int sc6607_24700_current[sc6607_24700_LEVEL_NUM] = {
 Step:12.5mA
 Range: 25mA(b0000000)~500mA(b0100110~b1111111)*/
 static const unsigned char sc6607_24700_torch_level[sc6607_24700_LEVEL_NUM] = {
-	0x00, 0x02, 0x04, 0x06, 0x08, 0x0A, 0x0C, 0x0E, 0x00, 0x00,
+	0x01, 0x02, 0x03, 0x04, 0x08, 0x0A, 0x0C, 0x0E, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
@@ -385,6 +385,7 @@ static int sc6607_24700_enable_ctrl(struct sc6607_24700_flash *flash,
 	return rval;
 }
 
+/* Begin by huangjiwu@Camera.Driver for taibai eng cam control single led flashlight at 2022/02/09 */
 static int sc6607_24700_select_led(struct sc6607_24700_flash *flash,
 										int led_num)
 {
@@ -403,6 +404,7 @@ static int sc6607_24700_select_led(struct sc6607_24700_flash *flash,
 	}
 	 return rval;
 }
+/* End   by huangjiwu@Camera.Driver for taibai eng cam control single led flashlight at 2022/02/09 */
 
 /* torch1/2 brightness control */
 static int sc6607_24700_torch_brt_ctrl(struct sc6607_24700_flash *flash,
@@ -1095,6 +1097,7 @@ static int sc6607_24700_ioctl(unsigned int cmd, unsigned long arg)
 	    oris_is_flash_cts();
 	    break;
 
+/* Begin by huangjiwu@Camera.Driver for taibai eng cam control single led flashlight at 2022/02/09 */
 	case OPLUS_FLASH_IOC_SELECT_LED_NUM:
 		if (fl_arg->arg == sc6607_CONTROL_LED0 || fl_arg->arg == sc6607_CONTROL_LED1) {
 			sc6607_24700_flash_data->led_mode = V4L2_FLASH_LED_MODE_FLASH;
@@ -1138,6 +1141,7 @@ static int sc6607_24700_ioctl(unsigned int cmd, unsigned long arg)
 				channel, (int)fl_arg->arg);
 		fl_arg->arg = oris_current[(int)fl_arg->arg];
 		break;
+/* End   by huangjiwu@Camera.Driver for taibai eng cam control single led flashlight at 2022/02/09 */
 
 	default:
 		pr_info("No such command and arg(%d): (%d, %d)\n",

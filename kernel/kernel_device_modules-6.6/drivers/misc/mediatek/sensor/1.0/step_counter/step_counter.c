@@ -11,6 +11,7 @@ static struct step_c_context *step_c_context_obj;
 static struct step_c_init_info *
 	step_counter_init_list[MAX_CHOOSE_STEP_C_NUM] = { 0 };
 #ifdef CONFIG_OPLUS_FEATURE_SENSOR
+//zhye@PSW.BSP.Sensor, 2018-01-20, to store original STEP and upload
 static unsigned int step_first_data = 0;
 static uint32_t last_step_counter = 0;
 #endif/*CONFIG_OPLUS_FEATURE_SENSOR*/
@@ -122,6 +123,7 @@ static struct step_c_context *step_c_context_alloc_object(void)
 		return NULL;
 	}
 #ifndef CONFIG_OPLUS_FEATURE_SENSOR
+//Chendai.Liang@BSP.Sensor, 2020.06.03, add for modify step delay
 	atomic_set(&obj->delay, 2000);	/*0.5Hz */
 #else
 	atomic_set(&obj->delay, 200); //5Hz
@@ -341,6 +343,7 @@ static int step_c_enable_data(int enable)
 			}
 		}
 #ifdef CONFIG_OPLUS_FEATURE_SENSOR
+//zhye@PSW.BSP.Sensor, 2018-01-20, to store original STEP and upload
 		step_first_data = 1;
 		step_c_data_report(last_step_counter, 3);
 #endif/*CONFIG_OPLUS_FEATURE_SENSOR*/
@@ -417,6 +420,7 @@ int step_c_enable_nodata(int enable)
 	if (enable == 1) {
 		cxt->is_active_nodata = true;
 #ifdef CONFIG_OPLUS_FEATURE_SENSOR
+//zhye@PSW.BSP.Sensor, 2018-01-20, to store original STEP and upload
 		step_first_data = 1;
 		step_c_data_report(last_step_counter, 3);
 #endif/*CONFIG_OPLUS_FEATURE_SENSOR*/

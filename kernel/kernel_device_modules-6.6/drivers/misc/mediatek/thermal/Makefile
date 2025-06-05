@@ -215,6 +215,8 @@ thermal_monitor-y += v5/src/mtk_ts_6359dcxo.o
 thermal_monitor-y += v5/src/mtk_ts_btscharger_hawaii.o
 thermal_monitor-y += common/thermal_zones/mtk_ts_imgsensor.o
 thermal_monitor-y += common/thermal_zones/mtk_ts_btsnrpa.o
+thermal_monitor-y += common/thermal_zones/mtk_ts_btsmdpa.o
+thermal_monitor-y += common/thermal_zones/mtk_ts_bts.o
 thermal_monitor-y += common/thermal_zones/mtk_ts_dctm.o
 thermal_monitor-y += common/coolers/mtk_cooler_bcct_v1.o
 ifeq ($(CONFIG_MTK_THERMAL_PA_VIA_ATCMD),y)

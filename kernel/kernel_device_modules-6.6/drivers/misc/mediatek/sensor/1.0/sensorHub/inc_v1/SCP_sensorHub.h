@@ -261,6 +261,7 @@ struct data_unit_t {
 		struct sar_event_t sar_event;
 		int32_t data[8];
                 #ifdef CONFIG_OPLUS_FEATURE_SENSOR_ALGORITHM
+		/*QZL@PSW.BSP.Sensor, 2018/12/24, Add for oplus algo*/
 		union oplus_data_unit_t oplus_data_t;
 		#endif /*CONFIG_OPLUS_FEATURE_SENSOR_ALGORITHM*/
 	};

@@ -88,6 +88,7 @@ struct imgsensor_struct {
 /* SENSOR PRIVATE STRUCT FOR CONSTANT*/
 struct imgsensor_info_struct {
 	kal_uint32 sensor_id;	/*record sensor id defined in Kd_imgsensor.h*/
+	/*Degao.Lan@Camera.DRV add for register device info 20191108*/
 	kal_uint16 module_id;
 	kal_uint32 checksum_value;	/*checksum value for Camera Auto Test*/
 

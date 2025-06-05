@@ -126,8 +126,8 @@
 
 	mt6358keys: mt6358keys {
 			compatible = "mediatek,mt6358-keys";
-			mediatek,long-press-mode = <1>;
-			power-off-time-sec = <0>;
+			mediatek,long-press-mode = <2>;
+			power-off-time-sec = <1>;
 
 			power {
 				linux,keycodes = <116>;

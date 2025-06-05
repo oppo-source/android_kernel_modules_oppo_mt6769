@@ -114,8 +114,14 @@ static const struct proc_ops proc_alloc_adjust_ctrl_ops = {
 
 static void create_alloc_adjust_ctrl_proc(void)
 {
-	alloc_adjust_ctrl_entry = proc_create("oplus_mem/alloc_adjust_ctrl",
-			0660, NULL, &proc_alloc_adjust_ctrl_ops);
+	struct proc_dir_entry *root_dir_entry;
+	root_dir_entry =  proc_mkdir("oplus_mem", NULL);
+	if (!root_dir_entry)
+		alloc_adjust_ctrl_entry = proc_create("oplus_mem/alloc_adjust_ctrl",
+					0660, NULL, &proc_alloc_adjust_ctrl_ops);
+	else
+		alloc_adjust_ctrl_entry = proc_create("alloc_adjust_ctrl",
+				0660, root_dir_entry, &proc_alloc_adjust_ctrl_ops);
 
 	if (!alloc_adjust_ctrl_entry)
 		pr_err("alloc_adjust_ctrl_proc create failed, ENOMEM\n");

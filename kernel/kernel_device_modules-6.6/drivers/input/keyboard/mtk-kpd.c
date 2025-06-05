@@ -22,6 +22,7 @@
 #include <linux/regmap.h>
 #include <soc/oplus/boot/oplus_project.h>
 //#ifdef OPLUS_BUG_STABILITY
+//Peng.Yao@BSP.Kernel.Stability 2021/10/18 add for vol +/- enter dump
 #include <linux/proc_fs.h>
 #include <asm/uaccess.h>
 #include <linux/of_gpio.h>
@@ -65,6 +66,7 @@ struct mtk_keypad {
 static struct platform_device *ktf_pdev;
 static struct mtk_keypad *ktf_keypad;
 
+/* Bin.Li@EXP.BSP.bootloader.bootflow, 2017/05/15, Add for keypad volume up and volume down */
 /*#define KPD_HOME_NAME 		"mtk-kpd-home"*/
 #define KPD_VOL_UP_NAME		"mtk-kpd-vol-up"
 #define KPD_VOL_DOWN_NAME	"mtk-kpd-vol-down"
@@ -104,6 +106,7 @@ static DECLARE_TASKLET_OLD(kpd_volumekey_up_tasklet, kpd_volumeup_task_process);
 #define VOL_DOWN_DELAY_TIME    35*1000*1000
 
 //#ifdef OPLUS_BUG_STABILITY
+//Peng.Yao@BSP.Kernel.Stability 2021/10/18 add for vol +/- enter dump
 /* for AEE manual dump */
 #define AEE_VOLUMEUP_BIT	0
 #define AEE_VOLUMEDOWN_BIT	1
@@ -345,6 +348,7 @@ static int kpd_get_dts_info(struct mtk_keypad *keypad,
 }
 
 //#ifdef OPLUS_BUG_STABILITY
+//Peng.Yao@BSP.Kernel.Stability 2021/10/18 add for vol +/- enter dump
 static int aee_kpd_enable_show(struct seq_file *s, void *v)
 {
 	seq_printf(s, "%d\n", aee_kpd_enable);
@@ -399,6 +403,7 @@ static ssize_t aee_kpd_enable_write(struct file *filp, const char __user *buff,
 	}
 
 	//#ifdef OPLUS_BUG_STABILITY
+	//wang.bing@BSP.Kernel.Stability 2022/12/21 add for vol +/- enter dump
 	if( get_eng_version() == PREVERSION ) {
 		pr_err("%s force to enable volumekey dump in preversion build\n", __func__);
 		aee_kpd_enable = 1;
@@ -431,6 +436,8 @@ static void init_proc_aee_kpd_enable(void)
 }
 //#endif /*OPLUS_BUG_STABILITY*/
 
+/* Bin.Li@EXP.BSP.boot
+loader.bootflow, 2017/05/15, Add for keypad volume up and volume down */
 static void oplus_key_process(struct input_dev *dev, int key, int val)
 {
 
@@ -575,6 +582,7 @@ static irqreturn_t kpd_volumedown_irq_handler(int irq, void *dev_id)
 	/*tasklet_schedule(&kpd_volumekey_down_tasklet);*/
 	hrtimer_start(&vol_down_timer, ktime_set(0, VOL_DOWN_DELAY_TIME), HRTIMER_MODE_REL);
         //#ifdef OPLUS_BUG_STABILITY
+        //Peng.Yao@BSP.Kernel.Stability 2021/10/18 add for vol +/- enter dump
         if(aee_kpd_enable)
                 kpd_aee_handler(KEY_VOLUMEDOWN, VOLUMEDOWN_PRESSED);
         //#endif /*OPLUS_BUG_STABILITY*/
@@ -694,6 +702,7 @@ static int kpd_pdrv_probe(struct platform_device *pdev)
 	int ret;
 	int err = 0;
 
+	/* Bin.Li@EXP.BSP.bootloader.bootflow, 2017/05/15, Add for keypad volume up and volume down */
 	struct device *dev = &pdev->dev;
 	struct vol_info *kpd_oplus;
 
@@ -820,9 +829,11 @@ static int kpd_pdrv_probe(struct platform_device *pdev)
 	enable_kpd(keypad->base, 1);
 
 	//#ifdef OPLUS_BUG_STABILITY
+	//Peng.Yao@BSP.Kernel.Stability 2021/10/18 add for vol +/- enter dump
 	hrtimer_init(&aee_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	aee_timer.function = aee_timer_func;
 
+	/* Bin.Li@EXP.BSP.bootloader.bootflow, 2017/05/15, Add for keypad volume up and volume down */
 	g_keypad = keypad;
 	kpd_oplus->dev = dev;
 	//dev_set_drvdata(dev, kpd_oplus);

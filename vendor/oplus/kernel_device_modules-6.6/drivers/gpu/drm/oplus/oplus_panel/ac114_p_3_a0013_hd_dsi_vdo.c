@@ -414,7 +414,7 @@ static void lcm_cabc_mode_switch(void *dsi, dcs_write_gce cb,
 		pr_info("[lcm] cabc set level_2 %d\n", mode);
 	}
 
-	char bl_tb0[] = {0xFF, 0x78, 0x07, 0x00};
+	char bl_tb0[] = {0xFF, 0x98, 0x83, 0x00};
 
 	if (mode == 0) {
 		char bl_tb1[] = {0x55, 0x00};
@@ -458,7 +458,7 @@ static struct mtk_panel_params ext_params = {
 	//.panel_bpp = 24,
 	.dyn = {
 		.switch_en = 1,
-		.data_rate = 1086,
+		.data_rate = 912,
 	},
 	.lcm_esd_check_table[0] = {
 		.cmd = 0x0a,
@@ -479,7 +479,7 @@ static struct mtk_panel_params ext_params_90hz = {
 	//.panel_bpp = 24,
 	.dyn = {
 		.switch_en = 1,
-		.data_rate = 1086,
+		.data_rate = 912,
 	},
 	.lcm_esd_check_table[0] = {
 		.cmd = 0x0a,
@@ -756,7 +756,7 @@ static void __exit lcm_drv_exit(void)
 module_init(lcm_drv_init);
 module_exit(lcm_drv_exit);
 
-MODULE_AUTHOR("Adigarla Bhargav");
+MODULE_AUTHOR("Adigarla Bhargav <adigarla.bhargav@oppo.com>");
 MODULE_DESCRIPTION("ac114_p_3_a0013 panel drm driver");
 MODULE_LICENSE("GPL v2");
 

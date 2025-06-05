@@ -34,6 +34,7 @@ static long rear_als_factory_unlocked_ioctl(struct file *file, unsigned int cmd,
 	int data = 0;
 	uint32_t enable = 0;
 	#if(0) //UNOPLUS_FEATURE_SENSOR
+	//chenyan@PSW.BSP.sensor,2018/12/08,modify
 	int als_cali = 0;
 	#else
 	int32_t data_buf[6] = {0};

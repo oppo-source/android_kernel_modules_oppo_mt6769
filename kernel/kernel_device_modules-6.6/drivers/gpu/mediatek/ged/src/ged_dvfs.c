@@ -927,6 +927,7 @@ bool ged_dvfs_cal_gpu_utilization_ex(unsigned int *pui32Loading,
 				Util_Ex->util_3d, Util_Ex->util_compute, Util_Ex->util_iter,
 				Util_Ex->util_mcu,Util_Ex->util_iter_u_mcu);
 			#ifdef OPLUS_ARCH_EXTENDS
+			// XieYuan@MULTIMEDIA.DISPLAY, 2024/07/10, add ftrace event.
 			trace_oplus_tracing_mark_write(5566, "util_active",
 				(long long)(Util_Ex->util_active));
 			trace_oplus_tracing_mark_write(5566, "util_ta",
@@ -1303,6 +1304,7 @@ bool ged_dvfs_gpu_freq_commit(unsigned long ui32NewFreqID,
 		trace_tracing_mark_write(5566, "gpu_freq",
 			(long long) div_u64(ged_get_cur_stack_freq(), 1000));
 		#ifdef OPLUS_ARCH_EXTENDS
+		// XieYuan@MULTIMEDIA.DISPLAY, 2024/07/10, add ftrace event.
 		trace_oplus_tracing_mark_write(5566, "gpu_freq",
 			(long long) div_u64(ged_get_cur_stack_freq(), 1000));
 		#endif /*OPLUS_ARCH_EXTENDS*/
@@ -1327,6 +1329,7 @@ bool ged_dvfs_gpu_freq_commit(unsigned long ui32NewFreqID,
 			ged_get_cur_limiter_floor());
 
 		#ifdef OPLUS_ARCH_EXTENDS
+		// XieYuan@MULTIMEDIA.DISPLAY, 2024/07/10,,add ftrace event.
 		trace_oplus_tracing_mark_write(5566, "gpu_freq_ceil",
 			(long long) div_u64(ged_get_freq_by_idx(ui32CeilingID), 1000));
 		trace_oplus_tracing_mark_write(5566, "gpu_freq_floor",
@@ -1344,6 +1347,7 @@ bool ged_dvfs_gpu_freq_commit(unsigned long ui32NewFreqID,
 			trace_tracing_mark_write(5566, "limitter_ceil_cus_val",
 				g_cust_upbound_freq_id_info.value);
 			#ifdef OPLUS_ARCH_EXTENDS
+			// XieYuan@MULTIMEDIA.DISPLAY, 2024/07/10,,add ftrace event.
 			trace_oplus_tracing_mark_write(5566, "limitter_ceil_pid",
 				g_cust_upbound_freq_id_info.pid);
 			trace_oplus_tracing_mark_write(5566, "limitter_ceil_id",
@@ -1361,6 +1365,7 @@ bool ged_dvfs_gpu_freq_commit(unsigned long ui32NewFreqID,
 			trace_tracing_mark_write(5566, "limitter_floor_cus_val",
 				g_cust_boost_freq_id_info.value);
 			#ifdef OPLUS_ARCH_EXTENDS
+			// XieYuan@MULTIMEDIA.DISPLAY, 2024/07/10,,add ftrace event.
 			trace_oplus_tracing_mark_write(5566, "limitter_floor_pid",
 				g_cust_boost_freq_id_info.pid);
 			trace_oplus_tracing_mark_write(5566, "limitter_floor_id",
@@ -1371,6 +1376,7 @@ bool ged_dvfs_gpu_freq_commit(unsigned long ui32NewFreqID,
 		}
 		trace_tracing_mark_write(5566, "commit_type", eCommitType);
 		#ifdef OPLUS_ARCH_EXTENDS
+		// XieYuan@MULTIMEDIA.DISPLAY, 2024/07/10,,add ftrace event.
 		trace_oplus_tracing_mark_write(5566, "commit_type", eCommitType);
 		#endif /*OPLUS_ARCH_EXTENDS*/
 
@@ -1502,6 +1508,7 @@ bool ged_dvfs_gpu_freq_dual_commit(unsigned long stackNewFreqID,
 	trace_tracing_mark_write(5566, "gpu_freq",
 		(long long) div_u64(ged_get_cur_stack_freq(), 1000));
 	#ifdef OPLUS_ARCH_EXTENDS
+	// XieYuan@MULTIMEDIA.DISPLAY, 2024/07/10, add ftrace event.
 	trace_oplus_tracing_mark_write(5566, "gpu_freq",
 		(long long) div_u64(ged_get_cur_stack_freq(), 1000));
 	#endif /*OPLUS_ARCH_EXTENDS*/
@@ -1523,6 +1530,7 @@ bool ged_dvfs_gpu_freq_dual_commit(unsigned long stackNewFreqID,
 	trace_tracing_mark_write(5566, "limitter_floor",
 		ged_get_cur_limiter_floor());
 	#ifdef OPLUS_ARCH_EXTENDS
+	// XieYuan@MULTIMEDIA.DISPLAY, 2024/07/10,,add ftrace event.
 	trace_oplus_tracing_mark_write(5566, "gpu_freq_ceil",
 		(long long) div_u64(ged_get_freq_by_idx(ui32CeilingID), 1000));
 	trace_oplus_tracing_mark_write(5566, "gpu_freq_floor",
@@ -1540,6 +1548,7 @@ bool ged_dvfs_gpu_freq_dual_commit(unsigned long stackNewFreqID,
 		trace_tracing_mark_write(5566, "limitter_ceil_cus_val",
 			g_cust_upbound_freq_id_info.value);
 		#ifdef OPLUS_ARCH_EXTENDS
+		// XieYuan@MULTIMEDIA.DISPLAY, 2024/07/10,,add ftrace event.
 		trace_oplus_tracing_mark_write(5566, "limitter_ceil_pid",
 			g_cust_upbound_freq_id_info.pid);
 		trace_oplus_tracing_mark_write(5566, "limitter_ceil_id",
@@ -1557,6 +1566,7 @@ bool ged_dvfs_gpu_freq_dual_commit(unsigned long stackNewFreqID,
 		trace_tracing_mark_write(5566, "limitter_floor_cus_val",
 			g_cust_boost_freq_id_info.value);
 		#ifdef OPLUS_ARCH_EXTENDS
+		// XieYuan@MULTIMEDIA.DISPLAY, 2024/07/10,,add ftrace event.
 		trace_oplus_tracing_mark_write(5566, "limitter_floor_pid",
 			g_cust_boost_freq_id_info.pid);
 		trace_oplus_tracing_mark_write(5566, "limitter_floor_id",
@@ -1569,6 +1579,7 @@ bool ged_dvfs_gpu_freq_dual_commit(unsigned long stackNewFreqID,
 	{
 		trace_tracing_mark_write(5566, "commit_type", eCommitType);
 		#ifdef OPLUS_ARCH_EXTENDS
+		// XieYuan@MULTIMEDIA.DISPLAY, 2024/07/10,,add ftrace event.
 		trace_oplus_tracing_mark_write(5566, "commit_type", eCommitType);
 		#endif /*OPLUS_ARCH_EXTENDS*/
 	}

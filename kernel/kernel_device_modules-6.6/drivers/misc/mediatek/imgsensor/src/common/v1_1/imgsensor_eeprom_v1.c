@@ -41,6 +41,7 @@ void read_eepromData(kal_uint8 *uData, kal_uint16 dataAddr,
     }
 }
 
+/*Henry.Chang@camera.driver 20181129, add for sensor Module SET*/
 static kal_int32 table_write_eeprom(kal_uint16 addr, kal_uint8 *para,
                                     kal_uint32 len, kal_uint16 i4SlaveAddr)
 {

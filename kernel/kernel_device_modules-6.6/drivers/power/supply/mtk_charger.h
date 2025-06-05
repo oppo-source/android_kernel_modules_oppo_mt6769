@@ -619,6 +619,9 @@ struct mtk_charger {
 	struct iio_channel      *batid_temp_chan;
 	struct delayed_work	step_charging_work;
 	struct delayed_work	check_charger_out_work;
+	struct delayed_work	ccdetect_work;
+	struct delayed_work	usbtemp_recover_work;
+	struct delayed_work	wd0_detect_work;
 	int step_status;
 	int step_status_pre;
 	int step_cnt;

@@ -28,6 +28,7 @@
 bool g_dp_support;
 EXPORT_SYMBOL(g_dp_support);
 
+#ifdef OPLUS_FEATURE_DISPLAY_MAINLINE
 struct dsi_panel_lcm* oplus_mtkCrtc_to_panel(struct mtk_drm_crtc *mtk_crtc)
 {
 	struct mtk_ddp_comp *comp = NULL;
@@ -79,6 +80,7 @@ struct dsi_panel_lcm* oplus_mtkDsi_to_panel(struct mtk_dsi *dsi)
 	return ctx;
 }
 EXPORT_SYMBOL(oplus_mtkDsi_to_panel);
+#endif /* OPLUS_FEATURE_DISPLAY_MAINLINE */
 
 void *oplus_dsi_display_get_driver_data(const char *compatible_name)
 {

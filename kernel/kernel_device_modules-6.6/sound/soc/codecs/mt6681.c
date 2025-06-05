@@ -6476,6 +6476,7 @@ static int mt_mic_bias_0_event(struct snd_soc_dapm_widget *w,
 		}
 
 #ifdef OPLUS_ARCH_EXTENDS
+/*zhangjiaquan@AUDIODRIVER.CODEC, change micbias to 2.7v*/
 		regmap_update_bits(priv->regmap, MT6681_AUDENC_PMU_CON59,
 			RG_AUDMICBIAS0VREF_MASK_SFT,
 			MIC_BIAS_2P7 << RG_AUDMICBIAS0VREF_SFT);
@@ -6552,6 +6553,7 @@ static int mt_mic_bias_1_event(struct snd_soc_dapm_widget *w,
 				   0x0 << RG_AUDMICBIAS1DCSW1PEN_SFT);
 
 #ifdef OPLUS_ARCH_EXTENDS
+/*zhangjiaquan@AUDIODRIVER.CODEC, change micbias to 2.7v*/
 		regmap_update_bits(priv->regmap, MT6681_AUDENC_PMU_CON61,
 			RG_AUDMICBIAS1VREF_MASK_SFT,
 			MIC_BIAS_2P7 << RG_AUDMICBIAS1VREF_SFT);
@@ -6630,6 +6632,7 @@ static int mt_mic_bias_2_event(struct snd_soc_dapm_widget *w,
 		}
 
 #ifdef OPLUS_ARCH_EXTENDS
+/*zhangjiaquan@AUDIODRIVER.CODEC, change micbias to 2.7v*/
 		regmap_update_bits(priv->regmap, MT6681_AUDENC_PMU_CON63,
 				   RG_AUDMICBIAS2VREF_MASK_SFT,
 				   MIC_BIAS_2P7 << RG_AUDMICBIAS2VREF_SFT);
@@ -6716,6 +6719,7 @@ static int mt_mic_bias_3_event(struct snd_soc_dapm_widget *w,
 		}
 
 #ifdef OPLUS_ARCH_EXTENDS
+/*zhangjiaquan@AUDIODRIVER.CODEC, change micbias to 2.7v*/
 		regmap_update_bits(priv->regmap, MT6681_AUDENC_PMU_CON65,
 				   RG_AUDMICBIAS3VREF_MASK_SFT,
 				   MIC_BIAS_2P7 << RG_AUDMICBIAS3VREF_SFT);

@@ -370,7 +370,7 @@ static long dw9786_ops_core_ioctl(struct v4l2_subdev *subdev, unsigned int cmd, 
 
 #ifdef GYRO_REG_MONITOR
 
-static struct task_struct *reg_monitor_task;
+static struct task_struct *reg_monitor_task = NULL;
 
 static int reg_monitor_kthread(void *arg) {
 	struct i2c_client *client = (struct i2c_client *)arg;
@@ -398,40 +398,36 @@ static int reg_monitor_kthread(void *arg) {
 	}
 
 	while(!kthread_should_stop()) {
-		if (dbg) {
-			I2C_READ_16BIT_OIS(DW9786_GYRO_RAW_X_ADDR, &gyro_data[0]);
-			I2C_READ_16BIT_OIS(DW9786_GYRO_RAW_Y_ADDR, &gyro_data[1]);
-			I2C_READ_16BIT_OIS(0xB1E0, &acc_data[0]);
-			I2C_READ_16BIT_OIS(0xB2E0, &acc_data[1]);
+		I2C_READ_16BIT_OIS(DW9786_GYRO_RAW_X_ADDR, &gyro_data[0]);
+		I2C_READ_16BIT_OIS(DW9786_GYRO_RAW_Y_ADDR, &gyro_data[1]);
+		I2C_READ_16BIT_OIS(0xB1E0, &acc_data[0]);
+		I2C_READ_16BIT_OIS(0xB2E0, &acc_data[1]);
 
-			if (g_still_en) {
-				I2C_READ_16BIT_OIS(0xB80C, &gyro_offset[0]);
-				I2C_READ_16BIT_OIS(0xB80E, &gyro_offset[1]);
+		if (g_still_en) {
+			I2C_READ_16BIT_OIS(0xB80C, &gyro_offset[0]);
+			I2C_READ_16BIT_OIS(0xB80E, &gyro_offset[1]);
 
-				I2C_READ_16BIT_OIS(0xB806, &gyro_gain[0]);
-				I2C_READ_16BIT_OIS(0xB808, &gyro_gain[1]);
+			I2C_READ_16BIT_OIS(0xB806, &gyro_gain[0]);
+			I2C_READ_16BIT_OIS(0xB808, &gyro_gain[1]);
 
-				I2C_READ_16BIT_OIS(0xB102, &hall[0]);
-				I2C_READ_16BIT_OIS(0xB202, &hall[1]);
+			I2C_READ_16BIT_OIS(0xB102, &hall[0]);
+			I2C_READ_16BIT_OIS(0xB202, &hall[1]);
 
-				I2C_READ_16BIT_OIS(0xB1B8, &target[0]);
-				I2C_READ_16BIT_OIS(0xB2B8, &target[1]);
+			I2C_READ_16BIT_OIS(0xB1B8, &target[0]);
+			I2C_READ_16BIT_OIS(0xB2B8, &target[1]);
 
-				I2C_READ_16BIT_OIS(0xB082, &tripod_mode);
+			I2C_READ_16BIT_OIS(0xB082, &tripod_mode);
 
-				I2C_READ_16BIT_OIS(0xB1C8, &stable_gain[0]);
-				I2C_READ_16BIT_OIS(0xB2C8, &stable_gain[1]);
+			I2C_READ_16BIT_OIS(0xB1C8, &stable_gain[0]);
+			I2C_READ_16BIT_OIS(0xB2C8, &stable_gain[1]);
 
-				I2C_READ_16BIT_OIS(0xB1B0, &gyro_filter_out[0]);
-				I2C_READ_16BIT_OIS(0xB2B0, &gyro_filter_out[1]);
-				LOG_DBG(dbg, "gyro data: %d %d acc data: %d %d gyro offset: %d %d gyro gain: %d %d "
-						"hall: %d %d target: %d %d tripod mode: %d stable gain: %d %d gyro filter out: %d %d",
-						gyro_data[0], gyro_data[1], acc_data[0], acc_data[1], gyro_offset[0], gyro_offset[1],
-						gyro_gain[0], gyro_gain[1], hall[0], hall[1], target[0], target[1], tripod_mode,
-						stable_gain[0], stable_gain[1], gyro_filter_out[0], gyro_filter_out[1]);
-			} else {
-				LOG_DBG(dbg, "gyro data: %d %d acc data: %d %d", gyro_data[0], gyro_data[1], acc_data[0], acc_data[1]);
-			}
+			I2C_READ_16BIT_OIS(0xB1B0, &gyro_filter_out[0]);
+			I2C_READ_16BIT_OIS(0xB2B0, &gyro_filter_out[1]);
+			LOG_DBG(dbg, "gyro data: %d %d acc data: %d %d gyro offset: %d %d gyro gain: %d %d "
+					"hall: %d %d target: %d %d tripod mode: %d stable gain: %d %d gyro filter out: %d %d",
+					gyro_data[0], gyro_data[1], acc_data[0], acc_data[1], gyro_offset[0], gyro_offset[1],
+					gyro_gain[0], gyro_gain[1], hall[0], hall[1], target[0], target[1], tripod_mode,
+					stable_gain[0], stable_gain[1], gyro_filter_out[0], gyro_filter_out[1]);
 		}
 		msleep(30);
 	}
@@ -442,6 +438,11 @@ static int reg_monitor_kthread(void *arg) {
 static int reg_monitor_thread_init(struct i2c_client *client)
 {
 	int err;
+
+	if (!dbg) {
+		return 0;
+	}
+
 	LOG_ERR("Kernel thread initalizing...\n");
 	reg_monitor_task = kthread_create(reg_monitor_kthread, client, "reg_monitor_kthread");
 	if (IS_ERR(reg_monitor_task)) {

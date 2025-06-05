@@ -92,5 +92,7 @@
 #define SENSOR_DRVNAME_BRZBUWIDE_MIPI_RAW               "brzbuwide_mipi_raw"
 #define BRZBFRONT_SENSOR_ID                             0x3471    /*(0x0471 + SENSOR_ID_OFFSET_BRZB) */
 #define SENSOR_DRVNAME_BRZBFRONT_MIPI_RAW               "brzbfront_mipi_raw"
+#define BRZBFRONT2_SENSOR_ID                            0x3615    /*(0x0615 + SENSOR_ID_OFFSET_BRZB) */
+#define SENSOR_DRVNAME_BRZBFRONT2_MIPI_RAW              "brzbfront2_mipi_raw"
 
 #endif    /* __OPLUS_KD_IMGSENSOR_H */

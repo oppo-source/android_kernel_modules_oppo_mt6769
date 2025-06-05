@@ -35,6 +35,7 @@ static long alsps_factory_unlocked_ioctl(struct file *file, unsigned int cmd,
 	uint32_t enable = 0;
 	int threshold_data[2] = {0, 0};
 	#ifndef CONFIG_OPLUS_FEATURE_SENSOR
+	//chenyan@PSW.BSP.sensor,2018/12/08,modify
 	int als_cali = 0;
 	#else
 	int32_t data_buf[6] = {0};

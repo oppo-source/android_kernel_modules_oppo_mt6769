@@ -24,6 +24,7 @@
 #define DEFAULT_DELAY_MS		10
 
 #ifdef OPLUS_FEATURE_CHG_BASIC
+/* Baoquan.Lai@BSP.CHG.Basic, 2024/03/11, Add for usbtemp check */
 struct regmap *oplus_regmap;
 #endif
 
@@ -731,6 +732,7 @@ static int mt6373_of_parse_cb(struct device_node *np,
 }
 
 #ifdef OPLUS_FEATURE_CHG_BASIC
+/* Baoquan.Lai@BSP.CHG.Basic, 2024/03/11, Add for usbtemp check */
 /*
 	0x989: Push-pull output1 for MOSFET driver
 	bit[2]: RG_MOSCON1_DRVSEL
@@ -839,6 +841,7 @@ static int mt6373_regulator_probe(struct platform_device *pdev)
 		}
 	}
 #ifdef OPLUS_FEATURE_CHG_BASIC
+/* Baoquan.Lai@BSP.CHG.Basic, 2024/03/11, Add for usbtemp check */
 	oplus_regmap = dev_get_regmap(pdev->dev.parent, NULL);
 	if (!oplus_regmap) {
 		dev_err(&pdev->dev, "get oplus_regmap failed\n");

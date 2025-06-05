@@ -338,6 +338,7 @@ DEFINE_EVENT(musb_log_ep, musb_gadget_disable,
 DECLARE_EVENT_CLASS(musb_host_log_ep,
 	TP_PROTO(struct urb *urb),
 	TP_ARGS(urb),
+
 	TP_STRUCT__entry(
 		__field(void *, urb)
 		__field(unsigned int, pipe)
@@ -386,6 +387,10 @@ DEFINE_EVENT(musb_host_log_ep, musb_host_urb_giveback,
 	TP_ARGS(urb)
 );
 
+DEFINE_EVENT(musb_host_log_ep, musb_urb_enqueue_,
+	TP_PROTO(struct urb *urb),
+	TP_ARGS(urb)
+);
 #endif /* __MUSB_TRACE_H */
 
 /* this part has to be here */

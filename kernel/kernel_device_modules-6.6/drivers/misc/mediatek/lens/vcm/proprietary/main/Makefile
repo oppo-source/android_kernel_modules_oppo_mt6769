@@ -31,6 +31,8 @@ subdir-ccflags-y += -I$(MTK_CUSTOM_PATH)/lens/vcm/proprietary/main/common/dw9827
 
 subdir-ccflags-y += -I$(MTK_CUSTOM_PATH)/lens/vcm/proprietary/main/common/dw9827af_23687_imx882
 subdir-ccflags-y += -I$(MTK_CUSTOM_PATH)/lens/vcm/proprietary/main/common/dw9827af_23687_imx882pd
+subdir-ccflags-y += -I$(MTK_CUSTOM_PATH)/lens/mtk/main/common/dw9800saf
+subdir-ccflags-y += -I$(MTK_CUSTOM_PATH)/lens/mtk/main/common/dw9800safpd
 subdir-ccflags-y += -I$(MTK_CUSTOM_PATH)/lens/vcm/proprietary/main/common/jd5516we4af_23689_imx890
 subdir-ccflags-y += -I$(MTK_CUSTOM_PATH)/lens/vcm/proprietary/main/common/fp5513af
 
@@ -51,6 +53,8 @@ mainaf-y  += common/dw9827af_23231_imx882/DW9827AF_23231_IMX882.o
 mainaf-y  += common/dw9827af_23231_imx882pd/DW9827AF_23231_IMX882PD.o
 mainaf-y  += common/dw9827af_23687_imx882/DW9827AF_23687_IMX882.o
 mainaf-y  += common/dw9827af_23687_imx882pd/DW9827AF_23687_IMX882PD.o
+mainaf-y  += common/dw9800saf/DW9800SAF.o
+mainaf-y  += common/dw9800safpd/DW9800SAFPD.o
 mainaf-y  += common/jd5516we4af_23689_imx890/JD5516WE4AF_23689_IMX890.o
 mainaf-y  += common/fp5513af/FP5513AF.o
 mainaf-y  += common/fp5510e2af/FP5510E2AF.o
@@ -105,3 +109,5 @@ mainaf-y  += common/fp5513e4af/FP5513E4AF.o
 mainaf-y  += common/fp5513e4af_s5kjn103/fp5513e4af_s5kjn103.o
 mainaf-y  += common/jd5516we4/JD5516WE4.o
 mainaf-y  += common/dw9827af/DW9827AF.o
+mainaf-y  += common/ak7377af/AK7377AF.o
+mainaf-y  += common/ak7316af/AK7316AF.o

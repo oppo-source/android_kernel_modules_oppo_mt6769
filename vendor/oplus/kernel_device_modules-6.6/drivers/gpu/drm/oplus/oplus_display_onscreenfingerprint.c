@@ -143,6 +143,9 @@ int oplus_ofp_init(void *node)
 	p_oplus_ofp_params->fp_type_compatible_mode = of_property_read_bool(devnode, "oplus,ofp-fp-type-compatible-mode");
 	OFP_INFO("fp_type_compatible_mode:%d\n", p_oplus_ofp_params->fp_type_compatible_mode);
 
+	p_oplus_ofp_params->fp_local_hbm_calibration = of_property_read_bool(devnode, "oplus,ofp-fp-local-hbm-calibration");
+	OFP_INFO("fp_local_hbm_calibration:%d\n", p_oplus_ofp_params->fp_local_hbm_calibration);
+
 	if (oplus_ofp_is_supported()) {
 		/* read by the framework for compatibility with different aod modes */
 		rc = of_property_read_u32(devnode, "oplus,ofp-longrui-aod-config", &value);
@@ -1706,6 +1709,19 @@ int oplus_ofp_set_aod_light_mode_after_doze_enable(void *mtk_panel_ext, void *mt
 }
 
 /* aod off cmd cmdq set */
+bool oplus_ofp_get_aod_unlocking(void)
+{
+	struct oplus_ofp_params *p_oplus_ofp_params = oplus_ofp_get_params();
+
+	if (!p_oplus_ofp_params) {
+		OFP_ERR("Invalid params\n");
+		return 0;
+	}
+
+	return p_oplus_ofp_params->aod_unlocking;
+}
+EXPORT_SYMBOL(oplus_ofp_get_aod_unlocking);
+
 int oplus_ofp_aod_off_set_cmdq(struct drm_crtc *crtc)
 {
 	bool is_frame_mode;
@@ -1807,6 +1823,7 @@ int oplus_ofp_aod_off_set_cmdq(struct drm_crtc *crtc)
 
 	OPLUS_OFP_TRACE_BEGIN("DSI_SET_DOZE");
 	oplus_ofp_set_aod_state(false);
+	oplus_ofp_aod_unlocking_update();
 	if (output_comp->funcs && output_comp->funcs->io_cmd)
 		output_comp->funcs->io_cmd(output_comp,
 			cmdq_handle, DSI_SET_DOZE, &doze_en);
@@ -2514,6 +2531,7 @@ int oplus_ofp_drm_set_hbm(struct drm_crtc *crtc, unsigned int hbm_mode)
 	struct mtk_drm_crtc *mtk_crtc = to_mtk_crtc(crtc);
 	struct cmdq_pkt *cmdq_handle;
 	struct mtk_ddp_comp *comp = mtk_ddp_comp_request_output(mtk_crtc);
+	struct oplus_ofp_params *p_oplus_ofp_params = oplus_ofp_get_params();
 
 	if (!crtc || !mtk_crtc) {
 		OFP_ERR("Invalid params\n");
@@ -2532,9 +2550,15 @@ int oplus_ofp_drm_set_hbm(struct drm_crtc *crtc, unsigned int hbm_mode)
 	mtk_drm_send_lcm_cmd_prepare(crtc, &cmdq_handle);
 	OPLUS_OFP_TRACE_END("mtk_drm_send_lcm_cmd_prepare");
 
+	if (oplus_ofp_local_hbm_is_enabled() && (p_oplus_ofp_params->fp_local_hbm_calibration)) {
+	/* send lhbm pressed icon cmd */
+		OPLUS_OFP_TRACE_BEGIN("OPLUS_OFP_SET_LHBM_PRESSED_ICON");
+		comp->funcs->io_cmd(comp, cmdq_handle, OPLUS_OFP_SET_LHBM_PRESSED_ICON, &hbm_mode);
+		OFP_INFO("OPLUS_OFP_SET_LHBM_PRESSED_ICON %d\n", hbm_mode);
+		OPLUS_OFP_TRACE_END("OPLUS_OFP_SET_LHBM_PRESSED_ICON");
+	} else {
 	/* set hbm */
-	 if (comp && comp->funcs && comp->funcs->io_cmd) {
-		 OPLUS_OFP_TRACE_BEGIN("LCM_HBM");
+		OPLUS_OFP_TRACE_BEGIN("LCM_HBM");
 		comp->funcs->io_cmd(comp, cmdq_handle, LCM_HBM, &hbm_mode);
 		OFP_INFO("LCM_HBM\n");
 		OPLUS_OFP_TRACE_END("LCM_HBM");
@@ -3146,6 +3170,6 @@ ssize_t oplus_ofp_get_longrui_aod_config_attr(struct kobject *obj,
 	return sysfs_emit(buf, "%u\n", p_oplus_ofp_params->longrui_aod_config);
 }
 
-MODULE_AUTHOR("Liuhe Zhong");
+MODULE_AUTHOR("Liuhe Zhong <zhongliuhe@oppo.com>");
 MODULE_DESCRIPTION("OPPO ofp device");
 MODULE_LICENSE("GPL v2");

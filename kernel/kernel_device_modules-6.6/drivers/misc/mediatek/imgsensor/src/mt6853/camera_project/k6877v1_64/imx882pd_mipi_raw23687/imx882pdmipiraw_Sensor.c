@@ -649,7 +649,7 @@ static enum IMGSENSOR_RETURN write_cmos_sensor_8(kal_uint16 addr, kal_uint8 para
     return iWriteRegI2C(pusendcmd, 3, imgsensor.i2c_write_id);
 }
 
-static kal_uint32 get_cur_exp_cnt()
+static kal_uint32 get_cur_exp_cnt(void)
 {
     kal_uint32 exp_cnt = 1;
 
@@ -6702,8 +6702,9 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
             feedback_awbgain((UINT32)*(feature_data_32 + 1),
                     (UINT32)*(feature_data_32 + 2));
         }
-    case SENSOR_FEATURE_SET_LSC_TBL:
-        break;
+	break;
+    //case SENSOR_FEATURE_SET_LSC_TBL:
+       // break;
     case SENSOR_FEATURE_GET_FRAME_CTRL_INFO_BY_SCENARIO:
         *(feature_data + 1) = 1; /* margin info by scenario */
         *(feature_data + 2) = imgsensor_info.margin;
@@ -6746,8 +6747,8 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
             *pScenarios = 0xff;
             break;
         }
-        pr_debug("SENSOR_FEATURE_GET_SEAMLESS_SCENARIOS %d %d\n",
-        *feature_data, *pScenarios);
+        //pr_debug("SENSOR_FEATURE_GET_SEAMLESS_SCENARIOS %d %d\n",
+        //*feature_data, *pScenarios);
         break;
     case SENSOR_FEATURE_GET_SEAMLESS_SYSTEM_DELAY:
         {
@@ -6761,8 +6762,9 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
                 }
             }
         }
-
+	break;
     default:
+	pr_info("default!\n");
         break;
     }
 

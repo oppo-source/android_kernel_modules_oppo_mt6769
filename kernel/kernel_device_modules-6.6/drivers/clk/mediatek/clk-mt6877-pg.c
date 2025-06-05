@@ -776,7 +776,7 @@ static void ram_console_update(void)
 	upd_block_time = sched_clock();
 	loop_cnt++;
 
-	if (loop_cnt > 5000)
+	if (loop_cnt > 100000)
 		log_over_cnt = true;
 
 	if ((upd_block_time > 0  && block_time > 0)

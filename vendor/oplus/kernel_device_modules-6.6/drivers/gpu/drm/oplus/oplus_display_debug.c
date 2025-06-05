@@ -115,7 +115,9 @@ int oplus_display_set_mtk_loglevel(void *buf)
 				g_mobile_log_default_state = true;
 			}
 			pq_dump_all(0xFF);
+#ifdef OPLUS_FEATURE_DISPLAY_MAINLINE
 			oplus_panel_backlight_check(oplus_display0_params);
+#endif /* OPLUS_FEATURE_DISPLAY_MAINLINE*/
 
 			if (!g_mobile_log_default_state) {
 				g_mobile_log = false;

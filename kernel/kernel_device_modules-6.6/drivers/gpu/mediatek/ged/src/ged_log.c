@@ -1294,3 +1294,27 @@ ssize_t get_cmd_info_dump(char *buf, int sz, ssize_t pos, struct cmd_info *cmd)
 	return pos;
 }
 
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_POWERMODEL)
+static noinline int perfetto_perf_write(const char *buf)
+{
+	/*trace_puts(buf);*/
+	return 0;
+}
+
+
+void ged_log_perf_trace_counter(char *name, long long count, int pid,
+	unsigned long frameID, u64 BQID)
+{
+	char buf[256];
+	int cx;
+
+	if (ged_log_perf_trace_enable) {
+		cx = snprintf(buf, sizeof(buf), "C|%d|%s|%lld|%llu|%lu\n",
+		pid, name, count, (unsigned long long)BQID, frameID);
+
+		if (cx >= 0 && cx < sizeof(buf))
+			perfetto_perf_write(buf);
+	}
+}
+EXPORT_SYMBOL(ged_log_perf_trace_counter);
+#endif

@@ -920,6 +920,7 @@ static struct mtk_panel_params ext_params_mode_4 = {//30hz
 
 static void tianma_gamma_enter(void *dsi, dcs_write_gce cb, void *handle)
 {
+#if 0
 	char bl_tb1[] = {0xFF, 0x20};
 	char bl_tb2[] = {0xFB, 0x01};
 	char bl_tb3[] = {0x95, 0x09};
@@ -989,9 +990,11 @@ static void tianma_gamma_enter(void *dsi, dcs_write_gce cb, void *handle)
 	cb(dsi, handle, bl_tb32, ARRAY_SIZE(bl_tb32));
 	cb(dsi, handle, bl_tb33, ARRAY_SIZE(bl_tb33));
 	cb(dsi, handle, bl_tb34, ARRAY_SIZE(bl_tb34));
+#endif
 }
 static void tianma_gamma_exit(void *dsi, dcs_write_gce cb, void *handle)
 {
+#if 0
 	char bl_tb1[] = {0xFF, 0x20};
 	char bl_tb2[] = {0xFB, 0x01};
 	char bl_tb3[] = {0x95, 0xD1};
@@ -1061,6 +1064,7 @@ static void tianma_gamma_exit(void *dsi, dcs_write_gce cb, void *handle)
 	cb(dsi, handle, bl_tb32, ARRAY_SIZE(bl_tb32));
 	cb(dsi, handle, bl_tb33, ARRAY_SIZE(bl_tb33));
 	cb(dsi, handle, bl_tb34, ARRAY_SIZE(bl_tb34));
+#endif
 }
 
 static int tianma_setbacklight_cmdq(void *dsi, dcs_write_gce cb,

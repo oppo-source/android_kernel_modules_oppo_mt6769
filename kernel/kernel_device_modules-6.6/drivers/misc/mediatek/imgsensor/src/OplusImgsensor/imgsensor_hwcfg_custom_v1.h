@@ -53,10 +53,13 @@
 
 enum IMGSENSOR_POWER_ACTION_INDEX {
     IMGSENSOR_POWER_ACTION_EVENT_START = 0,
+    /*liukai@camera.drv,20200118 add for Rear Capture_mode exit AF motor noise*/
     IMGSENSOR_POWER_ACTION_AFNOSISE_ADD_19551,
     IMGSENSOR_POWER_ACTION_AFNOSISE_DEC_19551,
+    /*Feiping.Li@Camera.Drv, 20190710, add for pull-up gc02's avdd when main sensor is powered*/
     IMGSENSOR_POWER_ACTION_GC02AVDD_PULLUP_19301,
 
+    /*Henry.Chang@Camera.Drv add for hwcfg common 20200727*/
     IMGSENSOR_POWER_MATCHMIPI_HWCFG_INDEX = 81,
     IMGSENSOR_POWER_MATCHSENSOR_HWCFG_INDEX,
     IMGSENSOR_POWER_EXTERNLDO_ENABLE_INDEX,

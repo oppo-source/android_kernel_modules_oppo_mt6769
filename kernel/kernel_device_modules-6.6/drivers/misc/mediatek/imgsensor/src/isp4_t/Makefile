@@ -16,8 +16,10 @@ IMGSENSOR_DRIVER_OBJ := \
 	imgsensor_clk.o \
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+#WangChao@Cam.Drv, 20210112, Add for get eeprom data
 #commented eeprom anil,need to pick from UOS
 IMGSENSOR_DRIVER_OBJ += ../common/$(COMMON_VERSION)/imgsensor_eeprom.o
+#Henry.Chang@Cam.Drv, 20200725, add for oppo custom  operation
 IMGSENSOR_DRIVER_OBJ += ../OplusImgsensor/imgsensor_hwcfg_custom_v1.o
 IMGSENSOR_DRIVER_OBJ += ../OplusImgsensor/imgsensor_hwcfg_mt6768.o
 #IMGSENSOR_DRIVER_OBJ += ../OplusImgsensor/imgsensor_hwcfg_custom.o

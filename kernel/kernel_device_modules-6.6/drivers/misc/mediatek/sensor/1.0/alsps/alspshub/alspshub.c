@@ -12,6 +12,7 @@
 #include "SCP_power_monitor.h"
 #include <linux/pm_wakeup.h>
 #ifdef CONFIG_OPLUS_FEATURE_SENSOR
+/*Fei.Mo@PSW.BSP.Sensor, 2017/12/17, Add for get sensor_devinfo*/
 #include "../../oplus_sensor_devinfo/sensor_devinfo_v2.h"
 #endif
 #define ALSPSHUB_DEV_NAME     "alsps_hub_pl"
@@ -28,6 +29,7 @@ struct alspshub_ipi_data {
 	/*data */
 	u16		als;
 #ifndef CONFIG_OPLUS_FEATURE_SENSOR
+/*Fei.Mo@PSW.BSP.Sensor, 2017/12/17, Modify for get alsps value to engineer mode*/
 	u8		ps;
 #else
 	int			als_factor;
@@ -226,6 +228,7 @@ static ssize_t als_show(struct device_driver *ddri, char *buf)
 		return snprintf(buf, PAGE_SIZE, "ERROR: %d\n", res);
 	else
 #ifndef CONFIG_OPLUS_FEATURE_SENSOR
+/*Fei.Mo@PSW.BSP.Sensor, 2017/12/17, Modify for get alsps value to engineer mode*/
 		return snprintf(buf, PAGE_SIZE, "0x%04X\n", obj->als);
 #else
 		return snprintf(buf, PAGE_SIZE, "%u\n", obj->als);
@@ -252,6 +255,7 @@ static ssize_t ps_show(struct device_driver *ddri, char *buf)
 #endif
 }
 #ifdef CONFIG_OPLUS_FEATURE_SENSOR
+//ChenYan@PSW.BSP.Sensor,2018-12-08, add
 static ssize_t ps_state_show(struct device_driver *ddri, char *buf)
 {
 	ssize_t res = 0;
@@ -311,6 +315,7 @@ static ssize_t alsval_show(struct device_driver *ddri, char *buf)
 }
 
 #ifdef CONFIG_OPLUS_FEATURE_SENSOR
+/*Fei.Mo@PSW.BSP.Sensor, 2017/12/17, Add for  engineer mode*/
 static ssize_t gain_als_show(struct device_driver *ddri, char *buf)
 {
 	struct cali_data c_data;
@@ -1096,6 +1101,7 @@ static int ps_get_data(int *value, int *status)
 static int ps_set_cali(uint8_t *data, uint8_t count)
 {
 #ifndef CONFIG_OPLUS_FEATURE_SENSOR
+/*Chendai.Liang@PSW.BSP.Sensor, 2020/10/14, Add for ps cali issue*/
 	int32_t *buf = (int32_t *)data;
 	struct alspshub_ipi_data *obj = obj_ipi_data;
 

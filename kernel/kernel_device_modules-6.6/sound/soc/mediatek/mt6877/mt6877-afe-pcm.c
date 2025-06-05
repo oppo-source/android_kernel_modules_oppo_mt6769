@@ -38,6 +38,7 @@
 #include "../ultrasound/ultra_scp/mtk-scp-ultra-common.h"
 #endif
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+/* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.PLATFORM, 2022/01/25, Add for audio kernel feedback */
 #include "../feedback/oplus_audio_kernel_fb.h"
 #ifdef dev_err
 #undef dev_err
@@ -3253,6 +3254,7 @@ static irqreturn_t mt6877_afe_irq_handler(int irq_id, void *dev)
 
 	if (ret || status_mcu == 0) {
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+/* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.PLATFORM, 2022/01/25, Add for audio kernel feedback */
 		dev_err_not_fb(afe->dev, "%s(), irq status err, ret %d, status 0x%x, mcu_en 0x%x\n",
 			__func__, ret, status, mcu_en);
 #else

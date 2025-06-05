@@ -37,6 +37,8 @@ struct mt_led_data {
 };
 #ifdef OPLUS_FEATURE_DISPLAY_APOLLO
 unsigned int mBrightnessValue = 1;
+bool mApolloDisable = false;
+bool oplus_apollo_unsupported(void);
 void apollo_set_brightness_for_show(unsigned int level);
 #endif /* OPLUS_FEATURE_DISPLAY_APOLLO */
 int mt_leds_parse_dt(struct mt_led_data *mdev, struct fwnode_handle *fwnode);

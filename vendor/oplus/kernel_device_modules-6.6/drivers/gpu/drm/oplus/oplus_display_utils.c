@@ -212,6 +212,7 @@ done:
 	OPLUS_DSI_INFO("End\n");
 }
 
+#ifdef OPLUS_FEATURE_DISPLAY_MAINLINE
 #define GAMMA_COMPENSATION_READ_RETRY_MAX 5
 #define GAMMA_COMPENSATION_READ_REG 0x82
 #define GAMMA_COMPENSATION_READ_LENGTH 4
@@ -410,12 +411,15 @@ static int oplus_panel_ac178_gamma_compensation(void *dsi)
 	return 0;
 }
 
+#endif /* OPLUS_FEATURE_DISPLAY_MAINLINE*/
 int oplus_panel_ext_init(struct drm_crtc *crtc)
 {
 	struct mtk_drm_crtc *mtk_crtc;
 	struct mtk_ddp_comp *comp;
 	struct mtk_dsi *dsi;
+#ifdef OPLUS_FEATURE_DISPLAY_MAINLINE
 	struct dsi_panel_lcm *ctx = NULL;
+#endif /* OPLUS_FEATURE_DISPLAY_MAINLINE*/
 	int rc = 0;
 
 	if (!crtc) {
@@ -446,6 +450,7 @@ int oplus_panel_ext_init(struct drm_crtc *crtc)
 		OPLUS_DSI_ERR("dsi is NULL\n");
 		return -EFAULT;
 	}
+#ifdef OPLUS_FEATURE_DISPLAY_MAINLINE
 	ctx = oplus_mtkDsi_to_panel(dsi);
 	if (!ctx) {
 		OPLUS_DSI_ERR("ctx is NULL\n");
@@ -460,6 +465,7 @@ int oplus_panel_ext_init(struct drm_crtc *crtc)
 			&& !g_gamma_regs_read_done) {
 		rc |= oplus_panel_ac178_gamma_compensation(dsi);
 	}
+#endif /* OPLUS_FEATURE_DISPLAY_MAINLINE*/
 
 	return rc;
 }
@@ -715,7 +721,7 @@ int oplus_panel_backlight_check(void *ctx)
 	unsigned int reg;
 
 	if (!lcm_ctx) {
-		OPLUS_DSI_ERR("invalid dsi\n");
+		OPLUS_DSI_ERR("invalid lcm_ctx\n");
 		return -EINVAL;
 	}
 

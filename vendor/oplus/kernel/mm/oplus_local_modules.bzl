@@ -149,10 +149,10 @@ def define_oplus_local_modules():
             "kswapd_opt/kswapd_opt.c",
         ]),
         includes = ["."],
-        local_defines = ["CONFIG_OPLUS_FEATURE_KSWAPD_OPT"],
-        conditional_defines = {
-            "mtk": ["CONFIG_COSTLY_ALLOC_MASK_RECLAIM"],
-        },
+        local_defines = ["CONFIG_OPLUS_FEATURE_KSWAPD_OPT", "CONFIG_COSTLY_ALLOC_MASK_RECLAIM"],
+        #conditional_defines = {
+        #    "mtk": ["CONFIG_COSTLY_ALLOC_MASK_RECLAIM"],
+        #},
         copts = select({
             "//build/kernel/kleaf:kocov_is_true": ["-fprofile-arcs", "-ftest-coverage"],
             "//conditions:default": [],

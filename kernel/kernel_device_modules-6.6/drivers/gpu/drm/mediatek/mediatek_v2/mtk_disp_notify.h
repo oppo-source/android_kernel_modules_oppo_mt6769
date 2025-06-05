@@ -15,6 +15,7 @@
 #define MTK_DISP_EARLY_EVENT_BLANK	0x00
 #define MTK_DISP_EVENT_BLANK		0x01
 #define MTK_DISP_EVENT_FOR_TOUCH	0x10
+#define LCD_CTL_AOD_ON			0x02
 
 enum {
 	/* disp power on */

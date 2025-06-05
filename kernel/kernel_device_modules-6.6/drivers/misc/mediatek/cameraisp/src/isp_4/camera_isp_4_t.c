@@ -581,7 +581,6 @@ struct S_START_T {
  */
 static unsigned int g_regScen = 0xa5a5a5a5; /* remove later */
 
-/*static unsigned int g_virtual_cq_cnt[2] = {0, 0};*/
 static unsigned int g_virtual_cq_cnt_a;
 static unsigned int g_virtual_cq_cnt_b;
 
@@ -7247,9 +7246,8 @@ static long ISP_ioctl(struct file *pFile, unsigned int Cmd, unsigned long Param)
 		}
 		LOG_NOTICE("ISP_SET_SEC_ENABLE sec_on = %d\n", sec_on);
 		break;
-	case ISP_SET_VIR_CQCNT: { 
+	case ISP_SET_VIR_CQCNT: {
 		unsigned int g_virtual_cq_cnt[2] = {0};
-		
 		if (copy_from_user(&g_virtual_cq_cnt, (void *)Param,
 			sizeof(unsigned int)*2) == 0) {
 			LOG_DBG("From hw_module:%d Virtual CQ count from user land : %d\n",
@@ -7922,6 +7920,100 @@ static inline void ISP_StopHW(signed int module)
 
 }
 
+static inline void ISP_StopSVHW(signed int module)
+{
+	unsigned int regTGSt, loopCnt = 3;
+	signed int ret = 0;
+	struct ISP_WAIT_IRQ_STRUCT waitirq;
+	unsigned long long  sec = 0, m_sec = 0;
+	unsigned long long  timeoutMs = 500000000;/*500ms*/
+	char moduleName[128];
+
+	/* wait TG idle */
+	switch (module) {
+	case ISP_CAMSV0_IDX:
+		strncpy(moduleName, "CAMSV0", 7);
+		waitirq.Type = ISP_IRQ_TYPE_INT_CAMSV_0_ST;
+		break;
+	case ISP_CAMSV1_IDX:
+		strncpy(moduleName, "CAMSV1", 7);
+		waitirq.Type = ISP_IRQ_TYPE_INT_CAMSV_1_ST;
+		break;
+	case ISP_CAMSV2_IDX:
+		strncpy(moduleName, "CAMSV2", 7);
+		waitirq.Type = ISP_IRQ_TYPE_INT_CAMSV_2_ST;
+		break;
+	case ISP_CAMSV3_IDX:
+		strncpy(moduleName, "CAMSV3", 7);
+		waitirq.Type = ISP_IRQ_TYPE_INT_CAMSV_3_ST;
+		break;
+	default:
+		LOG_NOTICE("Unknown camsv module(0x%x)\n", module);
+		return;
+	}
+
+	waitirq.EventInfo.Clear = ISP_IRQ_CLEAR_WAIT;
+	waitirq.EventInfo.Status = VS_INT_ST;
+	waitirq.EventInfo.St_type = SIGNAL_INT;
+	waitirq.EventInfo.Timeout = 0x100;
+	waitirq.EventInfo.UserKey = 0x0;
+	waitirq.bDumpReg = 0;
+
+	do {
+		regTGSt = (ISP_RD32(CAMSV_REG_TG_INTER_ST(module)) & 0x00003F00)
+			   >> 8;
+		if (regTGSt == 1 || regTGSt == 0)
+			break;
+
+		pr_info("%s: wait 1VD (%d)\n", moduleName, loopCnt);
+		ret = ISP_WaitIrq(&waitirq);
+		/* first wait is clear wait, others are non-clear wait */
+		waitirq.EventInfo.Clear = ISP_IRQ_CLEAR_NONE;
+	} while (--loopCnt);
+
+	if (-ERESTARTSYS == ret) {
+		pr_info("%s: interrupt by system signal, wait idle\n",
+			moduleName);
+		/* timer*/
+		m_sec = ktime_get();
+
+		if (regTGSt == 1)
+			pr_info("%s: wait idle done\n", moduleName);
+		else if (regTGSt == 0)
+			pr_info("plz check regTGSt value");
+		else
+			pr_info("%s: wait idle timeout(%lld)\n", moduleName,
+				(sec - m_sec));
+	}
+
+	pr_info("%s: reset\n", moduleName);
+	/* timer*/
+	m_sec = ktime_get();
+
+	/* Reset*/
+	ISP_WR32(CAMSV_REG_SW_CTL(module), 0x0);
+	ISP_WR32(CAMSV_REG_SW_CTL(module), 0x1);
+	while (ISP_RD32(CAMSV_REG_SW_CTL(module)) != 0x3) {
+		/*timer*/
+		sec = ktime_get();
+		/* wait time>timeoutMs, break */
+		if ((sec  - m_sec) > timeoutMs) {
+			pr_info("%s: wait SW idle timeout\n",
+				moduleName);
+			break;
+		}
+	}
+	ISP_WR32(CAMSV_REG_SW_CTL(module), 0x4);
+	ISP_WR32(CAMSV_REG_SW_CTL(module), 0x0);
+	regTGSt = (ISP_RD32(CAMSV_REG_TG_INTER_ST(module)) & 0x00003F00)
+		   >> 8;
+	LOG_DBG("%s_TG_ST(%d)_SW_ST(0x%x)\n", moduleName, regTGSt,
+		ISP_RD32(CAMSV_REG_SW_CTL(module)));
+
+	/*disable CMOS*/
+	ISP_WR32(CAMSV_REG_TG_SEN_MODE(module),
+		(ISP_RD32(CAMSV_REG_TG_SEN_MODE(module))&0xfffffffe));
+}
 /******************************************************************************
  *
  *****************************************************************************/
@@ -8088,6 +8180,10 @@ static int ISP_release(
 	}
 
 	/*  */
+	pr_info("Start ISP_StopSVHW");
+	ISP_StopSVHW(ISP_CAMSV1_IDX);
+	pr_info("End ISP_StopSVHW");
+
 	pr_info("Start ISP_StopHW");
 	ISP_StopHW(ISP_CAM_A_IDX);
 	ISP_StopHW(ISP_CAM_B_IDX);
@@ -9832,6 +9928,7 @@ static int DMAErrHandler(void)
 void IRQ_INT_ERR_CHECK_CAM(unsigned int WarnStatus, unsigned int ErrStatus,
 			enum ISP_IRQ_TYPE_ENUM module)
 {
+	static unsigned int camsv1_irq_errcount;
 	/* ERR print */
 	/* unsigned int i = 0; */
 	if (ErrStatus) {
@@ -9876,14 +9973,22 @@ void IRQ_INT_ERR_CHECK_CAM(unsigned int WarnStatus, unsigned int ErrStatus,
 				WarnStatus, ErrStatus);
 			break;
 		case ISP_IRQ_TYPE_INT_CAMSV_1_ST:
+		{
 			g_ISPIntErr[ISP_IRQ_TYPE_INT_CAMSV_1_ST] |=
 				(ErrStatus|WarnStatus);
 			g_ISPIntErr_SMI[ISP_IRQ_TYPE_INT_CAMSV_1_ST] =
 				g_ISPIntErr[ISP_IRQ_TYPE_INT_CAMSV_1_ST];
-			LOG_NOTICE(
-				"[ISP][ERR_CHECK_CAM]CAMSV1:int_err:0x%x_0x%x\n",
-				WarnStatus, ErrStatus);
+			if ((camsv1_irq_errcount % 10000) == 0) {
+				LOG_NOTICE(
+					"[ISP][ERR_CHECK_CAM]CAMSV1:int_err:0x%x_0x%x\n",
+					WarnStatus, ErrStatus);
+			}
+			if (camsv1_irq_errcount == 10000)
+				camsv1_irq_errcount = 1;
+			else
+				camsv1_irq_errcount += 1;
 			break;
+		}
 		case ISP_IRQ_TYPE_INT_CAMSV_2_ST:
 			g_ISPIntErr[ISP_IRQ_TYPE_INT_CAMSV_2_ST] |=
 				(ErrStatus|WarnStatus);

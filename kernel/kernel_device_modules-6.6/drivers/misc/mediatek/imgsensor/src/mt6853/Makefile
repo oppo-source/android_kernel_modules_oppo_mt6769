@@ -54,6 +54,7 @@ imgsensor_isp6s_mon-objs += ../common/$(COMMON_VERSION)/seninf_clk.o
 imgsensor_isp6s_mon-objs += ../common/$(COMMON_VERSION)/seninf.o
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+#Henry.Chang@Cam.Drv, 20200725, add for oppo custom  operation
 imgsensor_isp6s_mon-objs += ../OplusImgsensor/imgsensor_eeprom.o
 imgsensor_isp6s_mon-objs += ../OplusImgsensor/imgsensor_hwcfg_custom.o
 

@@ -1427,6 +1427,7 @@ void cmdq_util_reserved_memory_lookup(struct device *dev)
 
 	pa = mem->base + mem->size - CMDQ_RECORD_SIZE - CMDQ_STATUS_SIZE;
 
+// xibao@Kernel.Stability 2024-05-17
 // use ioremap_wc instead of ioremap to avoid alignment fault when enabled KCSAN
 #if IS_ENABLED(CONFIG_KCSAN)
 	if (!va)

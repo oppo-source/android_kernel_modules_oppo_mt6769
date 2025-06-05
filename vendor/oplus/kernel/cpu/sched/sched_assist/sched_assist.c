@@ -58,10 +58,43 @@ static void android_rvh_wake_up_new_task_handler(void *unused, struct task_struc
 	set_ux_to_task(new);
 }
 
+#include <linux/module.h>
+#include <linux/delay.h>
+static int delay_fork __read_mostly = 0;
+module_param(delay_fork, int, 0644);
+
+static char *delay_target __read_mostly = "                ";
+module_param(delay_target, charp, 0644);
+
+static int delay_debug __read_mostly = 0;
+module_param(delay_debug, int, 0644);
+
+static int delay_type __read_mostly = 0;
+module_param(delay_type, int, 0644);
+
+static void fbg_sched_fork_hook(void *unused, struct task_struct *tsk)
+{
+	if (delay_fork && !strncmp(current->comm, delay_target, 7)) {
+		if (delay_debug)
+			pr_err("current %s %d delay for %d ms start\n", current->comm, current->pid, delay_fork);
+
+		if (delay_type == 0)
+			msleep(delay_fork);
+		else if (delay_type == 1)
+			mdelay(delay_fork);
+		else if (delay_type == 2)
+			udelay(delay_fork);
+		else if (delay_type == 3)
+			usleep_range(delay_fork, delay_fork);
+
+		if (delay_debug)
+			pr_err("current %s %d delay for %d ms finish\n", current->comm, current->pid, delay_fork);
+	}
+}
 static int register_scheduler_vendor_hooks(void)
 {
 	int ret;
-
+	register_trace_android_rvh_sched_fork(fbg_sched_fork_hook, NULL);
 	/* register vender hook in kernel/sched/fair.c */
 	REGISTER_TRACE_RVH(android_rvh_place_entity, android_rvh_place_entity_handler);
 	REGISTER_TRACE_RVH(android_rvh_can_migrate_task, android_rvh_can_migrate_task_handler);

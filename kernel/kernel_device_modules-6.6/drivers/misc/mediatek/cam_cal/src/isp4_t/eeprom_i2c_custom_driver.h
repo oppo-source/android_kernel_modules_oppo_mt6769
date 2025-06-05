@@ -26,4 +26,9 @@ unsigned int sc820cs_read_region(struct i2c_client *client,
 				unsigned char *data,
 				unsigned int size);
 
+extern unsigned int Hi846_oris_read_region(struct i2c_client *client,
+				unsigned int addr,
+				unsigned char *data,
+				unsigned int size);
+
 #endif				/* __CAM_CAL_LIST_H */

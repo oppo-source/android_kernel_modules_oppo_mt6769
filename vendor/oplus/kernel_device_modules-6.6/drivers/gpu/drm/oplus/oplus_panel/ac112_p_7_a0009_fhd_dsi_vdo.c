@@ -719,7 +719,7 @@ static void __exit lcm_drv_exit(void)
 module_init(lcm_drv_init);
 module_exit(lcm_drv_exit);
 
-MODULE_AUTHOR("Adigarla Bhargav");
+MODULE_AUTHOR("Adigarla Bhargav <adigarla.bhargav@oppo.com>");
 MODULE_DESCRIPTION("ac112_p_7_a0009 panel drm driver");
 MODULE_LICENSE("GPL v2");
 

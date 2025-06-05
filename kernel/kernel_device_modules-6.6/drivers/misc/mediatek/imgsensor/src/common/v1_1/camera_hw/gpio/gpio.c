@@ -474,6 +474,7 @@ struct GPIO_PINCTRL gpio_pinctrl_list_switch[
 
 extern void gpio_dump_regs(void);
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*Henry.Chang@Cam.Drv, 20200727, add for 20131*/
 struct GPIO_PINCTRL gpio_pinctrl_list_ldo_enable[1] = {
 	{"fan53870_chip_enable"}
 };
@@ -597,6 +598,7 @@ static enum IMGSENSOR_RETURN gpio_init(
 	}
 	/* for mipi switch platform */
 	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	/*Henry.Chang@Cam.Drv, 20200727, add for 20131*/
 	if (1) {
 		if (gpio_pinctrl_list_ldo_enable[0].ppinctrl_lookup_names) {
 			pgpio->pinctrl_state_ldo_enable = pinctrl_lookup_state(
@@ -670,6 +672,7 @@ static enum IMGSENSOR_RETURN gpio_set(
 
 	PK_DBG("%s :debug pinctrl ENABLE, PinIdx %d, Val %d\n",__func__, pin, pin_state);
 
+	/*weiriqin@Cam.Drv, 20201109, modify for 19165 project*/
 	if (is_project(19165)) {
                 if (pin < IMGSENSOR_HW_PIN_PDN ||
                         pin > IMGSENSOR_HW_PIN_AVDD_1 ||
@@ -683,6 +686,7 @@ static enum IMGSENSOR_RETURN gpio_set(
 	    pin > IMGSENSOR_HW_PIN_MIPI_SWITCH_SEL ||
 #else
 		#ifdef OPLUS_FEATURE_CAMERA_COMMON
+		/*Henry.Chang@Cam.Drv, 20200727, add for 20131*/
 		pin > IMGSENSOR_HW_PIN_GPIO_POWER_ENABLE ||
 		#else
 		pin > IMGSENSOR_HW_PIN_DOVDD ||
@@ -706,6 +710,7 @@ static enum IMGSENSOR_RETURN gpio_set(
 #endif
 	{
 		#ifdef OPLUS_FEATURE_CAMERA_COMMON
+		/*Henry.Chang@Cam.Drv, 20200727, add for 20131*/
 		if (pin == IMGSENSOR_HW_PIN_FAN53870_ENABLE) {
 			ppinctrl_state = pgpio->pinctrl_state_ldo_enable;
 		} else if(pin == IMGSENSOR_HW_PIN_GPIO_POWER_ENABLE) {

@@ -10,4 +10,5 @@ brza_24613    IMX471           brzafront     front cam
 brza_24613    OV08D            brzauwide     ultra wide cam
 brzb_24720    IMX896           brzbmain      main cam
 brzb_24720    IMX471           brzbfront     front cam
+brzb_24720    IMX615           brzbfront2    front cam
 brzb_24720    OV08D            brzbuwide     ultra wide cam

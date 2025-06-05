@@ -4416,6 +4416,7 @@ static const struct soc_enum Audio_DL_Enum[] = {
 			    apply_n12db_setting),
 };
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+/* Jin.Liu@MULTIMEDIA.AUDIODRIVER.MACHINE, 2021/11/20, add for audiohal feedback */
 #define HAL_FEEDBACK_MAX_BYTES         (512)
 extern int hal_feedback_config_get(struct snd_kcontrol *kcontrol,
 			unsigned int __user *bytes,
@@ -4477,6 +4478,7 @@ static const struct snd_kcontrol_new mt6357_snd_controls[] = {
 	SOC_ENUM_EXT("Apply_N12DB_Gain", Audio_DL_Enum[14],
 		     apply_n12db_get, apply_n12db_set),
 	#if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+	/* Jin.Liu@MULTIMEDIA.AUDIODRIVER.MACHINE, 2021/11/20, add for audiohal feedback */
 	SND_SOC_BYTES_TLV("HAL FEEDBACK",
 			  HAL_FEEDBACK_MAX_BYTES,
 			  hal_feedback_config_get, hal_feedback_config_set),

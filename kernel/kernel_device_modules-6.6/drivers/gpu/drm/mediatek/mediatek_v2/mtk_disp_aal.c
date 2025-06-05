@@ -53,6 +53,10 @@
 #define MME_AAL_BUFFER_SIZE (240 * 1024)
 #endif
 
+#ifdef OPLUS_FEATURE_DISPLAY_APOLLO
+extern bool oplus_apollo_unsupported(void);
+#endif
+
 #undef pr_fmt
 #define pr_fmt(fmt) "[disp_aal]" fmt
 #define AALERR(fmt, arg...) pr_notice("[ERR]%s:" fmt, __func__, ##arg)
@@ -538,6 +542,9 @@ void disp_aal_notify_backlight_changed(struct mtk_ddp_comp *comp,
 #ifndef OPLUS_FEATURE_DISPLAY_APOLLO
 		if (aal_data->primary_data->led_type != TYPE_ATOMIC)
 			mtk_leds_brightness_set(connector_id, 0, 0, (0X1<<SET_BACKLIGHT_LEVEL));
+#else
+		if ((aal_data->primary_data->led_type != TYPE_ATOMIC) && oplus_apollo_unsupported())
+			mtk_leds_brightness_set(connector_id, 0, 0, (0X1<<SET_BACKLIGHT_LEVEL));
 #endif
 		/* set backlight = 0 may be not from AAL, */
 		/* we have to let AALService can turn on backlight */
@@ -549,6 +556,10 @@ void disp_aal_notify_backlight_changed(struct mtk_ddp_comp *comp,
 		/* AAL Service is not running */
 #ifndef OPLUS_FEATURE_DISPLAY_APOLLO
 		if (aal_data->primary_data->led_type != TYPE_ATOMIC)
+			mtk_leds_brightness_set(connector_id, trans_backlight,
+						0, (0X1<<SET_BACKLIGHT_LEVEL));
+#else
+		if ((aal_data->primary_data->led_type != TYPE_ATOMIC) && oplus_apollo_unsupported())
 			mtk_leds_brightness_set(connector_id, trans_backlight,
 						0, (0X1<<SET_BACKLIGHT_LEVEL));
 #endif
@@ -1984,7 +1995,6 @@ static int disp_aal_write_cabc_to_reg(struct mtk_ddp_comp *comp,
 
 	AALFLOW_LOG("\n");
 	if(aal_data->primary_data->aal_fo->mtk_cabc_no_support) {
-		pr_notice("mtk_cabc_no_support is true\n");
 		return 0;
 	}
 	if (priv->data->mmsys_id == MMSYS_MT6768 ||

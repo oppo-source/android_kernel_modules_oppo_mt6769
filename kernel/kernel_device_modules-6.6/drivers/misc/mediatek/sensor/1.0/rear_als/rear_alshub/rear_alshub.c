@@ -12,6 +12,7 @@
 #include "SCP_power_monitor.h"
 #include <linux/pm_wakeup.h>
 #if(1) //OPLUS_FEATURE_SENSOR
+/*Fei.Mo@PSW.BSP.Sensor, 2017/12/17, Add for get sensor_devinfo*/
 #include "../../oplus_sensor_devinfo/sensor_devinfo_v2.h"
 #endif
 #define REAR_ALSHUB_DEV_NAME     "rear_als_hub_pl"
@@ -120,6 +121,7 @@ static ssize_t rear_als_show(struct device_driver *ddri, char *buf)
 		return snprintf(buf, PAGE_SIZE, "ERROR: %d\n", res);
 	else
 #if(0) //UNOPLUS_FEATURE_SENSOR
+/*Fei.Mo@PSW.BSP.Sensor, 2017/12/17, Modify for get alsps value to engineer mode*/
 		return snprintf(buf, PAGE_SIZE, "0x%04X\n", obj->rear_als);
 #else
 		return snprintf(buf, PAGE_SIZE, "%u\n", obj->rear_als);
@@ -155,6 +157,7 @@ static ssize_t alsval_show(struct device_driver *ddri, char *buf)
 }
 
 #if(1) //OPLUS_FEATURE_SENSOR
+/*Fei.Mo@PSW.BSP.Sensor, 2017/12/17, Add for  engineer mode*/
 static ssize_t gain_als_show(struct device_driver *ddri, char *buf)
 {
 	struct cali_data c_data;

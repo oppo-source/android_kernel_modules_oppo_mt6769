@@ -18,6 +18,7 @@
 #include "../common/mtk-sp-spk-amp.h"
 
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+/* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.PLATFORM, 2022/01/25, Add for audio kernel feedback */
 #include "../feedback/oplus_audio_kernel_fb.h"
 #ifdef dev_err
 #undef dev_err
@@ -228,6 +229,7 @@ static const struct snd_soc_dapm_route mt6768_mt6358_routes[] = {
 };
 
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+/* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.MACHINE, 2020/10/10, add for audiohal feedback */
 #define HAL_FEEDBACK_MAX_BYTES         (512)
 extern int hal_feedback_config_get(struct snd_kcontrol *kcontrol,
 			unsigned int __user *bytes,
@@ -250,6 +252,7 @@ static const struct snd_kcontrol_new mt6768_mt6358_controls[] = {
 	SOC_ENUM_EXT("MTK_SPK_I2S_IN_TYPE_GET", mt6768_spk_type_enum[1],
 		     mt6768_spk_i2s_in_type_get, NULL),
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+/* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.MACHINE, 2020/10/10, add for audiohal feedback */
 	SND_SOC_BYTES_TLV("HAL FEEDBACK",
 			  HAL_FEEDBACK_MAX_BYTES,
 			  hal_feedback_config_get, hal_feedback_config_set),
@@ -342,6 +345,7 @@ static int mt6768_mt6358_mtkaif_calibration(struct snd_soc_pcm_runtime *rtd)
 			/* handle if never test done */
 			if (++counter > 10000) {
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+/* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.PLATFORM, 2022/01/25, Add for audio kernel feedback */
 				dev_err_not_fb(afe->dev, "%s(), test fail, cycle_1 %d, cycle_2 %d, monitor 0x%x\n",
 					__func__,
 					cycle_1, cycle_2, monitor);
@@ -1081,6 +1085,7 @@ static int mt6768_mt6358_dev_probe(struct platform_device *pdev)
 					"mediatek,speaker-codec");
 	if (!spk_node) {
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+/* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.PLATFORM, 2022/01/25, Add for audio kernel feedback */
 			dev_err_not_fb(&pdev->dev,
 				"spk_codec of_get_child_by_name fail\n");
 #else

@@ -338,6 +338,7 @@ struct tcp_ny_cable_type {
 };
 
 #ifdef OPLUS_FEATURE_CHG_BASIC
+/* @BSP.CHG.Basic 2023/01/06 add for audio switch */
 struct tcp_ny_switch_set_status {
 	bool	 state;		/* 0: DP/DM state;  1: fastchg state */
 	bool 	(*pfunc)(int);	/* recevier call the pfunc to ack.*/

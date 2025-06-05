@@ -1552,6 +1552,7 @@ static void set_shutter(kal_uint32 shutter)
 		//exposure_time = shutter/1000*4896/480;//ms
 		exposure_time = (shutter * 1) / 100;//ms
 
+		/*Modified by Xiaoyang.Huang@RM.Camera 20180913 to fix 7s long-exp problem*/
 		if (exposure_time < 6500) {
 			temp1_030F = 0x78;
 			temp2_0821 = 0x78;
@@ -1911,6 +1912,7 @@ static kal_uint32 close(void)
 	LOG_INF("E\n");
 
 	/*No Need to implement this function*/
+	/* Hanyue.Shao@Camera.Driver, 2018/11/3, add for S5K3L6 power down sequence */
 	streaming_control(0);
 	return ERROR_NONE;
 }	/*	close  */
@@ -2600,6 +2602,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 			memcpy(feature_return_para_32, (UINT32 *)otp_data, sizeof(otp_data));
 			break;
 		}
+		/*Caohua.Lin@Camera.Driver , 20190318, add for ITS--sensor_fusion*/
 		case SENSOR_FEATURE_GET_OFFSET_TO_START_OF_EXPOSURE:
 			*(MUINT32 *)(uintptr_t)(*(feature_data + 1)) = 0;
 			break;

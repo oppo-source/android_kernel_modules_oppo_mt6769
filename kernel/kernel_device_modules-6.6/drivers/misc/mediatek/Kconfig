@@ -333,6 +333,7 @@ source "$(KCONFIG_EXT_PREFIX)drivers/misc/mediatek/ktchbst/Kconfig"
 endmenu # Performance
 
 #ifdef OPLUS_FEATURE_OEM_OCDT
+#wanghao@BSP.Kernel.Stability, 2021/08/31, add for bootmode
 source "$(KCONFIG_EXT_PREFIX)drivers/misc/mediatek/boot_common/Kconfig"
 #endif
 

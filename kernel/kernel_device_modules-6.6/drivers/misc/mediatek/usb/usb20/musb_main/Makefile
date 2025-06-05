@@ -32,7 +32,7 @@ endif
 ccflags-y += -I$(srctree)/drivers/usb/core/
 ccflags-y += -I$(DEVICE_MODULES_PATH)/drivers/misc/mediatek/usb/usb20
 
-
+ccflags-y += -I$(srctree)/sound/usb
 obj-$(CONFIG_USB_MTK_HDRC) += musb_main.o
 musb_main-y := musb.o
 

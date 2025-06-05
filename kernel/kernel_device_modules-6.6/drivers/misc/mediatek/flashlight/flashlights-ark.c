@@ -73,7 +73,6 @@
 /* define level */
 #define ARK_LEVEL_NUM 28
 #define ARK_LEVEL_TORCH 7
-#define ARK_LEVEL_FLASH_CTS   4
 #define ARK_HW_TIMEOUT 400 /* ms */
 
 /* define mutex and work queue */
@@ -188,7 +187,6 @@ static volatile int ark_level_ch2 = -1;
 static volatile int ark_flash_mode = -1;
 static volatile int ark_charge_mode = 0;
 static volatile int ark_charge_enable = 0;
-static volatile int ark_flash_cts_enable = 0;
 static int ark_is_torch(int level)
 {
 	if (level >= ARK_LEVEL_TORCH)
@@ -215,17 +213,19 @@ static int ark_enable_ch1(void)
 	reg = ARK_REG_LED_CTRL1;
 	if (!ark_is_torch(ark_level_ch1)) {
 		/* torch mode */
-		if (ark_charge_mode == FLASHLIGHT_CHARGER_READY && ark_flash_cts_enable == 0) {
-			if (ark_charge_enable == 0) {
-				oplus_chg_set_camera_on(1);
-				ark_charge_enable = 1;
-			}
-			ark_flash_mode++;
-		}
+		//if (ark_charge_mode == FLASHLIGHT_CHARGER_READY && ark_flash_cts_enable == 0) {
+		//	if (ark_charge_enable == 0) {
+		//		oplus_chg_set_camera_on(1);
+		//		ark_charge_enable = 1;
+		//	}
+		//	ark_flash_mode++;
+		//}
 		ark_reg_enable = ARK_ENABLE_LED1_TORCH;
 	} else {
 		/* flash mode */
-		if (ark_charge_mode == FLASHLIGHT_CHARGER_READY && ark_charge_enable == 1 && ark_flash_cts_enable == 0) {
+		if (ark_charge_mode == FLASHLIGHT_CHARGER_READY && ark_charge_enable == 0) {
+			oplus_chg_set_camera_on(1);
+			ark_charge_enable = 1;
 			ark_flash_mode++;
 		}
 		ark_reg_enable = ARK_ENABLE_LED1_FLASH;
@@ -302,7 +302,7 @@ static int ark_disable(int channel)
 		return -1;
 	}
 
-	if (ark_flash_mode == 1 && ark_charge_enable == 1) {
+	if (ark_flash_mode == 0 && ark_charge_enable == 1) {
 		oplus_chg_set_camera_on(0);
 		ark_charge_enable = 0;
 		ark_flash_mode = -1;
@@ -470,11 +470,6 @@ int ark_timer_cancel(int channel)
 	return 0;
 }
 
-void ark_is_flash_cts(void) {
-	if (ark_charge_mode == FLASHLIGHT_CHARGER_READY && ark_level_ch1 == ARK_LEVEL_FLASH_CTS) {
-		ark_flash_cts_enable = 1;
-	}
-}
 /******************************************************************************
  * Flashlight operations
  *****************************************************************************/
@@ -527,7 +522,6 @@ static int ark_ioctl(unsigned int cmd, unsigned long arg)
 		if (fl_arg->arg == FLASHLIGHT_CHARGER_READY) {
 			ark_charge_mode = 1;
 		}
-		ark_is_flash_cts();
 		break;
 
 	case FLASH_IOC_GET_DUTY_NUMBER:
@@ -599,8 +593,7 @@ static int ark_set_driver(int set)
 		if (!use_count)
 			ret = ark_init();
 		use_count++;
-		ark_flash_cts_enable = 0;
-		pr_info("Set driver: %d, ark_flash_cts_enable = %d\n", use_count, ark_flash_cts_enable);
+		pr_info("Set driver: %d\n", use_count);
 	} else {
 		use_count--;
 		if (!use_count)
@@ -611,8 +604,7 @@ static int ark_set_driver(int set)
 			oplus_chg_set_camera_on(0);
 			ark_charge_enable = 0;
 		}
-		ark_flash_cts_enable = 0;
-		pr_info("Unset driver: %d, ark_flash_cts_enable = %d\n", use_count, ark_flash_cts_enable);
+		pr_info("Unset driver: %d\n", use_count);
 	}
 	mutex_unlock(&ark_mutex);
 

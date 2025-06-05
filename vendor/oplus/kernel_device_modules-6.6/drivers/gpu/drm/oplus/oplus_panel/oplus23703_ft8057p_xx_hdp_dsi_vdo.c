@@ -878,6 +878,7 @@ static int lcm_prepare(struct drm_panel *panel)
 #endif
 /*
 #ifdef LCD_LOAD_TP_FW
+	// shifan@bsp.tp 20191226 add for loading tp fw when screen lighting on
 	lcd_queue_load_tp_fw();
 #endif
 */
@@ -917,7 +918,7 @@ static const struct drm_display_mode default_mode = {
 
 #if CHANGE_FPS_EN
 static const struct drm_display_mode performance_mode_50hz = {
-	.clock = 156358,
+	.clock = 136382,
 	.hdisplay = 720,
 	.hsync_start = 720 + 36,//HFP
 	.hsync_end = 720 + 36 + 4,//HSA
@@ -925,14 +926,14 @@ static const struct drm_display_mode performance_mode_50hz = {
 	.vdisplay = 1604,
 	.vsync_start = 1604 + 1800,/* 23703 50FPS */
 	.vsync_end = 1604 + 1800 + 6,//VSA
-	.vtotal = 1604 + 18000 + 6 + 34,//VBP
+	.vtotal = 1604 + 1800 + 6 + 34,//VBP
 };
 
 static const struct drm_display_mode performance_mode_60hz = {
-	.clock = 156166,
+	.clock = 136097,
 	.hdisplay = 720,
-	.hsync_start = 7720 + 36,//HFP
-	.hsync_end = 7720 + 36 + 4,//HSA
+	.hsync_start = 720 + 36,//HFP
+	.hsync_end = 720 + 36 + 4,//HSA
 	.htotal = 720 + 36 + 4 + 32,//HBP
 	.vdisplay = 1604,
 	.vsync_start = 1604 + 1220,/* 23703 60FPS */
@@ -947,16 +948,23 @@ static struct mtk_panel_params ext_params = {
 	//.vfp_low_power = 148,
 	.oplus_esd_sleep_status = true,
 	.oplus_esd_sleep_ms = 5000,
-	.cust_esd_check = 0,
+	.cust_esd_check = 1,
 	.esd_check_enable = 1,
 	.lcm_esd_check_table[0] = {
-		.cmd = 0x09, .count = 3, .para_list[0] = 0x80, .para_list[1] = 0x03, .para_list[2] = 0x06,
+		.cmd = 0x0A, .count = 1, .para_list[0] = 0x9C,
+	},
+	.lcm_esd_check_table[1] = {
+		.cmd = 0x0B, .count = 1, .para_list[0] = 0x00,
+	},
+	.lcm_esd_check_table[2] = {
+		.cmd = 0x0D, .count = 1, .para_list[0] = 0x00,
 	},
 
 	.physical_width_um = LCM_PHYSICAL_WIDTH,
 	.physical_height_um = LCM_PHYSICAL_HEIGHT,
 
-	.data_rate = 1030, /* 943 */
+	.pll_clk = 450,
+	.data_rate = 900, /* 900 */
 	//.data_rate_khz = 1030000, /* 943307 */
 
 	.oplus_display_global_dre = 1,
@@ -969,13 +977,19 @@ static struct mtk_panel_params ext_params_50hz = {
 	//.vfp_low_power = 4484,
 	.oplus_esd_sleep_status = true,
 	.oplus_esd_sleep_ms = 5000,
-	.cust_esd_check = 0,
+	.cust_esd_check = 1,
 	.esd_check_enable = 1,
 	.lcm_esd_check_table[0] = {
-		.cmd = 0x09, .count = 3, .para_list[0] = 0x80, .para_list[1] = 0x03, .para_list[2] = 0x06,
+		.cmd = 0x0A, .count = 1, .para_list[0] = 0x9C,
 	},
-
-	.data_rate = 1030, /* 943 */
+	.lcm_esd_check_table[1] = {
+		.cmd = 0x0B, .count = 1, .para_list[0] = 0x00,
+	},
+	.lcm_esd_check_table[2] = {
+		.cmd = 0x0D, .count = 1, .para_list[0] = 0x00,
+	},
+	.pll_clk = 450,
+	.data_rate = 900, /* 900 */
 #if 0
 	//.data_rate_khz = 920190, /* 943307 */
 	.lfr_enable = 0,
@@ -1013,13 +1027,19 @@ static struct mtk_panel_params ext_params_60hz = {
 	//.vfp_low_power = 2316, /* 60 FPS */
 	.oplus_esd_sleep_status = true,
 	.oplus_esd_sleep_ms = 5000,
-	.cust_esd_check = 0,
+	.cust_esd_check = 1,
 	.esd_check_enable = 1,
 	.lcm_esd_check_table[0] = {
-		.cmd = 0x09, .count = 3, .para_list[0] = 0x80, .para_list[1] = 0x03, .para_list[2] = 0x06,
+		.cmd = 0x0A, .count = 1, .para_list[0] = 0x9C,
 	},
-
-	.data_rate = 1030, /* 943 */
+	.lcm_esd_check_table[1] = {
+		.cmd = 0x0B, .count = 1, .para_list[0] = 0x00,
+	},
+	.lcm_esd_check_table[2] = {
+		.cmd = 0x0D, .count = 1, .para_list[0] = 0x00,
+	},
+	.pll_clk = 450,
+	.data_rate = 900, /* 900 */
 #if 0
 	//.data_rate_khz = 920190, /* 943307  待定*/
 	.lfr_enable = 0,
@@ -1052,7 +1072,7 @@ static struct mtk_panel_params ext_params_60hz = {
 };
 #endif
 
-#if 0
+
 static void cabc_switch(void *dsi, dcs_write_gce cb,void *handle, unsigned int cabc_mode)
 {
     char bl_tb1[] = {0x55, 0x03}; /* no cabc ui pictures videoes*/
@@ -1108,7 +1128,7 @@ static void cabc_switch(void *dsi, dcs_write_gce cb,void *handle, unsigned int c
 	cabc_status = cabc_mode;
     /* cabc_lastlevel = cabc_mode; */
 }
-#endif
+
 
 static int panel_ata_check(struct drm_panel *panel)
 {
@@ -1171,24 +1191,24 @@ static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb, void *handle,
 
 	pr_info("ft8057p backlight: bl_level=%d, level=%d, esd_last_level=%d\n",
 		bl_level, level, esd_last_level);
-/*
+
 	//lcd cabc backlight
 	if (bl_level > 4095)
 		bl_level = 4095;
-*/
+
 	bl_tb0[1] = bl_level >> 4;
 	bl_tb0[2] = bl_level & 0xf;
 
 	pr_info("%s level = %d,backlight = %d,bl_tb0[1] = 0x%x,bl_tb0[2] = 0x%x\n",
-		__func__, level, bl_level, bl_tb0[1], bl_tb0[2]);	
-/*
+		__func__, level, bl_level, bl_tb0[1], bl_tb0[2]);
+
 	esd_brightness = level;
 
 	if (first_set_bl) {
 		msleep(12);
 		first_set_bl = 0;
 	}
-*/
+
 	if (!cb)
 		return -1;
 
@@ -1278,7 +1298,7 @@ static struct mtk_panel_funcs ext_funcs = {
 	.ext_param_set = mtk_panel_ext_param_set,
 	//.mode_switch = mode_switch,
 	.ata_check = panel_ata_check,
-	//.cabc_switch = cabc_switch,
+	.cabc_switch = cabc_switch,
 };
 #endif
 

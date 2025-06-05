@@ -20,6 +20,7 @@ int iReadRegI2C(u8 *a_pSendData, u16 a_sizeSendData,
 		return IMGSENSOR_RETURN_ERROR;
 
 	#ifndef OPLUS_FEATURE_CAMERA_COMMON
+	//weiriqin@Cam.drv 2020/06/18, Modify for async power-on-off, ALPS04924900 ALPS05201837
 	return imgsensor_i2c_read(
 			imgsensor_i2c_get_device(),
 			a_pSendData,
@@ -47,6 +48,7 @@ int iReadRegI2CTiming(u8 *a_pSendData, u16 a_sizeSendData, u8 *a_pRecvData,
 		return IMGSENSOR_RETURN_ERROR;
 
 	#ifndef OPLUS_FEATURE_CAMERA_COMMON
+	//weiriqin@Cam.drv 2020/06/18, Modify for async power-on-off, ALPS04924900 ALPS05201837
 	return imgsensor_i2c_read(
 			imgsensor_i2c_get_device(),
 			a_pSendData,
@@ -73,6 +75,7 @@ int iWriteRegI2C(u8 *a_pSendData, u16 a_sizeSendData, u16 i2cId)
 		return IMGSENSOR_RETURN_ERROR;
 
 	#ifndef OPLUS_FEATURE_CAMERA_COMMON
+	//weiriqin@Cam.drv 2020/06/18, Modify for async power-on-off, ALPS04924900 ALPS05201837
 	return imgsensor_i2c_write(
 			imgsensor_i2c_get_device(),
 			a_pSendData,
@@ -98,6 +101,7 @@ int iWriteRegI2CTiming(u8 *a_pSendData, u16 a_sizeSendData,
 		return IMGSENSOR_RETURN_ERROR;
 
 	#ifndef OPLUS_FEATURE_CAMERA_COMMON
+	//weiriqin@Cam.drv 2020/06/18, Modify for async power-on-off, ALPS04924900 ALPS05201837
 	return imgsensor_i2c_write(
 			imgsensor_i2c_get_device(),
 			a_pSendData,
@@ -122,6 +126,7 @@ int iBurstWriteReg(u8 *pData, u32 bytes, u16 i2cId)
 		return IMGSENSOR_RETURN_ERROR;
 
 	#ifndef OPLUS_FEATURE_CAMERA_COMMON
+	//weiriqin@Cam.drv 2020/06/18, Modify for async power-on-off, ALPS04924900 ALPS05201837
 	return imgsensor_i2c_write(
 			imgsensor_i2c_get_device(),
 			pData,

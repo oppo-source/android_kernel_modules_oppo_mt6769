@@ -579,6 +579,7 @@ struct mtk_panel_params {
 	unsigned int cmd_null_pkt_en;
 	unsigned int cmd_null_pkt_len;
 	unsigned int lcm_degree;
+	/* @PSW.MM.Display.LCD.Machine 2023/8/4, add for colorimeter in production line */
 	/* BOE:0, SDC:1, TM:2, VISIONOX:3 */
 	unsigned int panel_type;
 //Settings for LFR Function:
@@ -626,6 +627,7 @@ struct mtk_panel_params {
 	bool color_2nit_status;
 	bool color_nature_profession_status;
 	unsigned int panel_bpp;
+	unsigned int oplus_display_lcd_tp_aod;
 	unsigned int oplus_vidle_te_duration;
 #endif /* OPLUS_FEATURE_DISPLAY */
 
@@ -681,7 +683,6 @@ struct mtk_panel_params {
 	bool b_send_pps_per_frame;
 	unsigned char pps[128];
 #endif
-
 	/*global dre enable*/
 	unsigned int oplus_display_global_dre;
 #ifdef OPLUS_FEATURE_DISPLAY
@@ -692,9 +693,13 @@ struct mtk_panel_params {
 	unsigned int oplus_esd_sleep_ms;
 #endif /* OPLUS_FEATURE_DISPLAY */
 
+  /*Yaqiang.Shi@RM.Display.LCD.Driver, add for osc hopping*/
+  	bool oplus_osc_hoping_fps_switch;
+  /*#endif*/
+
 	/*exit aod backlight setting*/
 	unsigned int doze_disable_backlight_flag_enable;
-	unsigned int * doze_disable_backlight_flag;
+	unsigned int oplus_display_lcd_6382_aod;
 };
 
 struct mtk_panel_ext {

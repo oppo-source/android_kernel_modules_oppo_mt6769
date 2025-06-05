@@ -79,12 +79,14 @@ extern int AK7371AF_PowerDown(struct i2c_client *pstAF_I2Cclient,
 				int *pAF_Opened);
 extern int AK7371AF_GetFileName(unsigned char *pFileName);
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*Modify by rentianzhi@Cam.Drv, 20210705, add for 21015 AF.*/
 extern int AK7314AF_SetI2Cclient(struct i2c_client *pstAF_I2Cclient,
 				 spinlock_t *pAF_SpinLock, int *pAF_Opened);
 extern long AK7314AF_Ioctl(struct file *a_pstFile, unsigned int a_u4Command,
 			   unsigned long a_u4Param);
 extern int AK7314AF_Release(struct inode *a_pstInode, struct file *a_pstFile);
 extern int AK7314AF_GetFileName(unsigned char *pFileName);
+// Henry.Chang@CAMERA.DRV 20210222, add for driver ic
 extern int AK7375CAF_SetI2Cclient(struct i2c_client *pstAF_I2Cclient,
 				 spinlock_t *pAF_SpinLock, int *pAF_Opened);
 extern long AK7375CAF_Ioctl(struct file *a_pstFile, unsigned int a_u4Command,
@@ -104,6 +106,7 @@ extern int AK7377AF_PowerDown(struct i2c_client *pstAF_I2Cclient,
 				int *pAF_Opened);
 extern int AK7377AF_GetFileName(unsigned char *pFileName);
 extern int AK7377AF_DoExtLdo(int enable);
+/*Modify by HuyanXing@Cam.Drv, 20211217, add for 21127 AF.*/
 extern int AK7314AF_SetI2Cclient(struct i2c_client *pstAF_I2Cclient,
 				 spinlock_t *pAF_SpinLock, int *pAF_Opened);
 extern long AK7314AF_Ioctl(struct file *a_pstFile, unsigned int a_u4Command,
@@ -111,6 +114,7 @@ extern long AK7314AF_Ioctl(struct file *a_pstFile, unsigned int a_u4Command,
 extern int AK7314AF_Release(struct inode *a_pstInode, struct file *a_pstFile);
 extern int AK7314AF_GetFileName(unsigned char *pFileName);
 
+// 2021.11.25 linyuehan@Drv.Camera 20171 add for lens PID parameters update
 extern int AK7375CAF_updatePIDparam(void);
 extern int AK7375CAF_checkPIDparam(void);
 #endif
@@ -127,6 +131,7 @@ extern int BU6424AF_Release(struct inode *a_pstInode, struct file *a_pstFile);
 extern int BU6424AF_GetFileName(unsigned char *pFileName);
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*Henry.Chang@Camera.Drv add for mainaf 20191014*/
 #define BU64253AF_SetI2Cclient BU64253AF_SetI2Cclient_Main
 #define BBU64253AF_Ioctl BU64253AF_Ioctl_Main
 #define BBU64253AF_Release BU64253AF_Release_Main
@@ -138,6 +143,7 @@ extern long BU64253AF_Ioctl(struct file *a_pstFile, unsigned int a_u4Command,
 extern int BU64253AF_Release(struct inode *a_pstInode, struct file *a_pstFile);
 extern int BU64253AF_GetFileName(unsigned char *pFileName);
 
+/*wuyingchao@camera.driver add for zhaoyun brinigup 20211202*/
 #define DW9718TAF_ZHAOYUN_SetI2Cclient DW9718TAF_ZHAOYUN_SetI2Cclient_Main
 #define DW9718TAF_ZHAOYUN_Ioctl DW9718TAF_ZHAOYUN_Ioctl_Main
 #define DW9718TAF_ZHAOYUN_Release DW9718TAF_ZHAOYUN_Release_Main
@@ -286,6 +292,7 @@ extern long DW9718TAF_Ioctl(struct file *a_pstFile, unsigned int a_u4Command,
 			   unsigned long a_u4Param);
 extern int DW9718TAF_Release(struct inode *a_pstInode, struct file *a_pstFile);
 extern int DW9718TAF_GetFileName(unsigned char *pFileName);
+/*Wangxiangqin@Cam.Drv, 20210427, add for parkera af parameter distinction*/
 #define DW9718TAF_PARKERA_OV13B10_SetI2Cclient DW9718TAF_PARKERA_OV13B10_SetI2Cclient_Main
 #define DW9718TAF_PARKERA_OV13B10_Ioctl DW9718TAF_PARKERA_OV13B10_Ioctl_Main
 #define DW9718TAF_PARKERA_OV13B10_Release DW9718TAF_PARKERA_OV13B10_Release_Main
@@ -319,6 +326,7 @@ extern long DW9718TAF_PARKERA_S5KJN103_Ioctl(struct file *a_pstFile, unsigned in
 extern int DW9718TAF_PARKERA_S5KJN103_Release(struct inode *a_pstInode, struct file *a_pstFile);
 extern int DW9718TAF_PARKERA_S5KJN103_GetFileName(unsigned char *pFileName);
 
+/*wuyingchao@Cam.Drv, 20210521, add for parkerb af start*/
 #define DW9718TAF_PARKERB_S5KJN103_SetI2Cclient DW9718TAF_PARKERB_S5KJN103_SetI2Cclient_Main
 #define DW9718TAF_PARKERB_S5KJN103_Ioctl DW9718TAF_PARKERB_S5KJN103_Ioctl_Main
 #define DW9718TAF_PARKERB_S5KJN103_Release DW9718TAF_PARKERB_S5KJN103_Release_Main
@@ -329,6 +337,7 @@ extern long DW9718TAF_PARKERB_S5KJN103_Ioctl(struct file *a_pstFile, unsigned in
 			   unsigned long a_u4Param);
 extern int DW9718TAF_PARKERB_S5KJN103_Release(struct inode *a_pstInode, struct file *a_pstFile);
 extern int DW9718TAF_PARKERB_S5KJN103_GetFileName(unsigned char *pFileName);
+/*wuyingchao@Cam.Drv, 20210521, add for parkerb af end*/
 
 #define DW9718TAF_EVENC_S5KJN103_SetI2Cclient DW9718TAF_EVENC_S5KJN103_SetI2Cclient_Main
 #define DW9718TAF_EVENC_S5KJN103_Ioctl DW9718TAF_EVENC_S5KJN103_Ioctl_Main
@@ -377,6 +386,7 @@ extern int GT9768AF_GetFileName(unsigned char *pFileName);
 
 
 
+/* Wenjun.Wu@Cam.Drv, 20200107, add for 19131 AF*/
 #define DW9800AF_SetI2Cclient DW9800AF_SetI2Cclient_Main
 #define DW9800AF_Ioctl DW9800AF_Ioctl_Main
 #define DW9800AF_Release DW9800AF_Release_Main

@@ -28,6 +28,7 @@ subdir-ccflags-y += -I$(MTK_DRIVER_PATH)/camera/$(MTK_PLATFORM) \
              -I$(MTK_DRIVER_PATH)/imgsensor/src/$(MTK_PLATFORM)
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+#Henry.Chang@Cam.Drv, 20200725, add for oppo custom operation
 subdir-ccflags-y += -I$(DEVICE_MODULES_PATH)/drivers/misc/mediatek/imgsensor/src/OplusImgsensor
 #endif
 

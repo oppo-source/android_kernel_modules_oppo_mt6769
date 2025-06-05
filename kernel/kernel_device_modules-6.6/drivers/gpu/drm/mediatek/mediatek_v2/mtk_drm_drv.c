@@ -1142,16 +1142,35 @@ static void mtk_atomic_doze_update_pq(struct drm_crtc *crtc, unsigned int stage,
 #endif
 				mtk_ddp_comp_get_type(comp->id) == MTK_DISP_COLOR||
 				mtk_ddp_comp_get_type(comp->id) == MTK_DMDP_AAL)) {
-			if (comp->funcs && comp->funcs->bypass)
-				mtk_ddp_comp_bypass(comp, bypass, PQ_FEATURE_KRN_DOZE, cmdq_handle);
+				if (comp->funcs && comp->funcs->bypass) {
+#ifdef OPLUS_FEATURE_DISPLAY
+					if (mtk_crtc && mtk_crtc->panel_ext && mtk_crtc->panel_ext->params &&
+								mtk_crtc->panel_ext->params->oplus_display_lcd_tp_aod == 1) {
+						/* lcd aod doesn't bypass pq */
+						/* mtk_ddp_comp_bypass(comp, bypass, PQ_FEATURE_KRN_DOZE, cmdq_handle); */
+					} else {
+						mtk_ddp_comp_bypass(comp, bypass, PQ_FEATURE_KRN_DOZE, cmdq_handle);
+					}
+#else
+					mtk_ddp_comp_bypass(comp, bypass, PQ_FEATURE_KRN_DOZE, cmdq_handle);
+#endif
+			}
 		}
 
 #ifdef OPLUS_FEATURE_DISPLAY
-		if (fp_type != 0x10 && (comp->doze_bypass & DOZE_BYPASS_PQ))
+		if (fp_type != 0x10 && (comp->doze_bypass & DOZE_BYPASS_PQ)) {
+			if (mtk_crtc && mtk_crtc->panel_ext && mtk_crtc->panel_ext->params &&
+							mtk_crtc->panel_ext->params->oplus_display_lcd_tp_aod == 1) {
+				/* lcd aod doesn't bypass pq */
+				/* mtk_ddp_comp_bypass(comp, bypass, PQ_FEATURE_KRN_DOZE, cmdq_handle); */
+			} else {
+				mtk_ddp_comp_bypass(comp, bypass, PQ_FEATURE_KRN_DOZE, cmdq_handle);
+			}
+		}
 #else
 		if (comp->doze_bypass & DOZE_BYPASS_PQ)
-#endif
 			mtk_ddp_comp_bypass(comp, bypass, PQ_FEATURE_KRN_DOZE, cmdq_handle);
+#endif
 	}
 
 	if (mtk_crtc->is_dual_pipe) {
@@ -1166,16 +1185,35 @@ static void mtk_atomic_doze_update_pq(struct drm_crtc *crtc, unsigned int stage,
 
 				mtk_ddp_comp_get_type(comp->id) == MTK_DISP_COLOR||
 				mtk_ddp_comp_get_type(comp->id) == MTK_DMDP_AAL)) {
-				if (comp->funcs && comp->funcs->bypass)
+				if (comp->funcs && comp->funcs->bypass) {
+#ifdef OPLUS_FEATURE_DISPLAY
+					if (mtk_crtc && mtk_crtc->panel_ext && mtk_crtc->panel_ext->params &&
+							mtk_crtc->panel_ext->params->oplus_display_lcd_tp_aod == 1) {
+						/* lcd aod doesn't bypass pq */
+						/* mtk_ddp_comp_bypass(comp, bypass, PQ_FEATURE_KRN_DOZE, cmdq_handle); */
+					} else {
+						mtk_ddp_comp_bypass(comp, bypass, PQ_FEATURE_KRN_DOZE, cmdq_handle);
+					}
+#else
 					mtk_ddp_comp_bypass(comp, bypass, PQ_FEATURE_KRN_DOZE, cmdq_handle);
+#endif
+				}
 			}
 
 #ifdef OPLUS_FEATURE_DISPLAY
-			if(fp_type != 0x10 && (comp->doze_bypass & DOZE_BYPASS_PQ))
+			if(fp_type != 0x10 && (comp->doze_bypass & DOZE_BYPASS_PQ)) {
+				if (mtk_crtc && mtk_crtc->panel_ext && mtk_crtc->panel_ext->params &&
+							mtk_crtc->panel_ext->params->oplus_display_lcd_tp_aod == 1) {
+					/* lcd aod doesn't bypass pq */
+					/* mtk_ddp_comp_bypass(comp, bypass, PQ_FEATURE_KRN_DOZE, cmdq_handle); */
+				} else {
+					mtk_ddp_comp_bypass(comp, bypass, PQ_FEATURE_KRN_DOZE, cmdq_handle);
+				}
+			}
 #else
 			if(comp->doze_bypass & DOZE_BYPASS_PQ)
-#endif
 				mtk_ddp_comp_bypass(comp, bypass, PQ_FEATURE_KRN_DOZE, cmdq_handle);
+#endif
 		}
 	}
 
@@ -11620,7 +11658,7 @@ static bool init_secure_static_path_switch(struct device *dev, struct mtk_drm_pr
 {
 	struct device_node *dt_node;
 
-	dt_node = of_find_node_by_name(dev->of_node, "SecureVideoPath");
+	dt_node = of_find_node_by_name(dev->of_node, "SecureHDCPPath");
 	if (!dt_node) {
 		priv->secure_static_path_switch = false;
 		return false;

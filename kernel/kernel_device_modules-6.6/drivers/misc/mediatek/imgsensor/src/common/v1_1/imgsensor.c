@@ -188,6 +188,7 @@ static void imgsensor_mutex_unlock(struct IMGSENSOR_SENSOR_INST *psensor_inst)
 	if (psensor_inst->status.arch)
 		mutex_unlock(&psensor_inst->sensor_mutex);
 	#ifndef OPLUS_FEATURE_CAMERA_COMMON
+	//weiriqin@Cam.drv 2020/06/18, Modify for async power-on-off, ALPS04924900 ALPS05201837
 	else
 		mutex_unlock(&gimgsensor_mutex);
 	#else
@@ -300,6 +301,7 @@ MINT32 imgsensor_sensor_open(struct IMGSENSOR_SENSOR *psensor)
 
 	IMGSENSOR_FUNCTION_EXIT();
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+	//chenwenhui@CAMERA.DRV, 2022/05/12. Add for charge status change
 	if ((is_project(21684) || is_project(21685) || is_project(21686))
 		&& sensor_idx != IMGSENSOR_SENSOR_IDX_SUB) {
 		//oplus_chg_set_camera_on(1);
@@ -487,6 +489,11 @@ imgsensor_sensor_control(
 		if (ret != ERROR_NONE)
 			PK_PR_ERR("[%s]\n", __func__);
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+        /* dengchao@CAMERA.DRV 2022.1.4
+         * modified to avoid interruptting fast charge while boot up,
+         * so moved flash notify to control function which is called
+         * when it is really possible to turn on the flash.
+         */
         if (psensor->inst.sensor_idx != IMGSENSOR_SENSOR_IDX_SUB) {
             Oplusimgsensor_powerstate_notify(1);
         }
@@ -552,6 +559,7 @@ MINT32 imgsensor_sensor_close(struct IMGSENSOR_SENSOR *psensor)
 
 			psensor_inst->state = IMGSENSOR_STATE_CLOSE;
 			#ifdef OPLUS_FEATURE_CAMERA_COMMON
+			/*Henry.Chang@Cam.Drv, 20200917, add for charge status change*/
 			Oplusimgsensor_powerstate_notify(0);
 			#endif
 		}
@@ -564,6 +572,7 @@ MINT32 imgsensor_sensor_close(struct IMGSENSOR_SENSOR *psensor)
 	IMGSENSOR_FUNCTION_EXIT();
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+	//chenwenhui@CAMERA.DRV, 2022/05/12. Add for charge status change
 	if ((is_project(21684) || is_project(21685) || is_project(21686))
 		&& sensor_idx != IMGSENSOR_SENSOR_IDX_SUB) {
 		//oplus_chg_set_camera_on(0);
@@ -1097,6 +1106,7 @@ static inline int adopt_CAMERA_HW_FeatureControl(void *pBuf)
 	switch (pFeatureCtrl->FeatureId) {
 	#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	#if !defined(CONFIG_MACH_MT6779)
+	/*Henry.Chang@camera.driver 20181129, add for sensor Module SET*/
 	case SENSOR_FEATURE_SET_SENSOR_OTP:
 		ret = imgsensor_sensor_feature_control(psensor,
 					pFeatureCtrl->FeatureId,
@@ -1978,6 +1988,7 @@ static inline int adopt_CAMERA_HW_FeatureControl(void *pBuf)
 			*(pFeaturePara_64 + 1) = (uintptr_t) usr_ptr;
 		}
 		break;
+	/* Mintian.Wu@Cam.Drv, 20220331, modify for gw3 64M remosaic Rotatemirror! */
 	case SENSOR_FEATURE_GET_4CELL_DATA:
 		{
 #define FCELL_DATA_SIZE 8192

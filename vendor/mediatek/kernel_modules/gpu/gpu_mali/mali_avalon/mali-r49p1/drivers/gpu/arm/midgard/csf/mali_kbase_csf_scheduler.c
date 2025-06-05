@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note
 /*
  *
- * (C) COPYRIGHT 2018-2024 ARM Limited. All rights reserved.
+ * (C) COPYRIGHT 2018-2025 ARM Limited. All rights reserved.
  *
  * This program is free software and is provided to you under the terms of the
  * GNU General Public License version 2 as published by the Free Software
@@ -7034,7 +7034,7 @@ static void check_group_sync_update_worker(struct work_struct *work)
 	mutex_unlock(&scheduler->lock);
 }
 
-static enum kbase_csf_event_callback_action check_group_sync_update_cb(void *param)
+enum kbase_csf_event_callback_action kbase_csf_scheduler_check_group_sync_update_cb(void *param)
 {
 	struct kbase_context *const kctx = param;
 
@@ -7081,7 +7081,7 @@ int kbase_csf_scheduler_context_init(struct kbase_context *kctx)
 
 	kbase_csf_tiler_heap_reclaim_ctx_init(kctx);
 
-	err = kbase_csf_event_wait_add(kctx, check_group_sync_update_cb, kctx);
+	err = kbase_csf_event_wait_add(kctx, kbase_csf_scheduler_check_group_sync_update_cb, kctx);
 
 	if (err) {
 		dev_err(kbdev->dev, "Failed to register a sync update callback");
@@ -7104,21 +7104,7 @@ alloc_wq_failed:
 
 void kbase_csf_scheduler_context_term(struct kbase_context *kctx)
 {
-	kbase_csf_event_wait_remove(kctx, check_group_sync_update_cb, kctx);
 
-#if !IS_ENABLED(CONFIG_MALI_MTK_USE_WORKQUEUE_FOR_CSF_SCHEDULE)
-	/* Drain a pending SYNC_UPDATE work if any */
-	kbase_csf_scheduler_wait_for_kthread_pending_work(kctx->kbdev,
-							  &kctx->csf.pending_sync_update);
-#if IS_ENABLED(CONFIG_MALI_MTK_KBASE_THREAD_DEBUG)
-	WARN_ON(atomic_read(&kctx->csf.pending_sync_update) != 0 || !list_empty(&kctx->csf.sched.sync_update_work));
-#endif /* CONFIG_MALI_MTK_KBASE_THREAD_DEBUG */
-#else
-	cancel_work_sync(&kctx->csf.sched.sync_update_work);
-	destroy_workqueue(kctx->csf.sched.sync_update_wq);
-#endif /* CONFIG_MALI_MTK_USE_WORKQUEUE_FOR_CSF_SCHEDULE */
-
-	kbase_ctx_sched_remove_ctx(kctx);
 #if IS_ENABLED(CONFIG_MALI_TRACE_POWER_GPU_WORK_PERIOD)
 	gpu_metrics_ctx_term(kctx);
 #endif /* CONFIG_MALI_TRACE_POWER_GPU_WORK_PERIOD */

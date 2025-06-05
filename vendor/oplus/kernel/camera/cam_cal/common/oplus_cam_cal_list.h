@@ -23,6 +23,7 @@ struct stCAM_CAL_LIST_STRUCT g_oplusCamCalList[] = {
 	{BRZAUWIDE_SENSOR_ID, 0xA2, Common_read_region, MAX_EEPROM_SIZE_16K},
 	{BRZBMAIN_SENSOR_ID, 0xA0, Common_read_region, MAX_EEPROM_SIZE_32K},
 	{BRZBFRONT_SENSOR_ID, 0xA8, Common_read_region, MAX_EEPROM_SIZE_16K},
+	{BRZBFRONT2_SENSOR_ID, 0xA8, Common_read_region, MAX_EEPROM_SIZE_16K},
 	{BRZBUWIDE_SENSOR_ID, 0xA2, Common_read_region, MAX_EEPROM_SIZE_16K},
     /*  ADD before this line */
     {0, 0, 0}       /*end of list */

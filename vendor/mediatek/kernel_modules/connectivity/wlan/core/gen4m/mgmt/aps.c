@@ -1446,10 +1446,16 @@ uint8_t apsSanityCheckBssDesc(struct ADAPTER *prAdapter,
 {
 	struct AIS_FSM_INFO *ais = aisGetAisFsmInfo(prAdapter, ucBssIndex);
 	struct BSS_INFO *prAisBssInfo = aisGetAisBssInfo(prAdapter, ucBssIndex);
+#ifndef OPLUS_WLAN_BUG_STABILITY
+//LiJia@CONNECTIVITY.WIFI.NETWORK.8225461, 2024/11/27
 #if (CFG_SUPPORT_802_11BE_MLO == 1)
 	struct CONNECTION_SETTINGS *conn =
 				aisGetConnSettings(prAdapter, ucBssIndex);
 #endif
+#else  /* OPLUS_WLAN_BUG_STABILITY */
+	struct CONNECTION_SETTINGS *conn =
+				aisGetConnSettings(prAdapter, ucBssIndex);
+#endif /* OPLUS_WLAN_BUG_STABILITY */
 	struct APS_INFO *prApsInfo = aisGetApsInfo(prAdapter, ucBssIndex);
 #if CFG_SUPPORT_MBO
 	struct PARAM_BSS_DISALLOWED_LIST *disallow;
@@ -1496,13 +1502,31 @@ uint8_t apsSanityCheckBssDesc(struct ADAPTER *prAdapter,
 			MAC2STR(prBssDesc->aucBSSID),
 			RCPI_TO_dBm(prBssDesc->ucRCPI),
 			prBssDesc->prBlock->i4RssiThreshold);
+#ifndef OPLUS_WLAN_BUG_STABILITY
+		//LiJia@CONNECTIVITY.WIFI.NETWORK.8225461, 2024/11/27
 		return FALSE;
+#else  /* OPLUS_WLAN_BUG_STABILITY */
+		if (conn->eConnectionPolicy != CONNECT_BY_BSSID) {
+			return FALSE;
+		} else {
+			DBGLOG(APS, INFO, "allow select disallowed bssid for ConnPolicy:%d\n", conn->eConnectionPolicy);
+		}
+#endif /* OPLUS_WLAN_BUG_STABILITY */
 	}
 
 	if (prBssDesc->prBlock && prBssDesc->prBlock->fgDisallowed) {
 		DBGLOG(APS, WARN, MACSTR" disallowed delay\n",
 			MAC2STR(prBssDesc->aucBSSID));
+#ifndef OPLUS_WLAN_BUG_STABILITY
+		//LiJia@CONNECTIVITY.WIFI.NETWORK.8225461, 2024/11/27
 		return FALSE;
+#else  /* OPLUS_WLAN_BUG_STABILITY */
+		if (conn->eConnectionPolicy != CONNECT_BY_BSSID) {
+			return FALSE;
+		} else {
+			DBGLOG(APS, INFO, "allow select disallowed bssid for ConnPolicy:%d\n", conn->eConnectionPolicy);
+		}
+#endif /* OPLUS_WLAN_BUG_STABILITY */
 	}
 #endif
 

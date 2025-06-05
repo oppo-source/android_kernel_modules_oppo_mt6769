@@ -89,6 +89,7 @@ struct mt6379_data {
 };
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+// chenchong@CAMERA.DRV.2024/03/21, Add for engineer camera control single flashlight
 enum v4l2_flash_led_nums {
 	MT6379_CONTROL_LED1 = 2,
 	MT6379_CONTROL_LED2,
@@ -399,6 +400,7 @@ static int mt6379_set_scenario(int scenario)
 					flash);
 #if IS_ENABLED(CONFIG_MTK_FLASHLIGHT_DLPT)
 #ifndef OPLUS_FEATURE_CAMERA_COMMON
+// wangxuyang@CAMERA.DRV.2024/07/05, modify for update flashlight power.
 	if (scenario & FLASHLIGHT_SCENARIO_CAMERA_MASK) {
 		flashlight_kicker_pbm_by_device_id(&mtflash->dev_id,
 			MT6379_ISTRB_MAXUA / 1000 * MT6379_VIN);
@@ -429,6 +431,7 @@ static int mt6379_open(void)
 
 #if IS_ENABLED(CONFIG_MTK_FLASHLIGHT_DLPT)
 #ifndef OPLUS_FEATURE_CAMERA_COMMON
+// wangxuyang@CAMERA.DRV.2024/07/05, modify for update flashlight power.
 	flashlight_kicker_pbm_by_device_id(&mtflash->dev_id,
 				MT6379_ITOR_MAXUA / 1000 * MT6379_VIN * 2);
 #else /* OPLUS_FEATURE_CAMERA_COMMON */
@@ -545,6 +548,7 @@ static int mt6379_ioctl(unsigned int cmd, unsigned long arg)
 		mt6379_cooling_set_cur_state(channel, fl_arg->arg);
 		break;
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+// chenchong@CAMERA.DRV.2024/03/21, Add for engineer camera control single flashlight
 	case OPLUS_FLASH_IOC_SELECT_LED_NUM:
 		mt6379_select_led(lcdev, (int)fl_arg->arg);
 		break;

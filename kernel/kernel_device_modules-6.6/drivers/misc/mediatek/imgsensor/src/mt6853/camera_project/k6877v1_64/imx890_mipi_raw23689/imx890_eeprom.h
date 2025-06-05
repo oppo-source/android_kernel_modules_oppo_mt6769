@@ -25,8 +25,7 @@
 #define SPC_SIZE 384
 
 #define OTP_QSC_OFFSET 0x1150
-//#define QSC_SIZE 3072
-#define QSC_SIZE 1800
+#define QSC_SIZE 3072
 
 struct EEPROM_PDAF_INFO {
     kal_uint16 SPC_addr;

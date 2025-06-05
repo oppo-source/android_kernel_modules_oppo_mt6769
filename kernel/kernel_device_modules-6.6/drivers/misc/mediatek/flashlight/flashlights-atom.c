@@ -454,6 +454,7 @@ int atom_init(void)
 	chip_id = atom_read_reg(atom_i2c_client, 0x0c);
 	msleep(2);
 	pr_info("flashlight chip id: reg:0x0c, chip_id 0x%x",chip_id);
+	/* wuyingchao@camera.drv 20210812 add for AW36515 soft reset*/
 	if ( chip_id == AW36515_SM ) {
 		reg_val = atom_read_reg(atom_i2c_client, ATOM_AW36515_REG_BOOST_CONFIG);
 		reg_val |= ATOM_AW36515_SOFT_RESET_ENABLE;

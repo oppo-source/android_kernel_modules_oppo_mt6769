@@ -35,6 +35,7 @@ int rear_als_data_report_t(int value, int status, int64_t time_stamp)
 		cxt->is_get_valid_rear_als_data_after_enable = true;
 	}
 	#if(0) //UNOPLUS_FEATURE_SENSOR_WISELIGHT
+	//YanChen@PSW.BSP.sensor,2018/12/10, remove
 	if (value != last_rear_als_report_data)
 	#endif
 	{
@@ -314,6 +315,7 @@ static ssize_t rear_alsbatch_store(struct device *dev,
 	struct rear_als_context *cxt = rear_als_context_obj;
 	int handle = 0, flag = 0, err = 0;
 	#if(0) //UNOPLUS_FEATURE_SENSOR_WISELIGHT
+	//Yan.Chen@BSP.PSW.sensor,2019/03/08,add for RGBW rate
 	int64_t delay_ns = 0;
 	int64_t latency_ns = 0;
 	#endif

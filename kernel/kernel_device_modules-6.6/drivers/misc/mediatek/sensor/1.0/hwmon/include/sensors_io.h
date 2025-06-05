@@ -214,6 +214,7 @@ struct compat_biometric_threshold {
 #define SAR_IOCTL_INIT _IOW(SAR, 0x01, int)
 
 #ifdef CONFIG_OPLUS_FEATURE_SENSOR
+//Chendai.liang@PSW.BSP.SENSOR, add for sar factory test
 #define SAR_IOCTL_READ_SENSORDATA _IOR(SAR, 0x02, struct SAR_SENSOR_DATA)
 #define SAR_IOCTL_GET_CALI  _IOR(SAR, 0x03, struct SAR_SENSOR_DATA)
 #else

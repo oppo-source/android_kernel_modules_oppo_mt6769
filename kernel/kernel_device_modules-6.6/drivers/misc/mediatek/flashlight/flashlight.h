@@ -120,7 +120,9 @@ struct flashlight_user_arg {
 #define FLASH_IOC_SET_FLASH_MODE           _IOWR(FLASHLIGHT_MAGIC, 256, int)
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+// chenchong@CAMERA.DRV.2024/03/21, Add for engineer camera control single flashlight
 #define OPLUS_FLASH_IOC_SELECT_LED_NUM     _IOR(FLASHLIGHT_MAGIC, 300, int)
+// anil.mekala@CAMERA.DRV.2024/07/29, Add for camera flash support aladdin project
 #define FLASH_IOC_SET_FLASH_MODE           _IOWR(FLASHLIGHT_MAGIC, 256, int)
 #endif /*OPLUS_FEATURE_CAMERA_COMMON*/
 

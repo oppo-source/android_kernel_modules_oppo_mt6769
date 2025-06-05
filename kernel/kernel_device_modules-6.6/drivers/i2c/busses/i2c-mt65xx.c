@@ -32,6 +32,14 @@
 #include "../../misc/mediatek/include/mt-plat/mtk_boot_common.h"
 #endif
 
+#ifndef OPLUS_FEATURE_CAMERA_COMMON
+#define OPLUS_FEATURE_CAMERA_COMMON
+#endif /* OPLUS_FEATURE_CAMERA_COMMON */
+
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+#include "../../misc/mediatek/imgsensor/src/common/v1_1/dynamic_i2c.h"
+#endif
+
 #define I2C_CONFERR			(1 << 9)
 #define I2C_RS_TRANSFER			(1 << 4)
 #define I2C_ARB_LOST			(1 << 3)
@@ -382,6 +390,9 @@ struct mtk_i2c {
 	bool ignore_restart_irq;
 	bool ctrl_irq_sel;
 	bool ctrl_rs_stop;
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	bool dynamic_speed;
+#endif
 	bool master_code_sended;
 	struct mtk_i2c_ac_timing ac_timing;
 	const struct mtk_i2c_compatible *dev_comp;
@@ -757,6 +768,11 @@ static const struct of_device_id mtk_i2c_of_match[] = {
 	{}
 };
 MODULE_DEVICE_TABLE(of, mtk_i2c_of_match);
+
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+static u16 dynamic_speed_i2c_addr = 0;
+static u32 dynamic_i2c_speed = 0;
+#endif
 
 static u8 mtk_i2c_readb(struct mtk_i2c *i2c, enum I2C_REGS_OFFSET reg)
 {
@@ -2427,6 +2443,25 @@ static int mtk_i2c_transfer(struct i2c_adapter *adap,
 	if (ret)
 		goto err_clk;
 
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	if (i2c->dynamic_speed == true) {
+		static unsigned int origin_i2c_speed = 0;
+
+		if(msgs->addr << 1 == dynamic_speed_i2c_addr && i2c->speed_hz != dynamic_i2c_speed) {
+			if (!origin_i2c_speed)
+				origin_i2c_speed = i2c->speed_hz;
+			i2c->speed_hz = dynamic_i2c_speed;
+			mtk_i2c_set_speed(i2c, clk_get_rate(i2c->clk_main));
+			mtk_i2c_init_hw(i2c);
+		} else if (msgs->addr << 1 != dynamic_speed_i2c_addr && origin_i2c_speed && i2c->speed_hz != origin_i2c_speed) {
+			i2c->speed_hz = origin_i2c_speed;
+			origin_i2c_speed = 0;
+			mtk_i2c_set_speed(i2c, clk_get_rate(i2c->clk_main));
+			mtk_i2c_init_hw(i2c);
+		}
+	}
+#endif
+
 	if ((i2c->ch_offset_i2c == i2c->i2c_offset_ap) && (i2c->timeout_flag == 2)) {
 		dev_info(i2c->dev,"%s: i2c->clk_flag=%d, i2c->timeout_flag=%d, i2c->complete_flag=%d\n",
 			__func__, i2c->clk_flag, i2c->timeout_flag, i2c->complete_flag);
@@ -2540,6 +2575,15 @@ err_clk:
 	return ret;
 }
 
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+void dynamic_adjust_i2c_speed(struct i2c_msg msgs[], u32 timing)
+{
+	dynamic_speed_i2c_addr = msgs->addr << 1;
+	dynamic_i2c_speed = timing;
+}
+EXPORT_SYMBOL(dynamic_adjust_i2c_speed);
+#endif
+
 static irqreturn_t mtk_i2c_irq(int irqno, void *dev_id)
 {
 	struct mtk_i2c *i2c = dev_id;
@@ -2628,10 +2672,18 @@ static int mtk_i2c_parse_dt(struct device_node *np, struct mtk_i2c *i2c)
 	of_property_read_u32(np, "ch-offset-dma", &i2c->ch_offset_dma);
 	i2c->ctrl_irq_sel = of_property_read_bool(np, "mediatek,control-irq-sel");
 	i2c->ctrl_rs_stop = of_property_read_bool(np, "mediatek,control-rs-stop");
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	i2c->dynamic_speed = of_property_read_bool(np, "mediatek,dynamic-speed");
+	dev_info(i2c->dev, "clk_src=%d, offset_i2c=0x%x, offset_scp=0x%x,\n"
+			   "offset_dma=0x%x, irq_sel=%d, rs_stop=%d, dynamic=%d\n",
+			   i2c->clk_src_in_hz, i2c->ch_offset_i2c, i2c->ch_offset_scp,
+			   i2c->ch_offset_dma, i2c->ctrl_irq_sel, i2c->ctrl_rs_stop, i2c->dynamic_speed);
+#else
 	dev_info(i2c->dev, "clk_src=%d, offset_i2c=0x%x, offset_scp=0x%x,\n"
 			   "offset_dma=0x%x, irq_sel=%d, rs_stop=%d\n",
 			   i2c->clk_src_in_hz, i2c->ch_offset_i2c, i2c->ch_offset_scp,
 			   i2c->ch_offset_dma, i2c->ctrl_irq_sel, i2c->ctrl_rs_stop);
+#endif
 	i2c->have_pmic = of_property_read_bool(np, "mediatek,have-pmic");
 	i2c->use_push_pull =
 		of_property_read_bool(np, "mediatek,use-push-pull");
@@ -2781,6 +2833,9 @@ static int mtk_i2c_probe(struct platform_device *pdev)
 	i2c->complete_time = 0;
 	i2c->complete_ns = 0;
 	i2c->last_addr = 0;
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+	i2c->dynamic_speed = false;
+#endif
 	if (IS_ERR(i2c->adap.bus_regulator)) {
 		if (PTR_ERR(i2c->adap.bus_regulator) == -ENODEV)
 			i2c->adap.bus_regulator = NULL;

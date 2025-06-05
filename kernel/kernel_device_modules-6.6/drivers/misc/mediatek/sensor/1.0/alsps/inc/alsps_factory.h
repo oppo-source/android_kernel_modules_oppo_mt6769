@@ -40,6 +40,7 @@ struct alsps_factory_fops {
 	int (*als_clear_cali)(void);
 	int (*als_set_cali)(int32_t offset);
 #ifdef CONFIG_OPLUS_FEATURE_SENSOR
+/*zhq@PSW.BSP.Sensor, 2018/10/28, Add for als ps cail*/
 	int (*als_get_cali)(int32_t offset[6]);
 #else
 	int (*als_get_cali)(int32_t *offset);
@@ -51,6 +52,7 @@ struct alsps_factory_fops {
 	int (*ps_enable_calibration)(void);
 	int (*ps_clear_cali)(void);
 #ifdef CONFIG_OPLUS_FEATURE_SENSOR
+/*zhq@PSW.BSP.Sensor, 2018/10/28, Add for als ps cail*/
 	int (*ps_set_cali)(int32_t offset[6]);
 	int (*ps_get_cali)(int32_t offset[6]);
 #else
@@ -61,6 +63,7 @@ struct alsps_factory_fops {
 	int (*ps_set_threshold)(int32_t threshold[2]);
 	int (*ps_get_threshold)(int32_t threshold[2]);
 #ifdef CONFIG_OPLUS_FEATURE_SENSOR
+/* Weiqin.Tang@PSW.BSP.Sensor, 2020/1/2, add for set factory flag to scp */
 	int (*ps_set_factory_flag)(int32_t flag);
 #endif
 };

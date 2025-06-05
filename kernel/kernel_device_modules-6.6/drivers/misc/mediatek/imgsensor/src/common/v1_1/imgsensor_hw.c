@@ -190,6 +190,7 @@ enum IMGSENSOR_RETURN imgsensor_hw_init(struct IMGSENSOR_HW *phw)
 	for (i = 0; i < IMGSENSOR_SENSOR_IDX_MAX_NUM; i++) {
 		psensor_pwr = &phw->sensor_pwr[i];
 		#ifdef OPLUS_FEATURE_CAMERA_COMMON
+		/*Feiping.Li@Cam.Drv, 20200511, add for 19537*/
 		pcust_pwr_cfg = Oplusimgsensor_Custom_Config();
 		#else
 		pcust_pwr_cfg = imgsensor_custom_config;
@@ -292,6 +293,7 @@ static enum IMGSENSOR_RETURN imgsensor_hw_power_sequence(
 		if (pwr_status == IMGSENSOR_HW_POWER_STATUS_ON) {
 			if (ppwr_info->pin != IMGSENSOR_HW_PIN_UNDEF) {
 				#ifdef OPLUS_FEATURE_CAMERA_COMMON
+				/*Henry.Chang@Cam.Drv, 20200728, add for allplatfrom customconfig*/
 				if (Oplusimgsensor_ldo_powerset(sensor_idx, ppwr_info->pin, pwr_status)
 						== IMGSENSOR_RETURN_ERROR) {
 				#endif
@@ -310,6 +312,7 @@ static enum IMGSENSOR_RETURN imgsensor_hw_power_sequence(
 					sensor_idx,
 					ppwr_info->pin, ppwr_info->pin_state_on);
 				#ifdef OPLUS_FEATURE_CAMERA_COMMON
+				/*Henry.Chang@Cam.Drv, 20200728, add for allplatfrom customconfig*/
 				}
 				#endif
 			}
@@ -336,6 +339,7 @@ static enum IMGSENSOR_RETURN imgsensor_hw_power_sequence(
 
 			if (ppwr_info->pin != IMGSENSOR_HW_PIN_UNDEF) {
 				#ifdef OPLUS_FEATURE_CAMERA_COMMON
+				/*Henry.Chang@Cam.Drv, 20200728, add for allplatfrom customconfig*/
 				if (Oplusimgsensor_ldo_powerset(sensor_idx, ppwr_info->pin, pwr_status)
 						== IMGSENSOR_RETURN_ERROR) {
 				#endif
@@ -347,6 +351,7 @@ static enum IMGSENSOR_RETURN imgsensor_hw_power_sequence(
 						sensor_idx,
 						ppwr_info->pin, ppwr_info->pin_state_off);
 				#ifdef OPLUS_FEATURE_CAMERA_COMMON
+				/*Henry.Chang@Cam.Drv, 20200728, add for allplatfrom customconfig*/
 				}
 				#endif
 			}

@@ -21,6 +21,7 @@
 #include "../../codecs/mt6359.h"
 #endif
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+/* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.PLATFORM, 2022/01/25, Add for audio kernel feedback */
 #include "../feedback/oplus_audio_kernel_fb.h"
 #ifdef dev_err
 #undef dev_err
@@ -35,6 +36,7 @@
 #include "../../codecs/audio/codecs/sia91xx_v3.1.0/sipa_aux_dev_if.h"
 #endif
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/19,add PA manager*/
 #include "../../codecs/audio/mtk/oplus_speaker_manager/oplus_speaker_manager_platform.h"
 #include "../../codecs/audio/mtk/oplus_speaker_manager/oplus_speaker_manager_codec.h"
 #endif /*CONFIG_SND_SOC_OPLUS_PA_MANAGER*/
@@ -61,6 +63,7 @@ extern int audio_spk_get_i2s_in_type(void);
 extern int audio_spk_get_i2s_out_type(void);
 #endif /* CONFIG_OPLUS_MTK_AUDIO_EXT */
 //#ifdef OPLUS_BUG_COMPATIBILITY
+/* Liang.Huang@MULTIMEDIA.AUDIODRIVER.MACHINE, 2019/09/27, add for SIA PA ALGO */
 #include "../../codecs/audio/codecs/sia81xx/sipa_aux_dev_if.h"
 //#endif  /*OPLUS_BUG_COMPATIBILITY*/
 
@@ -127,6 +130,7 @@ static int mt6833_spk_i2s_in_type_get(struct snd_kcontrol *kcontrol,
 	return 0;
 	}
 #ifdef OPLUS_FEATURE_SPEAKER_MUTE
+//Jianqing.Liao@PSW.MM.AudioDriver.Machine,2019/09/04, Add for speaker mute
 static int speaker_mute_control = 0;
 static int kspk_enable_spk_pa_state = 0;
 
@@ -153,11 +157,14 @@ static int speaker_mute_put_status(struct snd_kcontrol *kcontrol, struct snd_ctl
 	if(speaker_mute_control)
 	{
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/11/15,add PA manager*/
 		oplus_ext_amp_l_enable(false);
 		oplus_ext_amp_r_enable(false);
 #else
+// Kun.Zhao@MULTIMEDIA.AUDIODRIVER.MACHINE,2020/10/27 Add for PA distingguish
 		if (OPLUS_PA_AWINIC == oplus_pa_type) {
                 #ifdef CONFIG_SND_SOC_CODEC_AW87339
+                /* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.MACHINE, 2020/04/23, add for awinic PA */
 			aw87339_audio_spk_if_off();
                 #endif  /*CONFIG_SND_SOC_CODEC_AW87339*/
 		} else if (OPLUS_PA_SIA == oplus_pa_type) {
@@ -166,11 +173,14 @@ static int speaker_mute_put_status(struct snd_kcontrol *kcontrol, struct snd_ctl
 #endif //CONFIG_SND_SOC_OPLUS_PA_MANAGER
 	} else {
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/11/15,add PA manager*/
 		oplus_ext_amp_l_enable(true);
 		oplus_ext_amp_r_enable(true);
 #else
+// Kun.Zhao@MULTIMEDIA.AUDIODRIVER.MACHINE,2020/10/27 Add for PA distingguish
 		if((kspk_enable_spk_pa_state)&&(OPLUS_PA_AWINIC == oplus_pa_type)) {
                 #ifdef CONFIG_SND_SOC_CODEC_AW87339
+                /* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.MACHINE, 2020/04/23, add for awinic PA */
 			aw87339_audio_spk_if_kspk();
                 #endif  /*CONFIG_SND_SOC_CODEC_AW87339*/
 		} else if ((kspk_enable_spk_pa_state)&&(OPLUS_PA_SIA == oplus_pa_type)) {
@@ -184,6 +194,7 @@ static int speaker_mute_put_status(struct snd_kcontrol *kcontrol, struct snd_ctl
 }
 #endif /* OPLUS_FEATURE_SPEAKER_MUTE */
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/19,add for handset and speaker two in one*/
 static int rcv_amp_mode;
 static const char *rcv_amp_type_str[] = {"SPEAKER_MODE", "RECIEVER_MODE"};
 static const struct soc_enum rcv_amp_type_enum =
@@ -223,6 +234,7 @@ static int mt6833_mt6359_spk_amp_event(struct snd_soc_dapm_widget *w,
 	case SND_SOC_DAPM_POST_PMU:
 		/* spk amp on control */
 #ifdef OPLUS_FEATURE_SPEAKER_MUTE
+//Jianqing.Liao@PSW.MM.AudioDriver.Machine,2019/09/04, Add for speaker mute
 		if(speaker_mute_control){
 			dev_err(card->dev, "%s(), speaker force mute\n", __func__);
 			return 0;
@@ -230,6 +242,7 @@ static int mt6833_mt6359_spk_amp_event(struct snd_soc_dapm_widget *w,
 		kspk_enable_spk_pa_state = 1;
 #endif /* OPLUS_FEATURE_SPEAKER_MUTE */
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/19,add PA manager*/
 		if (rcv_amp_mode == 1) {
 			oplus_ext_amp_recv_l_enable(true);
                 } else {
@@ -240,9 +253,11 @@ static int mt6833_mt6359_spk_amp_event(struct snd_soc_dapm_widget *w,
 	case SND_SOC_DAPM_PRE_PMD:
 		/* spk amp off control */
 #ifdef OPLUS_FEATURE_SPEAKER_MUTE
+//Jianqing.Liao@PSW.MM.AudioDriver.Machine,2019/09/04, Add for speaker mute
 		kspk_enable_spk_pa_state = 0;
 #endif /* OPLUS_FEATURE_SPEAKER_MUTE */
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/19,add PA manager*/
 		if (rcv_amp_mode == 1) {
 			oplus_ext_amp_recv_l_enable(false);
 		} else {
@@ -258,6 +273,7 @@ static int mt6833_mt6359_spk_amp_event(struct snd_soc_dapm_widget *w,
 };
 
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/19,add for handset and speaker two in one*/
 static int mt6833_mt6359_rcv_amp_event(struct snd_soc_dapm_widget *w,
 				       struct snd_kcontrol *kcontrol,
 				       int event)
@@ -271,6 +287,7 @@ static int mt6833_mt6359_rcv_amp_event(struct snd_soc_dapm_widget *w,
 	switch (event) {
 	case SND_SOC_DAPM_POST_PMU:
 #ifdef OPLUS_FEATURE_SPEAKER_MUTE
+		/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC, 2022/01/13, Add for speaker mute */
 		if (speaker_mute_control) {
 			dev_err(card->dev, "%s(), speaker force mute%d\n", __func__);
 			return 0;
@@ -284,6 +301,7 @@ static int mt6833_mt6359_rcv_amp_event(struct snd_soc_dapm_widget *w,
 		break;
 	case SND_SOC_DAPM_PRE_PMD:
 #ifdef OPLUS_FEATURE_SPEAKER_MUTE
+		/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC, 2022/01/13, Add for speaker mute */
 		kspk_enable_spk_pa_state = 0;
 #endif /* OPLUS_FEATURE_SPEAKER_MUTE */
 		if(rcv_amp_mode == 1)
@@ -301,6 +319,7 @@ static int mt6833_mt6359_rcv_amp_event(struct snd_soc_dapm_widget *w,
 static const struct snd_soc_dapm_widget mt6833_mt6359_widgets[] = {
 	SND_SOC_DAPM_SPK(EXT_SPK_AMP_W_NAME, mt6833_mt6359_spk_amp_event),
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/19,add for handset and speaker two in one*/
 	SND_SOC_DAPM_SPK(EXT_RCV_AMP_W_NAME, mt6833_mt6359_rcv_amp_event),
 #endif
 };
@@ -308,10 +327,12 @@ static const struct snd_soc_dapm_widget mt6833_mt6359_widgets[] = {
 static const struct snd_soc_dapm_route mt6833_mt6359_routes[] = {
 	{EXT_SPK_AMP_W_NAME, NULL, "LINEOUT L"},
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/19,add for handset and speaker two in one*/
 	{EXT_RCV_AMP_W_NAME, NULL, "Receiver"},
 #endif
 	{EXT_SPK_AMP_W_NAME, NULL, "Headphone L Ext Spk Amp"},
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/19,add for speaker and + headset switch with two analog PA */
 	{EXT_RCV_AMP_W_NAME, NULL, "Headphone R Ext Spk Amp"},
 #else
 	{EXT_SPK_AMP_W_NAME, NULL, "Headphone R Ext Spk Amp"},
@@ -319,6 +340,7 @@ static const struct snd_soc_dapm_route mt6833_mt6359_routes[] = {
 };
 
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+/* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.MACHINE, 2020/10/10, add for audiohal feedback */
 #define HAL_FEEDBACK_MAX_BYTES         (512)
 extern int hal_feedback_config_get(struct snd_kcontrol *kcontrol,
 			unsigned int __user *bytes,
@@ -330,6 +352,7 @@ extern int hal_feedback_config_set(struct snd_kcontrol *kcontrol,
 static const struct snd_kcontrol_new mt6833_mt6359_controls[] = {
 	SOC_DAPM_PIN_SWITCH(EXT_SPK_AMP_W_NAME),
 #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
+/*Jin.Liu@MULTIMEDIA.AUDIODRIVER.CODEC,2021/10/19,add for handset and speaker two in one*/
 	SOC_DAPM_PIN_SWITCH(EXT_RCV_AMP_W_NAME),
 	SOC_ENUM_EXT("RCV_AMP_MODE", rcv_amp_type_enum,
 		     mt6833_rcv_amp_mode_get, mt6833_rcv_amp_mode_set),
@@ -342,10 +365,12 @@ static const struct snd_kcontrol_new mt6833_mt6359_controls[] = {
 		     mt6833_spk_i2s_in_type_get, NULL),
     #if IS_ENABLED(CONFIG_SND_SOC_OPLUS_PA_MANAGER)
 	#ifdef OPLUS_FEATURE_SPEAKER_MUTE
+	//Jianqing.Liao@PSW.MM.AudioDriver.Machine,2019/07/25, Add for speaker mute
 	SOC_ENUM_EXT("Speaker_Mute_Switch", spkmute_snd_enum[0], speaker_mute_get_status, speaker_mute_put_status),
 	#endif /* OPLUS_FEATURE_SPEAKER_MUTE */
 	#endif
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+/* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.MACHINE, 2020/10/10, add for audiohal feedback */
 	SND_SOC_BYTES_TLV("HAL FEEDBACK",
 			  HAL_FEEDBACK_MAX_BYTES,
 			  hal_feedback_config_get, hal_feedback_config_set),
@@ -459,6 +484,7 @@ static int mt6833_mt6359_mtkaif_calibration(struct snd_soc_pcm_runtime *rtd)
 			/* handle if never test done */
 			if (++counter > 10000) {
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+/* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.PLATFORM, 2022/01/25, Add for audio kernel feedback */
 				dev_err_not_fb(afe->dev, "%s(), test fail, cycle_1 %d, cycle_2 %d, cycle_3 %d, monitor 0x%x\n",
 					__func__,
 					cycle_1, cycle_2, cycle_3, monitor);
@@ -1405,6 +1431,7 @@ static int mt6833_mt6359_dev_probe(struct platform_device *pdev)
 					"mediatek,speaker-codec");
 	if (!spk_node) {
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
+/* Zhao.Pan@MULTIMEDIA.AUDIODRIVER.PLATFORM, 2022/01/25, Add for audio kernel feedback */
 			dev_err_not_fb(&pdev->dev,
 				"spk_codec of_get_child_by_name fail\n");
 #else

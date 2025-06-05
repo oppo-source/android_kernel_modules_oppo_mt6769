@@ -76,6 +76,7 @@ struct GPIO {
 		GPIO_CTRL_STATE_MAX_NUM_SWITCH];
 #endif
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+//Henry.Chang@Cam.Drv, 20200729, add for porting 20131 sensor
 	struct pinctrl_state *pinctrl_state_ldo_enable;
 	struct pinctrl_state *pinctrl_state_gpio_power_enable;
 	struct pinctrl_state *pinctrl_state_gpio_power_disable;

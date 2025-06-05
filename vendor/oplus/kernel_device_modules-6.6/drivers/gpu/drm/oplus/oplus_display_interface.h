@@ -20,8 +20,10 @@
 
 
 /* ---------------------------- function implementation ---------------------------- */
+#ifdef OPLUS_FEATURE_DISPLAY_MAINLINE
 struct dsi_panel_lcm* oplus_mtkCrtc_to_panel(struct mtk_drm_crtc *mtk_crtc);
 struct dsi_panel_lcm* oplus_mtkDsi_to_panel(struct mtk_dsi *dsi);
+#endif /* OPLUS_FEATURE_DISPLAY_MAINLINE */
 int oplus_panel_init(struct drm_crtc *crtc);
 int oplus_dsi_display_parse(struct device_node *node, void *ctx);
 

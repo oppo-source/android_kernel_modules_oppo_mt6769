@@ -606,6 +606,9 @@ static int aw36515_brza_close(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 	struct i2c_client *client = to_i2c_client(sd->dev);
 	struct aw36515_brza_flash *flash = i2c_get_clientdata(client);
 	pr_info("%s\n", __func__);
+	int rval;
+	rval = regmap_update_bits(flash->regmap,
+				REG_ENABLE, 0x01, 0x00);
 
 	pm_runtime_put(sd->dev);
 

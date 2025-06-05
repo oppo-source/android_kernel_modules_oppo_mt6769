@@ -24,8 +24,8 @@ obj-$(CONFIG_MTK_FLASHLIGHT_SY6560)      += flashlights-sy6560.o
 obj-$(CONFIG_MTK_FLASHLIGHT_ATOM)        += flashlights-atom.o
 obj-$(CONFIG_MTK_FLASHLIGHT_MIAMI)       += flashlights-miami.o
 obj-$(CONFIG_MTK_FLASHLIGHT_ARK)         += flashlights-ark.o
-
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+#v-peng.song@Cam.Drv flashlights decouple
 obj-y += ./oplus/flashlight_custom.o
 #endif
 obj-$(CONFIG_MTK_FLASHLIGHT_ORISA)         += flashlights-orisa.o

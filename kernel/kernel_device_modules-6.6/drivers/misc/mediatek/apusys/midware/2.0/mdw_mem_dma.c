@@ -303,7 +303,7 @@ static void mdw_dmabuf_release(struct dma_buf *dbuf)
 
 	mdw_mem_dma_show(mdbuf);
 
-        //add by zhenghaiqing for dma debug
+        //add by zhenghaiqing@oppo.com for dma debug
         trace_mdw_dma_free(dbuf->size, dbuf->android_kabi_reserved2, "APUSYS");
 
 	mdw_mem_dma_free_sgt(&mdbuf->sgt);
@@ -436,7 +436,7 @@ int mdw_mem_dma_alloc(struct mdw_mem *mem)
 		goto free_sgt;
 	}
 
-        //add by zhenghaiqing for dma debug
+        //add by zhenghaiqing@oppo.com for dma debug
         /*
 	 * use android_kabi_reserved2 as inode no. but it has potential risk if
 	 * google uses it.

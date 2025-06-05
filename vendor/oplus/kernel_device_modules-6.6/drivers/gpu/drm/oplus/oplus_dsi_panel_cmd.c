@@ -86,6 +86,7 @@ const char *dsi_cmd_map[DSI_CMD_ID_MAX] = {
 	"oplus,dsi-multi-te-enable-command",
 	"oplus,dsi-pwm-switch-18to1pul-command",
 	"oplus,dsi-pwm-switch-18to3pul-command",
+	"oplus,dsi-pwm-switch-18to3pul-wake-command",
 	"oplus,dsi-pwm-switch-1to18pul-command",
 	"oplus,dsi-pwm-switch-1to3pul-command",
 	"oplus,dsi-pwm-switch-3to18pul-command",
@@ -117,6 +118,7 @@ const char *dsi_cmd_map[DSI_CMD_ID_MAX] = {
 	"oplus,dsi-panel-mipi-err-check-exit-command",
 	"oplus,dsi-panel-crc-check-enter-command",
 	"oplus,dsi-panel-crc-check-exit-command",
+	"oplus,dsi-panel-aod-off-insert-black-command",
 };
 EXPORT_SYMBOL(dsi_cmd_map);
 
@@ -172,6 +174,7 @@ const char *dsi_cmd_state_map[DSI_CMD_ID_MAX] = {
 	"oplus,dsi-multi-te-enable-command-state",
 	"oplus,dsi-pwm-switch-18to1pul-command-state",
 	"oplus,dsi-pwm-switch-18to3pul-command-state",
+	"oplus,dsi-pwm-switch-18to3pul-wake-command-state",
 	"oplus,dsi-pwm-switch-1to18pul-command-state",
 	"oplus,dsi-pwm-switch-1to3pul-command-state",
 	"oplus,dsi-pwm-switch-3to18pul-command-state",
@@ -203,6 +206,7 @@ const char *dsi_cmd_state_map[DSI_CMD_ID_MAX] = {
 	"oplus,dsi-panel-mipi-err-check-exit-command-state",
 	"oplus,dsi-panel-crc-check-enter-command-state",
 	"oplus,dsi-panel-crc-check-exit-command-state",
+	"oplus,dsi-panel-aod-off-insert-black-command-state",
 };
 EXPORT_SYMBOL(dsi_cmd_state_map);
 
@@ -533,7 +537,8 @@ int oplus_dsi_panel_send_cmd(void *dsi, enum dsi_cmd_id cmd_set_id,
 				batch_count = 0;
 				table[i].last_command = true;
 			}
-			oplus_dsi_panel_send_cmd_sub(dsi, &table[i], &ddic_cmd[i], handle, i, cmd_func);
+			oplus_dsi_panel_send_cmd_sub(dsi, &table[i], &ddic_cmd[send_cmd_to_ddic.cmd_count - 1],
+				handle, send_cmd_to_ddic.cmd_count - 1, cmd_func);
 		} else if (cmd_state == DSI_CMD_SET_STATE_LP) {
 			oplus_dsi_panel_dcs_write(dsi, table[i].para_list, table[i].count);
 		} else if (cmd_state == DSI_CMD_SET_STATE_LP_GCE) {

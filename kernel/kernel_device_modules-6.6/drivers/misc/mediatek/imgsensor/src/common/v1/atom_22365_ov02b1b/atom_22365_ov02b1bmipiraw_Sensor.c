@@ -489,6 +489,7 @@ static void ihdr_write_shutter_gain(
 }
 
 
+/*Feiping@Camera.Drv, 20190603, add for set correct mirror/flip */
 static void set_mirror_flip(kal_uint8 image_mirror)
 {
 	LOG_INF("image_mirror = %d\n", image_mirror);
@@ -875,6 +876,7 @@ static kal_uint32 open(void)
 	 * we should detect the module used i2c address
 	 */
 
+	/* Feiping.Li@Camera.Drv, 20190729, add for delay i2c clock when power up*/
 	mdelay(9);
 
 	while (imgsensor_info.i2c_addr_table[i] != 0xff) {

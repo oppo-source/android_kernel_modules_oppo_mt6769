@@ -32,6 +32,7 @@ COMMON_OPLUS_MODULES_LIST = [
     "//vendor/oplus/kernel/touchpanel/oplus_touchscreen_v2:oplus_bsp_tp_ft3658u_spi",
     "//vendor/oplus/kernel/touchpanel/oplus_touchscreen_v2:oplus_bsp_tp_ft3683g",
     "//vendor/oplus/kernel/touchpanel/oplus_touchscreen_v2:oplus_bsp_tp_ft3518",
+    "//vendor/oplus/kernel/touchpanel/oplus_touchscreen_v2:oplus_bsp_tp_ft8057p",
     "//vendor/oplus/kernel/touchpanel/oplus_touchscreen_v2:oplus_bsp_tp_focal_common",
     "//vendor/oplus/kernel/touchpanel/oplus_touchscreen_v2:oplus_bsp_tp_custom",
     "//vendor/oplus/kernel/touchpanel/oplus_touchscreen_v2:oplus_bsp_tp_common",

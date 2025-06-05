@@ -147,6 +147,7 @@
 #define ID_RGBW                 (ID_BASE + SENSOR_TYPE_RGBW - 1)
 #define ID_GYRO_TEMPERATURE     (ID_BASE + SENSOR_TYPE_GYRO_TEMPERATURE - 1)
 #define ID_SAR                  (ID_BASE + SENSOR_TYPE_SAR - 1)
+/*xiebaixue@PSW.BSP.Sensor, 2020/04/17, Add for oplus sensor algo driver*/
 #ifndef CONFIG_OPLUS_FEATURE_SENSOR_ALGORITHM
 /* end sensor ID */
 #define ID_SENSOR_MAX_HANDLE    (ID_SAR)

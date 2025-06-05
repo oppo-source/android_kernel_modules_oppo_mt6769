@@ -35,7 +35,10 @@ int als_data_report_t(int value, int status, int64_t time_stamp)
 		err = sensor_input_event(cxt->als_mdev.minor, &event);
 		cxt->is_get_valid_als_data_after_enable = true;
 	}
-	if (value != last_als_report_data) {
+	#ifndef CONFIG_OPLUS_FEATURE_SENSOR
+	if (value != last_als_report_data)
+	#endif
+	{
 		event.handle = ID_LIGHT;
 		event.flush_action = DATA_ACTION;
 		event.word[0] = value;

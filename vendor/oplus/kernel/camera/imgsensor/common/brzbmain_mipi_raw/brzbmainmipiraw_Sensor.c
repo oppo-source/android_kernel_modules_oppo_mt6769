@@ -114,12 +114,12 @@ static struct eeprom_info_struct eeprom_info[] = {
 
 		.qsc_support = TRUE,
 		.qsc_size = 0x0C00,
-		.addr_qsc = 0x1E30,/*QSC_EEPROM_ADDR*/
+		.addr_qsc = 0x22D0,/*QSC_EEPROM_ADDR*/
 		.sensor_reg_addr_qsc = 0xC000, /*QSC_OTP_ADDR*/
 
 		.pdc_support = TRUE,
 		.pdc_size = 0x180,
-		.addr_pdc = 0x7C20,
+		.addr_pdc = 0x2EE0,
 		.sensor_reg_addr_pdc = 0xD200,
 	},
 };
@@ -228,7 +228,7 @@ static struct SET_PD_BLOCK_INFO_T imgsensor_pd_info_full = {
 	.i4FullRawH = 6144,
 	.i4VCPackNum = 1,
 	.PDAF_Support = PDAF_SUPPORT_CAMSV_QPD,
-	.i4ModeIndex = 0x4,
+	.i4ModeIndex = 0x2,
 	.sPDMapInfo[0] = {
 		.i4PDPattern = 1,
 		.i4BinFacX = 4,
@@ -242,14 +242,14 @@ static struct SET_PD_BLOCK_INFO_T imgsensor_partial_pd_info = {
 	.i4OffsetX = 16,
 	.i4OffsetY = 32,
 	.i4PitchX = 8,
-	.i4PitchY = 16,
+	.i4PitchY = 32,
 	.i4PairNum = 4,
 	.i4SubBlkW = 8,
-	.i4SubBlkH = 4,
-	.i4PosL = {{16, 35}, {20, 37}, {19, 42}, {23, 44}},
-	.i4PosR = {{18, 33}, {22, 39}, {17, 40}, {21, 46}},
+	.i4SubBlkH = 16,
+	.i4PosL = {{20, 41}, {20, 43}, {19, 48}, {19, 50}},
+	.i4PosR = {{16, 33}, {16, 35}, {23, 56}, {23, 58}},
 	.i4BlockNumX = 504,
-	.i4BlockNumY = 144,
+	.i4BlockNumY = 72,
 	.i4Crop = {
 		/* <pre> <cap> <normal_video> <hs_video> <slim_video> */
 		{0, 0}, {0, 0}, {0, 384}, {0, 384}, {0, 192},
@@ -261,6 +261,8 @@ static struct SET_PD_BLOCK_INFO_T imgsensor_partial_pd_info = {
 		{0, 0}, {2048, 1536}, {0, 0}, {0, 0},
 	},
 	.iMirrorFlip = 3,
+	.i4VolumeX = 1,
+	.i4VolumeY = 2,
 	.i4FullRawW = 4096,
 	.i4FullRawH = 3072,
 	.i4ModeIndex = 0,
@@ -270,8 +272,8 @@ static struct SET_PD_BLOCK_INFO_T imgsensor_partial_pd_info = {
 	.sPDMapInfo[0] = {
 		/*.i4VCFeature = VC_PDAF_STATS_NE_PIX_1,*/
 		.i4PDPattern = 3,
-		.i4PDRepetition = 4,
-		.i4PDOrder = {0, 1, 1, 0}, /*R = 1, L = 0*/
+		.i4PDRepetition = 8,
+		.i4PDOrder = {1, 1, 0, 0, 0, 0, 1, 1}, /*R = 1, L = 0*/
 	},
 };
 
@@ -1103,6 +1105,7 @@ static struct subdrv_mode_struct mode_struct[] = {
 		.csi_param = {},
 		.dpc_enabled = true,
 		.ana_gain_max = BASEGAIN * 64,
+		.awb_enabled = true,
 	},
 	{/*reg_L1-S1 4096x3072 @30FPS QBIN 2LB-MF w/ Partial-PD VB Max. Seamless w/ "*-S1"*/
 		.frame_desc = frame_desc_cus4,
@@ -1158,6 +1161,7 @@ static struct subdrv_mode_struct mode_struct[] = {
 		.multi_exposure_ana_gain_range[IMGSENSOR_EXPOSURE_LE].max = BASEGAIN * 64,
 		.multi_exposure_ana_gain_range[IMGSENSOR_EXPOSURE_ME].max = BASEGAIN * 64,
 		.dpc_enabled = true,
+		.awb_enabled = true,
 	},
 	{/*reg_F2-S1 4096x3072 @30FPS Full-Crop w/ PD VB Max. Seamless w/  "*-S1"*/
 		.frame_desc = frame_desc_cus5,
@@ -1206,6 +1210,7 @@ static struct subdrv_mode_struct mode_struct[] = {
 		},
 		.ana_gain_max = BASEGAIN * 16,
 		.dpc_enabled = true,
+		.awb_enabled = true,
 	},
 	{/*reg_L2-S1 4096x3072 @15FPS Full RMSC 2LB-MF w/ All-PD VB Max. Seamless w/ "*-S1"*/
 		.frame_desc = frame_desc_cus6,
@@ -1322,6 +1327,7 @@ static struct subdrv_mode_struct mode_struct[] = {
 			.dcg_gain_table_size = sizeof(brzbmain_dcg_ratio_table_ratio4),
 		},
 		.dpc_enabled = true,
+		.awb_enabled = true,
 		.multi_exposure_ana_gain_range[IMGSENSOR_EXPOSURE_LE].min = BASEGAIN * 1,
 		.multi_exposure_ana_gain_range[IMGSENSOR_EXPOSURE_ME].max = BASEGAIN * 64,
 	},
@@ -1625,6 +1631,7 @@ static struct subdrv_mode_struct mode_struct[] = {
 			.cphy_settle = 58,
 		},
 		.ana_gain_max = BASEGAIN * 64,
+		.awb_enabled = true,
 /* 		.sensor_setting_info = {
 			.sensor_scenario_usage = NORMAL_MASK,
 			.equivalent_fps = 24,
@@ -1808,7 +1815,6 @@ static struct subdrv_ops ops = {
 
 static struct subdrv_pw_seq_entry pw_seq[] = {
 	{HW_ID_MCLK, {24}, 0},
-	{HW_ID_DVDD1, {1}, 2000},
 	{HW_ID_RST, {0}, 2000},
 	{HW_ID_AVDD, {2800000, 2800000}, 3000},
 	{HW_ID_AVDD1, {1804000, 1804000}, 3000},
@@ -2254,21 +2260,15 @@ static void feedback_awbgain(struct subdrv_ctx *ctx, kal_uint32 r_gain, kal_uint
 	UINT32 r_gain_int = 0;
 	UINT32 b_gain_int = 0;
 
-	if (ctx->current_scenario_id == SENSOR_SCENARIO_ID_CUSTOM3 ||
-		ctx->current_scenario_id == SENSOR_SCENARIO_ID_CUSTOM5 ||
-		ctx->current_scenario_id == SENSOR_SCENARIO_ID_CUSTOM7 ||
-		ctx->current_scenario_id == SENSOR_SCENARIO_ID_CUSTOM12 ||
-		ctx->current_scenario_id == SENSOR_SCENARIO_ID_CUSTOM13) {
-		DRV_LOG(ctx, "feedback_awbgain r_gain: %d, b_gain: %d\n", r_gain, b_gain);
-		r_gain_int = r_gain / 512;
-		b_gain_int = b_gain / 512;
-		brzbmain_feedback_awbgain[5] = r_gain_int;
-		brzbmain_feedback_awbgain[7] = (r_gain - r_gain_int * 512) / 2;
-		brzbmain_feedback_awbgain[9] = b_gain_int;
-		brzbmain_feedback_awbgain[11] = (b_gain - b_gain_int * 512) / 2;
-		subdrv_i2c_wr_regs_u8(ctx, brzbmain_feedback_awbgain,
-			ARRAY_SIZE(brzbmain_feedback_awbgain));
-	}
+	DRV_LOG(ctx, "feedback_awbgain r_gain: %d, b_gain: %d\n", r_gain, b_gain);
+	r_gain_int = r_gain / 512;
+	b_gain_int = b_gain / 512;
+	brzbmain_feedback_awbgain[5] = r_gain_int;
+	brzbmain_feedback_awbgain[7] = (r_gain - r_gain_int * 512) / 2;
+	brzbmain_feedback_awbgain[9] = b_gain_int;
+	brzbmain_feedback_awbgain[11] = (b_gain - b_gain_int * 512) / 2;
+	subdrv_i2c_wr_regs_u8(ctx, brzbmain_feedback_awbgain,
+		ARRAY_SIZE(brzbmain_feedback_awbgain));
 }
 
 static int brzbmain_set_awb_gain(struct subdrv_ctx *ctx, u8 *para, u32 *len) {

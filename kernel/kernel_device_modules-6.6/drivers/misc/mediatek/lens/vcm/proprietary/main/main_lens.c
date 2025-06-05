@@ -95,6 +95,10 @@ static struct stAF_DrvList g_stAF_DrvList[MAX_NUM_OF_LENS] = {
 	DW9827AF_23687_IMX882_Release, DW9827AF_23687_IMX882_GetFileName, NULL},
 	{1, AFDRV_DW9827AF_23687_IMX882PD, DW9827AF_23687_IMX882PD_SetI2Cclient, DW9827AF_23687_IMX882PD_Ioctl,
 	DW9827AF_23687_IMX882PD_Release, DW9827AF_23687_IMX882PD_GetFileName, NULL},
+	{1, AFDRV_DW9800SAF, DW9800SAF_SetI2Cclient, DW9800SAF_Ioctl,
+	DW9800SAF_Release, DW9800SAF_GetFileName, NULL},
+	{1, AFDRV_DW9800SAFPD, DW9800SAFPD_SetI2Cclient, DW9800SAFPD_Ioctl,
+	DW9800SAFPD_Release, DW9800SAFPD_GetFileName, NULL},
 	 {1, AFDRV_AW8601, AW8601_CHANEL_OV64B_SetI2Cclient, AW8601_CHANEL_OV64B_Ioctl,
 	 AW8601_CHANEL_OV64B_Release, AW8601_CHANEL_OV64B_GetFileName, NULL},
 	{1, AFDRV_JD5516WE4AF_23689_IMX890, JD5516WE4AF_23689_IMX890_SetI2Cclient, JD5516WE4AF_23689_IMX890_Ioctl,
@@ -190,6 +194,10 @@ static struct stAF_DrvList g_stAF_DrvList[MAX_NUM_OF_LENS] = {
 	 JD5516WE4_Release, JD5516WE4_GetFileName, NULL},
 	{1, AFDRV_DW9827AF, DW9827AF_SetI2Cclient, DW9827AF_Ioctl,
 	DW9827AF_Release, DW9827AF_GetFileName, NULL},
+	{1, AFDRV_AK7377AF, AK7377AF_SetI2Cclient, AK7377AF_Ioctl,
+	AK7377AF_Release, AK7377AF_GetFileName, NULL},
+	{1, AFDRV_AK7316AF, AK7316AF_SetI2Cclient, AK7316AF_Ioctl,
+	AK7316AF_Release, AK7316AF_GetFileName, NULL},
 };
 
 static struct stAF_DrvList *g_pstAF_CurDrv;
@@ -217,6 +225,7 @@ extern int fan53870_cam_ldo_set_voltage(int LDO_NUM, int set_mv);
 extern int fan53870_cam_ldo_disable(int LDO_NUM);
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
 #if !defined(CONFIG_MACH_MT6765)
+/*Wenjun.Wu@Cam.Drv add for 20171 20210628*/
 extern int pmic_ldo_set_voltage_mv(unsigned int ldo_num, int set_mv);
 extern int pmic_ldo_set_disable(unsigned int ldo_num);
 extern int pmic_ldo_get_type(void);

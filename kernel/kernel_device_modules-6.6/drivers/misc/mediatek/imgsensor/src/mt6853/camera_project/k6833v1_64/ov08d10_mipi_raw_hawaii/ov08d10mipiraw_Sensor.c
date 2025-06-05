@@ -31,6 +31,7 @@
 #define MULTI_WRITE 1
 /* Camera Hardwareinfo */
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*Degao.Lan@Camera.DRV add for register device info 20191108*/
 #define DEVICE_VERSION_OV08D10     "ov08d10"
 // #define MODULE_ID_OFFSET 0X0000
 static kal_uint8 deviceInfo_register_value = 0x00;
@@ -475,6 +476,7 @@ static kal_uint16 set_gain(kal_uint16 gain)
 	return gain;
 }    /*    set_gain  */
 
+//quchengzhang@Camera.Drv, 20200509, add for set correct mirror/flip
 static void set_mirror_flip(kal_uint8 image_mirror)
 {
 	LOG_INF("image_mirror = %d\n", image_mirror);
@@ -1553,7 +1555,8 @@ static kal_uint32 open(void)
 	imgsensor.dummy_pixel = 0;
 	imgsensor.dummy_line = 0;
 	imgsensor.ihdr_en = 0;
-	//imgsensor.test_pattern = KAL_FALSE;
+	//miaozhongshu@Cam.Drv, 2022/05/05, add for AWAII pattern mode enable open camera not init
+	imgsensor.test_pattern = KAL_FALSE;
 	imgsensor.current_fps = imgsensor_info.pre.max_framerate;
 	spin_unlock(&imgsensor_drv_lock);
 
@@ -1859,9 +1862,10 @@ static kal_uint32 control(enum MSDK_SCENARIO_ID_ENUM scenario_id,
 		preview(image_window, sensor_config_data);
 		return ERROR_INVALID_SCENARIO_ID;
 	}
-	if ( imgsensor.test_pattern ) {
-		set_test_pattern_mode(imgsensor.test_pattern);
-	}
+	//miaozhongshu@Cam.Drv, 2022/05/05, add for hawaii set pattern mode after init
+	// if ( imgsensor.test_pattern ) {
+	// 	set_test_pattern_mode(imgsensor.test_pattern);
+	// }
 	return ERROR_NONE;
 }    /* control() */
 

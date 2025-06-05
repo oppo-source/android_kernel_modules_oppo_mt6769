@@ -1191,6 +1191,7 @@ int BattThermistorConverTempHighPrecision(struct mtk_battery *gm, int Res)
 #define TBAT_LITTLE_LOW_TEMP -80
 #define TBAT_VBIF28_BIG 3000
 #define TBAT_VBIF28_SMALL 2500
+/*Baoquan.Lai@BSP.CHG.Basic,2020/11/06,add for 0.1 precision battery temp*/
 int volttotemp_precise(struct mtk_battery *gm, int dwVolt, int volt_cali)
 {
 	long long TRes_temp;
@@ -4205,6 +4206,7 @@ int battery_type_check(void)
 			gmb->battery_id = BATT_ID_0;
 		}
 	#elif defined CONFIG_OPLUS_CHARGER_MTK6781
+		/*hongzhenglong@ODM.HQ.BSP.CHG 2020/04/19 add for bringing up 18W&33W*/
 		if (odm_select_bat_ntc_support == ODM_SPACE_B_33W) {/*33w*/
 			if (value >= batt_id_vol[4][0] && value <= batt_id_vol[4][1]) {//2nd  ATL  68K  0.55-0.79V  0.68
 					battery_type = BAT_TYPE__ATL_4450mV;
@@ -4234,6 +4236,7 @@ int battery_type_check(void)
 		struct device_node *node = NULL;
 		bool chg_battery_id = false;
 		bool chg_batt_id_supported_project = false;
+		int i = 0;
 		node = of_find_compatible_node(NULL, NULL, "mediatek,charger");
 		chg_battery_id = of_property_read_bool(node, "chg_battery_id");
 		chg_batt_id_supported_project = of_property_read_bool(node, "chg_batt_id_supported_project");
@@ -4253,12 +4256,29 @@ int battery_type_check(void)
 					gmb->battery_id = BATT_ID_0;
 				}
 			} else {
-				if (value >= batt_id_vol[12][0] && value < batt_id_vol[12][1]) {
-					battery_type = BAT_TYPE__LIW_4450mV;
-					gmb->battery_id = BATT_ID_1;
-				} else if (value >= batt_id_vol[4][0] && value <= batt_id_vol[4][1]) {
-					battery_type = BAT_TYPE__ATL_4450mV;
-					gmb->battery_id = BATT_ID_0;
+				int length = of_property_count_elems_of_size(node, "batid_voltage_range", sizeof(u32));
+				printk(KERN_ERR "batid_voltage_range length = %d\n", length);
+				if (length > 0) {
+					u32 batid_voltage_range[BATTID_ARR_LEN][BATTID_ARR_WIDTH+1] = {0};
+					ret = of_property_read_u32_array(node, "batid_voltage_range",
+										&batid_voltage_range[0][0],
+										length);
+					for (i = 0; i < BATTID_ARR_LEN; i++) {
+						if (value >= batid_voltage_range[i][0] && value <= batid_voltage_range[i][1]) {
+							gmb->battery_id = i+1;
+							battery_type = batid_voltage_range[i][2];
+							break;
+						}
+					}
+					printk(KERN_ERR " battery_id = %d(%d), battery_type = %d\n", gmb->battery_id, value, battery_type);
+				} else {
+					if (value >= batt_id_vol[12][0] && value < batt_id_vol[12][1]) {
+						battery_type = BAT_TYPE__LIW_4450mV;
+						gmb->battery_id = BATT_ID_1;
+					} else if (value >= batt_id_vol[4][0] && value <= batt_id_vol[4][1]) {
+						battery_type = BAT_TYPE__ATL_4450mV;
+						gmb->battery_id = BATT_ID_0;
+					}
 				}
 			}
 		} else if (use_mt6370) {
@@ -4321,7 +4341,8 @@ try_again:
 	if (battery_type == BAT_TYPE__ATL_4450mV
 		|| battery_type == BAT_TYPE__COS_4450mV
 		|| battery_type == BAT_TYPE__LIW_4450mV
-		|| battery_type == BAT_TYPE__SDI_4450mV) {
+		|| battery_type == BAT_TYPE__SDI_4450mV
+		|| battery_type == BAT_TYPE__GUANYU_4480mV_GUANYU) {
 		return true;
 	} else {
 		/*if (get_project() == 20391 && get_PCB_Version() <= PCB_VERSION_EVT1) {
@@ -4339,7 +4360,7 @@ try_again:
 		} else {
 			return false;
 		}*/
-		return true;
+		return false;
 	}
 }
 
